@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install:*)",
+      "Bash(timeout 8 tsx server/index.ts)",
+      "Bash(curl -s -X POST http://localhost:3001/api/holsi-advice -H 'Content-Type: application/json' -d '{\"dDay\": 3, \"userName\": \"테스트\", \"pills\": [{\"name\": \"비타민C\"}]}')",
+      "Bash(python3:*)",
+      "Bash(node:*)",
+      "Bash(npx tsc:*)",
+      "Bash(echo \"exit=$?\")",
+      "Bash(curl -s -o /dev/null -w \"root: HTTP:%{http_code}\\\\n\" http://localhost:3001/)",
+      "Bash(curl -s -o /dev/null -w \"calendar: HTTP:%{http_code}\\\\n\" http://localhost:3001/calendar)",
+      "Bash(curl -s -o /dev/null -w \"manifest: HTTP:%{http_code}\\\\n\" http://localhost:3001/manifest.webmanifest)",
+      "Bash(curl -s -o /dev/null -w \"sw: HTTP:%{http_code}\\\\n\" http://localhost:3001/sw.js)",
+      "Bash(curl -s -o /dev/null -w \"push-handler: HTTP:%{http_code}\\\\n\" http://localhost:3001/push-handler.js)"
+    ]
+  }
+}

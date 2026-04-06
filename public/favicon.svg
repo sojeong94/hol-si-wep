@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="bg-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#09090b" />
+      <stop offset="100%" stop-color="#18181b" />
+    </linearGradient>
+    <linearGradient id="pink-glow" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FF2A7A" />
+      <stop offset="100%" stop-color="#D9004C" />
+    </linearGradient>
+    <filter id="glass-blur" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="40" />
+    </filter>
+  </defs>
+  
+  <!-- Base Dark Background -->
+  <rect width="512" height="512" rx="120" fill="url(#bg-grad)" />
+  
+  <!-- Pink Glow Behind Glass -->
+  <circle cx="380" cy="150" r="160" fill="#FF2A7A" opacity="0.6" filter="url(#glass-blur)" />
+  <circle cx="120" cy="400" r="130" fill="#990033" opacity="0.5" filter="url(#glass-blur)" />
+
+  <!-- Glass Layer over glows -->
+  <rect width="512" height="512" rx="120" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.15" stroke-width="4" />
+  
+  <!-- Dandelion Art -->
+  <g transform="translate(256, 320)" stroke="#ffffff" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Stem/Seed -->
+    <path d="M 0 0 Q -10 60 15 110" stroke-width="24" fill="none" opacity="0.8" />
+    <circle cx="0" cy="0" r="16" fill="url(#pink-glow)" stroke="none" />
+    
+    <!-- Parachute stems -->
+    <path d="M 0 0 L -120 -150" stroke-width="20" opacity="0.6" />
+    <path d="M 0 0 L -40 -200" stroke-width="20" opacity="0.6" />
+    <path d="M 0 0 L 40 -200" stroke-width="20" opacity="0.6" />
+    <path d="M 0 0 L 120 -150" stroke-width="20" opacity="0.6" />
+
+    <!-- Fluff nodes -->
+    <circle cx="-120" cy="-150" r="28" fill="#FF2A7A" stroke="none" />
+    <circle cx="-40" cy="-200" r="28" fill="#FF2A7A" stroke="none" />
+    <circle cx="40" cy="-200" r="28" fill="#FF2A7A" stroke="none" />
+    <circle cx="120" cy="-150" r="28" fill="#FF2A7A" stroke="none" />
+    
+    <!-- Cross fluffs (the bristles) -->
+    <g stroke="white" stroke-opacity="0.95">
+      <path d="M -150 -140 L -90 -160 M -135 -170 L -105 -130" stroke-width="16" />
+      <path d="M -65 -190 L -15 -210 M -55 -215 L -25 -185" stroke-width="16" />
+      <path d="M 15 -210 L 65 -190 M 25 -185 L 55 -215" stroke-width="16" />
+      <path d="M 90 -160 L 150 -140 M 105 -130 L 135 -170" stroke-width="16" />
+    </g>
+  </g>
+</svg>

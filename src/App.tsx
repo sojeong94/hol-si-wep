@@ -1,0 +1,102 @@
+import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { useEffect } from 'react'
+import { format } from 'date-fns'
+import { usePillStore } from '@/store/usePillStore'
+import { useSettingStore } from '@/store/useSettingStore'
+import { TopNav } from '@/components/layout/TopNav'
+import { syncPillsToServer } from '@/lib/pushService'
+
+import { Home } from '@/pages/Home'
+
+import { CalendarPage } from '@/pages/Calendar'
+import { Pills } from '@/pages/Pills'
+import { MyPage } from '@/pages/MyPage'
+import { AlarmRingingModal } from '@/components/ui/AlarmRingingModal'
+import { ErrorBoundary } from '@/components/ui/ErrorBoundary'
+
+function App() {
+  const { pills, setTriggerAlarm } = usePillStore()
+  const { pushEnabled } = useSettingStore()
+
+  // 영양제 변경 시 서버 자동 동기화 (push 활성화된 경우에만)
+  useEffect(() => {
+    if (pushEnabled && Notification.permission === 'granted') {
+      syncPillsToServer(pills)
+    }
+  }, [pills, pushEnabled])
+
+  useEffect(() => {
+    if ('Notification' in window && pushEnabled && Notification.permission === 'default') {
+      try {
+        const promise = Notification.requestPermission()
+        if (promise) promise.then().catch(() => {})
+      } catch (e) {
+        // fallback for older Safari
+      }
+    }
+
+    let lastCheckedMinute = ''
+
+    const interval = setInterval(() => {
+      const now = new Date()
+      const minuteStr = format(now, 'yyyy-MM-dd HH:mm')
+      const timeString = format(now, 'HH:mm')
+      const currentDay = now.getDay() // 0 is Sunday, 6 is Saturday
+      
+      if (minuteStr !== lastCheckedMinute) {
+        lastCheckedMinute = minuteStr
+        
+        const duePills = pills.filter(p => {
+          if (p.isActive === false) return false
+          if (p.time !== timeString) return false
+          if (p.days && !p.days.includes(currentDay)) return false
+          return true
+        })
+
+        // 앱이 열려있을 때는 in-app 모달 + 오디오 알람만 트리거.
+        // OS 알림은 서버 Web Push 가 담당 (앱 닫혀있을 때도 동작).
+        // 양쪽에서 동시에 OS 알림을 띄우면 이중 발송이라 여기서는 Notification API 호출 안함.
+        duePills.forEach(pill => setTriggerAlarm(pill.id))
+      }
+    }, 1000) // 백그라운드 스로틀링 등에 대비해 체크 주기를 1초로 강화 
+
+    return () => clearInterval(interval)
+  }, [pills, pushEnabled])
+
+  return (
+    <ErrorBoundary>
+      <BrowserRouter>
+        {/* 글래스모피즘 분위기의 동적 메시 배경 */}
+        <div className="min-h-screen w-full relative overflow-hidden bg-gradient-to-br from-orange-50/50 via-rose-50/50 to-orange-100/50">
+          <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-pink-300/20 rounded-full blur-[100px] pointer-events-none"></div>
+          <div className="absolute bottom-[-10%] right-[-10%] w-[60%] h-[50%] bg-orange-300/20 rounded-full blur-[120px] pointer-events-none"></div>
+
+          <div
+            className="max-w-md mx-auto relative min-h-screen"
+            style={{ paddingTop: 'calc(4rem + env(safe-area-inset-top))' }}
+          >
+            <TopNav />
+            <AlarmRingingModal />
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/calendar" element={<CalendarPage />} />
+              <Route path="/pills" element={<Pills />} />
+              <Route path="/mypage" element={<MyPage />} />
+              <Route
+                path="*"
+                element={
+                  <div className="p-8 text-center text-zinc-400">
+                    <p className="text-lg font-bold text-zinc-100 mb-2">페이지를 찾지 못했어요</p>
+                    <p className="text-sm">상단 메뉴에서 다시 선택해주세요.</p>
+                  </div>
+                }
+              />
+            </Routes>
+          </div>
+        </div>
+      </BrowserRouter>
+    </ErrorBoundary>
+  )
+}
+
+export default App

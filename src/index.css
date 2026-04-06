@@ -1,0 +1,28 @@
+@import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css");
+@import url("https://fonts.googleapis.com/css2?family=Gowun+Dodum&display=swap");
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #FF2A7A;
+  --color-secondary: #0A0A0A;
+  --color-navy: #F3F4F6;
+  --font-sans: "Pretendard", "Inter", sans-serif;
+  
+  --radius-xl: 24px;
+  --radius-2xl: 32px;
+}
+
+@layer base {
+  * {
+    @apply box-border;
+  }
+  body {
+    font-family: var(--font-sans);
+    background-color: var(--color-secondary);
+    color: var(--color-navy);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    margin: 0;
+    padding: 0;
+  }
+}

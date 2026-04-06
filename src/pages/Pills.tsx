@@ -1,0 +1,244 @@
+import { useState } from 'react'
+import { usePillStore } from '@/store/usePillStore'
+import { Card } from '@/components/ui/Card'
+import { Button } from '@/components/ui/Button'
+import { Modal } from '@/components/ui/Modal'
+import { Plus, MessageCircle, Send, Loader2, Sparkles } from 'lucide-react'
+import { cn } from '@/lib/utils'
+import { RecommendCards, type Recommendation } from '@/components/ui/RecommendCards'
+
+const DAYS = ['일', '월', '화', '수', '목', '금', '토']
+
+export function Pills() {
+  const { pills, addPill, removePill, togglePill, updatePillTime } = usePillStore()
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [isEditMode, setIsEditMode] = useState(false)
+  const [newPill, setNewPill] = useState<{ name: string, time: string, cycle: 'everyday' | 'specific', days: number[] }>({ name: '', time: '08:00', cycle: 'everyday', days: [0, 1, 2, 3, 4, 5, 6] })
+
+  // AI 상담
+  const [isAdvisorOpen, setIsAdvisorOpen] = useState(false)
+  const [advisorQuestion, setAdvisorQuestion] = useState('')
+  const [advisorAnswer, setAdvisorAnswer] = useState('')
+  const [advisorRecommendations, setAdvisorRecommendations] = useState<Recommendation[]>([])
+  const [isAsking, setIsAsking] = useState(false)
+
+  const askAdvisor = async () => {
+    if (!advisorQuestion.trim() || isAsking) return
+    setIsAsking(true)
+    setAdvisorAnswer('')
+    setAdvisorRecommendations([])
+    try {
+      const res = await fetch('/api/pill-advisor', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ question: advisorQuestion, pills }),
+      })
+      const data = await res.json()
+      setAdvisorAnswer(data.answer ?? '답변을 가져오지 못했어요.')
+      setAdvisorRecommendations(data.recommendations ?? [])
+    } catch {
+      setAdvisorAnswer('서버 연결에 실패했어요. 잠시 후 다시 시도해주세요.')
+    } finally {
+      setIsAsking(false)
+    }
+  }
+
+  const handleAdd = () => {
+    if (!newPill.name.trim()) return
+    addPill(newPill)
+    setIsModalOpen(false)
+    setNewPill({ name: '', time: '08:00', cycle: 'everyday', days: [0, 1, 2, 3, 4, 5, 6] })
+  }
+
+  const toggleDay = (dayIndex: number) => {
+    setNewPill(prev => {
+      let newDays;
+      if (prev.days.includes(dayIndex)) {
+        newDays = prev.days.filter(d => d !== dayIndex)
+      } else {
+        newDays = [...prev.days, dayIndex].sort()
+      }
+      return { ...prev, cycle: newDays.length === 7 ? 'everyday' : 'specific', days: newDays }
+    })
+  }
+
+  const getDaysText = (days: number[] = [0, 1, 2, 3, 4, 5, 6]) => {
+    if (days.length === 7) return '매일'
+    if (days.length === 0) return '안 함'
+    if (days.length === 5 && !days.includes(0) && !days.includes(6)) return '평일'
+    if (days.length === 2 && days.includes(0) && days.includes(6)) return '주말'
+    return days.map(d => DAYS[d]).join(', ')
+  }
+
+  return (
+    <div className="p-5 pb-8 space-y-4 animate-in fade-in duration-500 bg-[var(--color-secondary)] min-h-screen relative text-white">
+      <header className="pt-2 flex justify-between items-center mb-6">
+        <button
+          onClick={() => setIsEditMode(!isEditMode)}
+          className="text-pink-500 font-bold active:opacity-70 transition-opacity text-lg drop-shadow-[0_0_8px_rgba(255,42,122,0.4)]"
+        >
+          {isEditMode ? '완료' : '편집'}
+        </button>
+        <button
+          onClick={() => setIsModalOpen(true)}
+          className="text-pink-500 active:opacity-70 transition-opacity drop-shadow-[0_0_8px_rgba(255,42,122,0.4)]"
+        >
+          <Plus size={32} strokeWidth={2.5} />
+        </button>
+      </header>
+
+      <h1 className="text-3xl font-black mb-6 tracking-tight drop-shadow-[0_0_10px_rgba(255,255,255,0.2)]">알람</h1>
+
+      {pills.length === 0 ? (
+        <Card className="flex flex-col items-center justify-center p-12 text-center text-zinc-500 border-none shadow-none bg-transparent">
+          <p className="mb-2 font-bold text-lg text-zinc-400">알람 없음</p>
+          <p className="text-sm">우측 상단의 + 버튼을 눌러 추가해주세요.</p>
+        </Card>
+      ) : (
+        <div className="space-y-0">
+          {pills.map((pill) => (
+            <div key={pill.id} className="flex items-center gap-4 py-4 border-b border-zinc-800">
+              {isEditMode && (
+                <button onClick={() => removePill(pill.id)} className="shrink-0 w-6 h-6 rounded-full bg-pink-600 flex items-center justify-center shadow-sm">
+                  <div className="w-3 h-0.5 bg-white rounded-full"></div>
+                </button>
+              )}
+
+              <div className="flex-1 flex justify-between items-center transition-opacity" style={{ opacity: pill.isActive === false ? 0.5 : 1 }}>
+                <div className="flex flex-col">
+                  {isEditMode ? (
+                    <label className="relative inline-flex items-center mb-1 group">
+                      <span className="text-4xl font-light text-white py-0.5 pr-5 border-b-2 border-zinc-800 group-focus-within:border-[var(--color-primary)] transition-colors">
+                        {pill.time}
+                      </span>
+                      <span className="absolute right-0 text-pink-500 text-xs shadow-white">✏️</span>
+                      <input
+                        type="time"
+                        defaultValue={pill.time}
+                        onChange={(e) => e.target.value && updatePillTime(pill.id, e.target.value)}
+                        className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+                      />
+                    </label>
+                  ) : (
+                    <span className="text-5xl font-light text-white mb-1">{pill.time}</span>
+                  )}
+                  <span className="text-sm font-medium text-zinc-400">
+                    {pill.name}, {getDaysText(pill.days)}
+                  </span>
+                </div>
+
+                {!isEditMode && (
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input type="checkbox" className="sr-only peer" checked={pill.isActive !== false} onChange={() => togglePill(pill.id)} />
+                    <div className="w-14 h-8 bg-black/50 border border-zinc-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-[24px] after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-7 after:w-7 after:transition-all peer-checked:bg-[var(--color-primary)] peer-checked:border-[var(--color-primary)] shadow-inner"></div>
+                  </label>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* AI 영양제 상담 플로팅 버튼 */}
+      {!isEditMode && (
+        <button
+          onClick={() => { setIsAdvisorOpen(true); setAdvisorAnswer(''); setAdvisorQuestion('') }}
+          className="fixed bottom-24 right-5 w-14 h-14 bg-[var(--color-primary)] rounded-full shadow-[0_0_20px_rgba(255,42,122,0.5)] flex items-center justify-center active:scale-95 transition-all z-40 border border-pink-400"
+        >
+          <MessageCircle size={24} className="text-white" />
+        </button>
+      )}
+
+      {/* AI 영양제 상담 모달 */}
+      <Modal isOpen={isAdvisorOpen} onClose={() => setIsAdvisorOpen(false)} title="AI 영양제 상담">
+        <div className="space-y-4">
+          <div className="flex items-center gap-2 text-xs text-zinc-400 font-medium">
+            <Sparkles size={12} className="text-pink-400 shrink-0" />
+            복용 중인 영양제를 기반으로 AI가 답변해드려요
+          </div>
+
+          {advisorAnswer && (
+            <Card className="p-4 bg-zinc-900 border border-zinc-700 text-sm text-zinc-200 leading-relaxed whitespace-pre-wrap">
+              {advisorAnswer}
+              <RecommendCards recommendations={advisorRecommendations} label="관련 영양제 보기" />
+            </Card>
+          )}
+
+          <div className="flex gap-2">
+            <input
+              type="text"
+              value={advisorQuestion}
+              onChange={e => setAdvisorQuestion(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && askAdvisor()}
+              placeholder="예: 칼슘이랑 마그네슘 같이 먹어도 돼?"
+              className="flex-1 bg-zinc-900 border border-zinc-700 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-[var(--color-primary)] transition-all"
+            />
+            <button
+              onClick={askAdvisor}
+              disabled={isAsking || !advisorQuestion.trim()}
+              className="shrink-0 w-12 h-12 bg-[var(--color-primary)] disabled:opacity-40 rounded-xl flex items-center justify-center active:scale-95 transition-all shadow-[0_0_10px_rgba(255,42,122,0.4)]"
+            >
+              {isAsking ? <Loader2 size={18} className="text-white animate-spin" /> : <Send size={18} className="text-white" />}
+            </button>
+          </div>
+
+          <div className="flex flex-wrap gap-2">
+            {['같이 먹으면 안 되는 조합이 있어?', '공복에 먹어도 돼?', '월경 기간에 더 챙겨야 할 게 있어?'].map(q => (
+              <button
+                key={q}
+                onClick={() => setAdvisorQuestion(q)}
+                className="text-xs bg-zinc-800 border border-zinc-700 text-zinc-300 px-3 py-1.5 rounded-full hover:border-pink-500/50 transition-colors"
+              >
+                {q}
+              </button>
+            ))}
+          </div>
+        </div>
+      </Modal>
+
+      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="알람 추가">
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-zinc-400 mb-1">영양제 이름</label>
+            <input
+              type="text"
+              value={newPill.name}
+              onChange={e => setNewPill({ ...newPill, name: e.target.value })}
+              className="w-full bg-[#18181A] border border-zinc-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[var(--color-primary)] transition-all text-lg"
+              placeholder="예: 피임약, 유산균"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-zinc-400 mb-1">시간</label>
+            <input
+              type="time"
+              value={newPill.time}
+              onChange={e => setNewPill({ ...newPill, time: e.target.value })}
+              className="w-full bg-[#18181A] border border-zinc-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[var(--color-primary)] transition-all text-2xl font-bold"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-zinc-400 mb-2 mt-4">반복 요일</label>
+            <div className="flex justify-between gap-1">
+              {DAYS.map((day, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => toggleDay(idx)}
+                  className={cn(
+                    "w-10 h-10 rounded-full font-bold flex items-center justify-center transition-all text-sm",
+                    newPill.days.includes(idx)
+                      ? "bg-[var(--color-primary)] text-white shadow-[0_0_10px_rgba(255,42,122,0.5)]"
+                      : "bg-zinc-800 text-zinc-500 border border-zinc-700 hover:bg-zinc-700"
+                  )}
+                >
+                  {day}
+                </button>
+              ))}
+            </div>
+          </div>
+          <Button className="w-full mt-6 bg-[var(--color-primary)] text-white font-bold h-14 rounded-xl shadow-[0_0_15px_rgba(255,42,122,0.4)]" size="lg" onClick={handleAdd}>저장</Button>
+        </div>
+      </Modal>
+    </div>
+  )
+}
