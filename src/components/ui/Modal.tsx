@@ -22,16 +22,16 @@ export function Modal({ isOpen, onClose, title, children, className }: ModalProp
       />
       
       {/* Content */}
-      <div className={cn("relative w-full max-w-sm bg-zinc-900 border border-zinc-800 rounded-[var(--radius-2xl)] shadow-2xl shadow-pink-900/10 overflow-hidden transform transition-all", className)}>
+      <div className={cn("relative w-full max-w-sm bg-zinc-900 border border-zinc-800 rounded-[var(--radius-2xl)] shadow-2xl shadow-pink-900/10 overflow-hidden transform transition-all flex flex-col max-h-[85vh]", className)}>
         {title && (
-          <div className="flex items-center justify-between p-4 border-b border-zinc-800">
+          <div className="flex-none flex items-center justify-between p-4 border-b border-zinc-800 shrink-0">
             <h3 className="text-lg font-bold text-white">{title}</h3>
             <button onClick={onClose} className="p-1 text-zinc-500 hover:text-white rounded-full hover:bg-zinc-800">
               <X size={20} />
             </button>
           </div>
         )}
-        <div className="p-5">
+        <div className="p-5 overflow-y-auto">
           {children}
         </div>
       </div>

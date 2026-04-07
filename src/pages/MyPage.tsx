@@ -22,13 +22,23 @@ export function MyPage() {
 
   const handlePushToggle = async (enable: boolean) => {
     if (enable) {
-      if (!('Notification' in window)) {
-        alert('이 브라우저는 알림을 지원하지 않아요.')
+      // iOS 기기인지 확인
+      const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent)
+      const isPWA = window.matchMedia('(display-mode: standalone)').matches
+
+      if (isIOS && !isPWA) {
+        alert('iOS에서 알림을 받으려면 먼저 Safari 하단 메뉴에서\n"홈 화면에 추가"를 눌러 앱으로 설치해주세요.\n\n(iOS 16.4 이상 필요)')
         return
       }
+
+      if (!('Notification' in window) || !('PushManager' in window)) {
+        alert('이 브라우저는 푸시 알림을 지원하지 않아요.\nChrome 또는 Edge를 사용해주세요.')
+        return
+      }
+
       const permission = await Notification.requestPermission()
       if (permission !== 'granted') {
-        alert('알림이 차단되었어요. 브라우저 설정에서 허용해주세요.')
+        alert('알림이 차단되어 있어요.\n\n브라우저 주소창 왼쪽 자물쇠 아이콘 → 알림 → 허용 으로 변경해주세요.')
         setPushEnabled(false)
         return
       }
@@ -205,15 +215,19 @@ export function MyPage() {
               <p className="text-xs text-zinc-400 font-medium mt-0.5">배경에서도 영양제 복용 시간을 알려드려요</p>
             </div>
           </div>
-          <label className="relative inline-flex items-center cursor-pointer">
-            <input 
-              type="checkbox" 
-              className="sr-only peer" 
-              checked={pushEnabled} 
-              onChange={(e) => handlePushToggle(e.target.checked)}
-            />
-            <div className="w-14 h-8 bg-black/50 border border-zinc-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-[24px] after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-zinc-300 after:rounded-full after:h-7 after:w-7 after:transition-all peer-checked:bg-[var(--color-primary)] peer-checked:border-[var(--color-primary)] shadow-inner"></div>
-          </label>
+          <button
+            type="button"
+            onClick={() => handlePushToggle(!pushEnabled)}
+            className={`relative w-14 h-8 rounded-full border transition-all duration-300 shadow-inner shrink-0 ${
+              pushEnabled
+                ? 'bg-[var(--color-primary)] border-[var(--color-primary)]'
+                : 'bg-black/50 border-zinc-700'
+            }`}
+          >
+            <span className={`absolute top-[2px] left-[2px] w-7 h-7 bg-white rounded-full shadow transition-transform duration-300 ${
+              pushEnabled ? 'translate-x-6' : 'translate-x-0'
+            }`} />
+          </button>
         </Card>
       </section>
 

@@ -3,7 +3,7 @@ import { usePillStore } from '@/store/usePillStore'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Modal } from '@/components/ui/Modal'
-import { Plus, MessageCircle, Send, Loader2, Sparkles } from 'lucide-react'
+import { Plus, MessageCircle, Send, Loader2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { RecommendCards, type Recommendation } from '@/components/ui/RecommendCards'
 
@@ -149,13 +149,9 @@ export function Pills() {
         </button>
       )}
 
-      {/* AI 영양제 상담 모달 */}
-      <Modal isOpen={isAdvisorOpen} onClose={() => setIsAdvisorOpen(false)} title="AI 영양제 상담">
+      {/* 영양제 상담 모달 */}
+      <Modal isOpen={isAdvisorOpen} onClose={() => setIsAdvisorOpen(false)} title="영양제 Q&A">
         <div className="space-y-4">
-          <div className="flex items-center gap-2 text-xs text-zinc-400 font-medium">
-            <Sparkles size={12} className="text-pink-400 shrink-0" />
-            복용 중인 영양제를 기반으로 AI가 답변해드려요
-          </div>
 
           {advisorAnswer && (
             <Card className="p-4 bg-zinc-900 border border-zinc-700 text-sm text-zinc-200 leading-relaxed whitespace-pre-wrap">
@@ -171,7 +167,7 @@ export function Pills() {
               onChange={e => setAdvisorQuestion(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && askAdvisor()}
               placeholder="예: 칼슘이랑 마그네슘 같이 먹어도 돼?"
-              className="flex-1 bg-zinc-900 border border-zinc-700 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-[var(--color-primary)] transition-all"
+              className="flex-1 bg-zinc-900 border border-zinc-700 rounded-xl px-4 py-3 text-white text-base focus:outline-none focus:border-[var(--color-primary)] transition-all"
             />
             <button
               onClick={askAdvisor}

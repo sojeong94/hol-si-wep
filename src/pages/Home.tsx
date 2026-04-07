@@ -254,7 +254,7 @@ export function Home() {
         <div className="space-y-4">
           <input
             type="text"
-            placeholder="블랙핑크 제니랄까..?"
+            placeholder="이를테면 공주랄까..?"
             className="w-full bg-black/50 border border-zinc-700 rounded-xl px-4 py-3.5 text-white focus:outline-none focus:border-[var(--color-primary)] placeholder:text-zinc-600 transition-colors"
             value={tempName}
             onChange={e => setTempName(e.target.value)}
@@ -417,7 +417,7 @@ export function Home() {
             <div className={`transition-all duration-1000 ${isBurning ? 'opacity-0 translate-y-[-20px] blur-sm scale-95' : 'opacity-100'}`}>
               <textarea
                 placeholder="짜증, 우울, 혹은 말 못할 고민들. 이곳에 털어놓고 쿨하게 잊어버리세요."
-                className="w-full bg-[#111] border border-zinc-800 rounded-xl px-4 py-3 text-sm text-zinc-200 focus:outline-none focus:border-[var(--color-primary)] transition-all resize-none h-24 mb-3"
+                className="w-full bg-[#111] border border-zinc-800 rounded-xl px-4 py-3 text-base text-zinc-200 focus:outline-none focus:border-[var(--color-primary)] transition-all resize-none h-24 mb-3"
                 value={trashText}
                 onChange={(e) => setTrashText(e.target.value)}
                 disabled={isBurning}
