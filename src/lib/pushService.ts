@@ -27,10 +27,16 @@ export async function subscribePush(pills: Pill[]): Promise<boolean> {
       return false
     }
 
+    // 서비스워커가 없으면 직접 등록
+    let existingReg = await navigator.serviceWorker.getRegistration('/')
+    if (!existingReg) {
+      existingReg = await navigator.serviceWorker.register('/sw.js', { scope: '/' })
+    }
+
     const reg = await Promise.race([
       navigator.serviceWorker.ready,
       new Promise<never>((_, reject) =>
-        setTimeout(() => reject(new Error('서비스워커 준비 시간 초과')), 8000)
+        setTimeout(() => reject(new Error('서비스워커 준비 시간 초과')), 10000)
       ),
     ])
     let sub = await reg.pushManager.getSubscription()
