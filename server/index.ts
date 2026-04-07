@@ -471,7 +471,7 @@ app.post('/api/ocr', ocrLimiter, async (req, res) => {
 // ─── 프로덕션: 빌드된 프론트엔드 서빙 ────────────────────────────────────────
 const distPath = path.join(__dirname, '../dist')
 if (fs.existsSync(distPath)) {
-  app.use(express.static(distPath))
+  app.use(express.static(distPath, { dotfiles: 'allow' }))
   // Express 5: '*' 는 더 이상 유효한 path 가 아님. SPA fallback 은 모든 메소드/경로를 잡는 미들웨어로 처리
   app.use((req, res, next) => {
     // API 경로 및 .well-known 경로는 fallback 하지 않음 (404 유지)
