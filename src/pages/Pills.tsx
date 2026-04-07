@@ -73,21 +73,22 @@ export function Pills() {
   return (
     <div className="p-5 pb-8 space-y-4 animate-in fade-in duration-500 bg-[var(--color-secondary)] min-h-screen relative text-white">
       <header className="pt-2 flex justify-between items-center mb-6">
-        <button
-          onClick={() => setIsEditMode(!isEditMode)}
-          className="text-pink-500 font-bold active:opacity-70 transition-opacity text-lg drop-shadow-[0_0_8px_rgba(255,42,122,0.4)]"
-        >
-          {isEditMode ? '완료' : '편집'}
-        </button>
-        <button
-          onClick={() => setIsModalOpen(true)}
-          className="text-pink-500 active:opacity-70 transition-opacity drop-shadow-[0_0_8px_rgba(255,42,122,0.4)]"
-        >
-          <Plus size={32} strokeWidth={2.5} />
-        </button>
+        <h1 className="text-3xl font-black tracking-tight drop-shadow-[0_0_10px_rgba(255,255,255,0.2)]">알람</h1>
+        <div className="flex items-center gap-4">
+          <button
+            onClick={() => setIsEditMode(!isEditMode)}
+            className="text-pink-500 font-bold active:opacity-70 transition-opacity text-lg drop-shadow-[0_0_8px_rgba(255,42,122,0.4)]"
+          >
+            {isEditMode ? '완료' : '편집'}
+          </button>
+          <button
+            onClick={() => setIsModalOpen(true)}
+            className="text-pink-500 active:opacity-70 transition-opacity drop-shadow-[0_0_8px_rgba(255,42,122,0.4)]"
+          >
+            <Plus size={32} strokeWidth={2.5} />
+          </button>
+        </div>
       </header>
-
-      <h1 className="text-3xl font-black mb-6 tracking-tight drop-shadow-[0_0_10px_rgba(255,255,255,0.2)]">알람</h1>
 
       {pills.length === 0 ? (
         <Card className="flex flex-col items-center justify-center p-12 text-center text-zinc-500 border-none shadow-none bg-transparent">
@@ -160,14 +161,14 @@ export function Pills() {
             </Card>
           )}
 
-          <div className="flex gap-2">
+          <div className="flex w-full gap-2 items-center">
             <input
               type="text"
               value={advisorQuestion}
               onChange={e => setAdvisorQuestion(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && askAdvisor()}
               placeholder="예: 칼슘이랑 마그네슘 같이 먹어도 돼?"
-              className="flex-1 bg-zinc-900 border border-zinc-700 rounded-xl px-4 py-3 text-white text-base focus:outline-none focus:border-[var(--color-primary)] transition-all"
+              className="flex-1 min-w-0 bg-zinc-900 border border-zinc-700 rounded-xl px-4 py-3 text-white text-base focus:outline-none focus:border-[var(--color-primary)] transition-all"
             />
             <button
               onClick={askAdvisor}

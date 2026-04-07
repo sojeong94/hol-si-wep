@@ -309,11 +309,7 @@ export function Home() {
               <span className="block">{dDayContent.title}</span>
               <span className="opacity-90">{dDayContent.subtitle}</span>
             </h2>
-            {dDayContent.tag && (
-              <span className="bg-white/20 text-white px-2.5 py-1 rounded-full text-[10px] sm:text-xs font-bold inline-block mt-2 w-max backdrop-blur-sm border border-white/20">
-                {dDayContent.tag}
-              </span>
-            )}
+
           </div>
         </div>
       </Card>
