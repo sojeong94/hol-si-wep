@@ -1,0 +1,67 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 500" width="1024" height="500">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#09090b" />
+      <stop offset="100%" stop-color="#18181b" />
+    </linearGradient>
+    <linearGradient id="pink" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FF2A7A" />
+      <stop offset="100%" stop-color="#D9004C" />
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="60" />
+    </filter>
+    <filter id="glow2">
+      <feGaussianBlur stdDeviation="30" />
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1024" height="500" fill="url(#bg)" />
+
+  <!-- Glow effects -->
+  <circle cx="800" cy="150" r="200" fill="#FF2A7A" opacity="0.3" filter="url(#glow)" />
+  <circle cx="150" cy="380" r="160" fill="#990033" opacity="0.25" filter="url(#glow)" />
+
+  <!-- Dandelion icon (right side) -->
+  <g transform="translate(820, 300) scale(0.55)" stroke="#ffffff" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M 0 0 Q -10 60 15 110" stroke-width="24" fill="none" opacity="0.5" />
+    <circle cx="0" cy="0" r="16" fill="url(#pink)" stroke="none" />
+    <path d="M 0 0 L -120 -150" stroke-width="20" opacity="0.4" />
+    <path d="M 0 0 L -40 -200" stroke-width="20" opacity="0.4" />
+    <path d="M 0 0 L 40 -200" stroke-width="20" opacity="0.4" />
+    <path d="M 0 0 L 120 -150" stroke-width="20" opacity="0.4" />
+    <circle cx="-120" cy="-150" r="28" fill="#FF2A7A" stroke="none" opacity="0.8" />
+    <circle cx="-40" cy="-200" r="28" fill="#FF2A7A" stroke="none" opacity="0.8" />
+    <circle cx="40" cy="-200" r="28" fill="#FF2A7A" stroke="none" opacity="0.8" />
+    <circle cx="120" cy="-150" r="28" fill="#FF2A7A" stroke="none" opacity="0.8" />
+    <g stroke="white" stroke-opacity="0.7">
+      <path d="M -150 -140 L -90 -160 M -135 -170 L -105 -130" stroke-width="16" />
+      <path d="M -65 -190 L -15 -210 M -55 -215 L -25 -185" stroke-width="16" />
+      <path d="M 15 -210 L 65 -190 M 25 -185 L 55 -215" stroke-width="16" />
+      <path d="M 90 -160 L 150 -140 M 105 -130 L 135 -170" stroke-width="16" />
+    </g>
+  </g>
+
+  <!-- App name -->
+  <text x="80" y="210" font-family="Arial, sans-serif" font-weight="900" font-size="96" fill="white" letter-spacing="-2">Holsi</text>
+
+  <!-- Pink underline -->
+  <rect x="80" y="225" width="200" height="5" rx="3" fill="url(#pink)" />
+
+  <!-- Korean subtitle -->
+  <text x="80" y="290" font-family="Arial, sans-serif" font-weight="700" font-size="28" fill="#FF2A7A">홀몬시스터즈</text>
+
+  <!-- Tagline -->
+  <text x="80" y="345" font-family="Arial, sans-serif" font-weight="400" font-size="22" fill="#a1a1aa">월경 주기 &amp; 영양제를 한 번에</text>
+
+  <!-- Feature pills -->
+  <rect x="80" y="385" width="130" height="36" rx="18" fill="#FF2A7A" fill-opacity="0.15" stroke="#FF2A7A" stroke-opacity="0.4" stroke-width="1" />
+  <text x="145" y="408" font-family="Arial, sans-serif" font-size="14" fill="#FF2A7A" text-anchor="middle">주기 예측</text>
+
+  <rect x="224" y="385" width="130" height="36" rx="18" fill="#FF2A7A" fill-opacity="0.15" stroke="#FF2A7A" stroke-opacity="0.4" stroke-width="1" />
+  <text x="289" y="408" font-family="Arial, sans-serif" font-size="14" fill="#FF2A7A" text-anchor="middle">영양제 알림</text>
+
+  <rect x="368" y="385" width="130" height="36" rx="18" fill="#FF2A7A" fill-opacity="0.15" stroke="#FF2A7A" stroke-opacity="0.4" stroke-width="1" />
+  <text x="433" y="408" font-family="Arial, sans-serif" font-size="14" fill="#FF2A7A" text-anchor="middle">AI 건강 조언</text>
+</svg>
