@@ -61,8 +61,9 @@ export async function subscribePush(pills: Pill[]): Promise<boolean> {
       }),
     })
     return true
-  } catch (err) {
+  } catch (err: any) {
     console.error('push subscribe error:', err)
+    alert(`알림 등록 실패: ${err?.message ?? String(err)}`)
     return false
   }
 }
