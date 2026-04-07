@@ -474,8 +474,9 @@ if (fs.existsSync(distPath)) {
   app.use(express.static(distPath))
   // Express 5: '*' 는 더 이상 유효한 path 가 아님. SPA fallback 은 모든 메소드/경로를 잡는 미들웨어로 처리
   app.use((req, res, next) => {
-    // API 경로는 fallback 하지 않음 (404 유지)
+    // API 경로 및 .well-known 경로는 fallback 하지 않음 (404 유지)
     if (req.path.startsWith('/api/')) return next()
+    if (req.path.startsWith('/.well-known/')) return next()
     res.sendFile(path.join(distPath, 'index.html'))
   })
 }
