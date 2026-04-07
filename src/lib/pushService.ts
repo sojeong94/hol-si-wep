@@ -22,9 +22,17 @@ async function getSubscription(): Promise<PushSubscription | null> {
 export async function subscribePush(pills: Pill[]): Promise<boolean> {
   try {
     const vapidKey = import.meta.env.VITE_VAPID_PUBLIC_KEY
-    if (!vapidKey) return false
+    if (!vapidKey) {
+      alert('푸시 설정 오류: VAPID 키가 없어요.')
+      return false
+    }
 
-    const reg = await navigator.serviceWorker.ready
+    const reg = await Promise.race([
+      navigator.serviceWorker.ready,
+      new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error('서비스워커 준비 시간 초과')), 8000)
+      ),
+    ])
     let sub = await reg.pushManager.getSubscription()
 
     if (!sub) {
