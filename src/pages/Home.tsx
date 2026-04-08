@@ -396,7 +396,7 @@ export function Home() {
       </section>
 
       {/* 광고 배너 */}
-      <AdBanner slot="5445746484" className="my-2" />
+      {/* <AdBanner slot="5445746484" className="my-2" /> */}
 
 
       {/* 감정 쓰레기통 */}
