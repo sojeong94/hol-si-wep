@@ -8,7 +8,6 @@ import { Modal } from '@/components/ui/Modal'
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { Share, Wind, RefreshCw, Info } from 'lucide-react'
 import { RecommendCards, type Recommendation } from '@/components/ui/RecommendCards'
-import { AdBanner } from '@/components/ui/AdBanner'
 
 export function Home() {
   const { records } = useRecordStore()
