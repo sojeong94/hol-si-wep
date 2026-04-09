@@ -142,12 +142,15 @@ export async function postYoutube(): Promise<void> {
     // 공개 설정 화면 스크린샷
     await page.screenshot({ path: 'youtube-public.png' })
 
-    // 본인 인증 팝업 닫기 (공개 상태 진입 시)
+    // 본인 인증 팝업 닫기 — 팝업 내 버튼만 정확히 클릭
     const dismissPopup = async () => {
-      const popupBtn = page.getByRole('button', { name: '다음' }).or(page.getByRole('button', { name: 'Next' }))
-      const visible = await popupBtn.first().isVisible({ timeout: 2_000 }).catch(() => false)
+      const popup = page.locator('yt-confirm-dialog-renderer, ytcp-confirmation-dialog').first()
+      const visible = await popup.isVisible({ timeout: 2_000 }).catch(() => false)
       if (visible) {
-        await popupBtn.first().evaluate((el: HTMLElement) => el.click())
+        const btn = popup.getByRole('button', { name: '다음' })
+          .or(popup.getByRole('button', { name: 'Next' }))
+        await btn.click({ force: true })
+        await popup.waitFor({ state: 'hidden', timeout: 5_000 }).catch(() => {})
         await page.waitForTimeout(500)
         console.log('[YouTube] 팝업 닫음')
       }
@@ -164,15 +167,10 @@ export async function postYoutube(): Promise<void> {
     console.log('[YouTube] 공개 설정 완료')
 
     await dismissPopup()
-    await page.waitForTimeout(500)
+    await page.waitForTimeout(1_000)
 
-    // 팝업 완전 제거 후 게시 클릭
+    // 게시/저장 버튼 클릭
     const clicked = await page.evaluate(() => {
-      // 1. 팝업 DOM 제거
-      document.querySelectorAll('yt-confirm-dialog-renderer, tp-yt-paper-dialog, ytcp-confirmation-dialog').forEach(el => el.remove())
-      document.querySelectorAll('tp-yt-iron-overlay-backdrop').forEach(el => el.remove())
-
-      // 2. 게시/저장 버튼 클릭
       const spans = Array.from(document.querySelectorAll('.ytcpButtonShapeImpl__button-text-content'))
       const span = spans.find(el => {
         const t = el.textContent?.trim()
