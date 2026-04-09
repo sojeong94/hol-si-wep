@@ -232,38 +232,6 @@ export function MyPage() {
       </section>
 
       <section>
-        <h3 className="text-sm font-extrabold text-zinc-500 mb-2 ml-1 tracking-wide">안전한 데이터 백업</h3>
-        <div className="space-y-3">
-          <Card className="flex items-center justify-between p-4 cursor-pointer hover:bg-zinc-800 transition-colors bg-zinc-900 border border-zinc-800 !rounded-[var(--radius-xl)]" onClick={handleBackup}>
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-[#111] shadow-inner flex items-center justify-center text-zinc-400 border border-zinc-700">
-                <Download size={20} />
-              </div>
-              <div>
-                <p className="font-bold text-white">이 기기의 데이터 백업하기</p>
-                <p className="text-xs text-zinc-500 font-medium mt-0.5">안전하게 로컬 JSON 파일로 보관하세요</p>
-              </div>
-            </div>
-          </Card>
-          
-          <label className="block w-full">
-            <input type="file" accept=".json" className="hidden" onChange={handleRestore} />
-            <Card className="flex items-center justify-between p-4 cursor-pointer hover:bg-zinc-800 transition-colors bg-zinc-900 border border-zinc-800 !rounded-[var(--radius-xl)]">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-[#111] shadow-inner flex items-center justify-center text-[var(--color-primary)] border border-[var(--color-primary)] border-opacity-30">
-                  <Upload size={20} />
-                </div>
-                <div>
-                  <p className="font-bold text-white">다른 기기 데이터 복구하기</p>
-                  <p className="text-xs text-zinc-500 font-medium mt-0.5">기기를 변경해도 그대로 이어갈 수 있어요</p>
-                </div>
-              </div>
-            </Card>
-          </label>
-        </div>
-      </section>
-
-      <section>
         <h3 className="text-sm font-extrabold text-zinc-500 mb-2 ml-1 tracking-wide">커뮤니티 & 지원</h3>
         <div className="space-y-3">
           <Card
@@ -295,6 +263,38 @@ export function MyPage() {
               </div>
             </div>
           </Card>
+        </div>
+      </section>
+
+      <section>
+        <h3 className="text-sm font-extrabold text-zinc-500 mb-2 ml-1 tracking-wide">안전한 데이터 백업</h3>
+        <div className="space-y-3">
+          <Card className="flex items-center justify-between p-4 cursor-pointer hover:bg-zinc-800 transition-colors bg-zinc-900 border border-zinc-800 !rounded-[var(--radius-xl)]" onClick={handleBackup}>
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-[#111] shadow-inner flex items-center justify-center text-zinc-400 border border-zinc-700">
+                <Download size={20} />
+              </div>
+              <div>
+                <p className="font-bold text-white">이 기기의 데이터 백업하기</p>
+                <p className="text-xs text-zinc-500 font-medium mt-0.5">안전하게 로컬 JSON 파일로 보관하세요</p>
+              </div>
+            </div>
+          </Card>
+
+          <label className="block w-full">
+            <input type="file" accept=".json" className="hidden" onChange={handleRestore} />
+            <Card className="flex items-center justify-between p-4 cursor-pointer hover:bg-zinc-800 transition-colors bg-zinc-900 border border-zinc-800 !rounded-[var(--radius-xl)]">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-[#111] shadow-inner flex items-center justify-center text-[var(--color-primary)] border border-[var(--color-primary)] border-opacity-30">
+                  <Upload size={20} />
+                </div>
+                <div>
+                  <p className="font-bold text-white">다른 기기 데이터 복구하기</p>
+                  <p className="text-xs text-zinc-500 font-medium mt-0.5">기기를 변경해도 그대로 이어갈 수 있어요</p>
+                </div>
+              </div>
+            </Card>
+          </label>
         </div>
       </section>
 
