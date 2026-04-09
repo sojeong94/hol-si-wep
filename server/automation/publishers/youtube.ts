@@ -142,21 +142,31 @@ export async function postYoutube(): Promise<void> {
     // 공개 설정 화면 스크린샷
     await page.screenshot({ path: 'youtube-public.png' })
 
-    // 공개 설정 → "공개" (JS 클릭)
-    const publicBtn = page.locator('[name="PUBLIC"], label:has-text("공개"), input[value="PUBLIC"]').first()
-    const publicVisible = await publicBtn.isVisible({ timeout: 5_000 }).catch(() => false)
-    if (publicVisible) {
-      await publicBtn.evaluate((el: HTMLElement) => el.click())
-      await page.waitForTimeout(1_000)
-      console.log('[YouTube] 공개 설정 완료')
-    } else {
-      console.log('[YouTube] 공개 버튼 못 찾음 — 스크린샷 확인 필요')
+    // 본인 인증 팝업 닫기 (공개 상태 진입 시)
+    const dismissPopup = async () => {
+      const popupBtn = page.getByRole('button', { name: '다음' }).or(page.getByRole('button', { name: 'Next' }))
+      const visible = await popupBtn.first().isVisible({ timeout: 2_000 }).catch(() => false)
+      if (visible) {
+        await popupBtn.first().evaluate((el: HTMLElement) => el.click())
+        await page.waitForTimeout(500)
+        console.log('[YouTube] 팝업 닫음')
+      }
     }
+    await dismissPopup()
 
-    await page.screenshot({ path: 'youtube-before-save.png' })
+    // 공개 선택
+    const publicRadio = page.getByText('공개', { exact: true }).last()
+      .or(page.getByText('Public', { exact: true }).last())
+    await publicRadio.waitFor({ state: 'attached', timeout: 5_000 }).catch(() => {})
+    await publicRadio.evaluate((el: HTMLElement) => el.click()).catch(() => {})
+    await page.waitForTimeout(1_000)
+    console.log('[YouTube] 공개 설정 완료')
 
-    // 저장 / 게시 (JS 클릭으로 오버레이 우회)
-    const saveBtn = page.locator('button:has-text("저장"), button:has-text("Save"), ytcp-button:has-text("저장"), button:has-text("게시")').last()
+    await dismissPopup()
+
+    // 저장
+    const saveBtn = page.locator('#save-button button').first()
+      .or(page.locator('button:has-text("저장")').last())
     await saveBtn.waitFor({ state: 'attached', timeout: 10_000 })
     await saveBtn.evaluate((el: HTMLElement) => el.click())
     await page.waitForTimeout(8_000)
