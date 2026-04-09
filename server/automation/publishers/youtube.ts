@@ -59,7 +59,7 @@ export async function postYoutube(): Promise<void> {
   const title = content.split('\n')[0].replace(/[*#👉✨😭😔]/g, '').trim().slice(0, 90)
   const description = `${content}\n\n홀시 앱 → https://hol-si.com`
 
-  const browser = await chromium.launch({ headless: false, args: STEALTH_ARGS })
+  const browser = await chromium.launch({ headless: true, args: STEALTH_ARGS })
   const context = await browser.newContext({
     storageState: getStorageState('youtube') as any,
     userAgent: USER_AGENT,

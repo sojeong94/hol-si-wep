@@ -56,7 +56,7 @@ export async function postThread(): Promise<void> {
   const content = await generateContent('threads')
   console.log('[Threads] 생성된 콘텐츠:\n', content)
 
-  const browser = await chromium.launch({ headless: false, args: STEALTH_ARGS }) // 디버그: 화면 표시
+  const browser = await chromium.launch({ headless: true, args: STEALTH_ARGS })
   const context = await browser.newContext({
     storageState: getStorageState('threads') as any,
     userAgent: USER_AGENT,

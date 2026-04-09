@@ -63,7 +63,7 @@ export async function postTiktok(): Promise<void> {
     .trim()
     .slice(0, 150) + ' #홀시 #여성건강 #생리주기 https://hol-si.com'
 
-  const browser = await chromium.launch({ headless: false, args: STEALTH_ARGS })
+  const browser = await chromium.launch({ headless: true, args: STEALTH_ARGS })
   const context = await browser.newContext({
     storageState: getStorageState('tiktok') as any,
     userAgent: USER_AGENT,

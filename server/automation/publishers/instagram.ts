@@ -60,7 +60,7 @@ export async function postInstagram(): Promise<void> {
   await renderCard(content, CARD_PATH)
 
   // 3. Instagram 발행
-  const browser = await chromium.launch({ headless: false, args: STEALTH_ARGS })
+  const browser = await chromium.launch({ headless: true, args: STEALTH_ARGS })
   const context = await browser.newContext({
     storageState: getStorageState('instagram') as any,
     userAgent: USER_AGENT,
