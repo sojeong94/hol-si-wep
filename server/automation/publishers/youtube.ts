@@ -82,11 +82,14 @@ export async function postYoutube(): Promise<void> {
     await page.waitForTimeout(3_000)
     console.log('[YouTube] 파일 업로드 완료')
 
-    // 제목 입력
+    // 제목 입력 (오버레이 무시하고 JS로 포커스)
     const titleInput = page.locator('#title-textarea [contenteditable], #title [contenteditable], [aria-label*="제목"]').first()
     await titleInput.waitFor({ timeout: 15_000 })
-    await titleInput.click()
+    await page.screenshot({ path: 'youtube-debug.png' })
+    await titleInput.evaluate((el: HTMLElement) => el.click())
+    await page.waitForTimeout(500)
     await page.keyboard.selectAll()
+    await page.keyboard.press('Delete')
     await titleInput.type(title, { delay: 30 })
     console.log('[YouTube] 제목 입력 완료')
 
