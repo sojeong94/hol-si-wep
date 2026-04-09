@@ -3,10 +3,10 @@ import path from 'path'
 import { fileURLToPath } from 'url'
 import { hasSession, getStorageState, saveSession } from '../session-manager.js'
 import { generateContent } from '../content-generator.js'
-import { renderCard } from '../card-renderer.js'
+import { renderInstagramCards } from '../card-renderer.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
-const CARD_PATH = path.join(__dirname, '..', 'card-output.png')
+const CARDS_DIR = path.join(__dirname, '..')
 
 const STEALTH_ARGS = [
   '--disable-blink-features=AutomationControlled',
@@ -16,7 +16,6 @@ const STEALTH_ARGS = [
 const USER_AGENT =
   'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36'
 
-// 처음 한 번만 실행 — 직접 로그인 후 Enter로 세션 저장
 export async function loginInstagram(): Promise<void> {
   const browser = await chromium.launch({ headless: false, args: STEALTH_ARGS })
   const context = await browser.newContext({
@@ -46,18 +45,29 @@ export async function loginInstagram(): Promise<void> {
   console.log('[Instagram] 세션 저장 완료 ✓')
 }
 
-// 자동 발행
+// 4장 카드 내용으로 Instagram 캡션 생성
+function buildCaption(content: string): string {
+  const parts = content.split('---').map(p => p.trim()).filter(Boolean)
+  // HOOK + CORE 조합으로 캡션 구성
+  const hook = parts[0] ?? ''
+  const core = parts[2] ?? ''
+  return `${hook}\n\n${core}\n\n👉 https://hol-si.com\n\n#홀시 #여성건강 #생리주기 #생리통 #호르몬건강 #PMS #영양제 #자기관리 #건강정보 #웰니스`
+}
+
 export async function postInstagram(): Promise<void> {
   if (!hasSession('instagram')) {
     throw new Error('[Instagram] 세션이 없습니다. 먼저 "npm run automate login instagram"을 실행하세요.')
   }
 
-  // 1. 콘텐츠 생성
-  const content = await generateContent('threads')
+  // 1. 콘텐츠 생성 (4장 구조)
+  const content = await generateContent('instagram')
   console.log('[Instagram] 생성된 콘텐츠:\n', content)
 
-  // 2. 카드 이미지 생성
-  await renderCard(content, CARD_PATH)
+  // 2. 4장 카드 이미지 생성
+  const cardPaths = await renderInstagramCards(content, CARDS_DIR)
+  console.log('[Instagram] 카드 이미지 생성 완료:', cardPaths)
+
+  const caption = buildCaption(content)
 
   // 3. Instagram 발행
   const browser = await chromium.launch({ headless: true, args: STEALTH_ARGS })
@@ -78,31 +88,29 @@ export async function postInstagram(): Promise<void> {
     await page.waitForTimeout(4_000)
     await page.screenshot({ path: 'instagram-debug.png' })
 
-    // 새로운 게시물 버튼 클릭 (여러 선택자 시도)
+    // 새 게시물 버튼
     const createBtn = page.locator([
       '[aria-label="새로운 게시물"]',
       '[aria-label="New post"]',
       '[aria-label="Create"]',
-      'svg[aria-label="새로운 게시물"]',
     ].join(', ')).first()
 
     const found = await createBtn.isVisible({ timeout: 8_000 }).catch(() => false)
     if (found) {
       await createBtn.click()
     } else {
-      // 직접 create 페이지로 이동
       await page.goto('https://www.instagram.com/create/select/', { waitUntil: 'domcontentloaded' })
     }
     await page.waitForTimeout(2_500)
 
-    // 파일 업로드 input (숨겨진 요소)
+    // 4장 파일 업로드 (캐러셀)
     const fileInput = page.locator('input[type="file"]').first()
-    await fileInput.setInputFiles(CARD_PATH)
+    await fileInput.setInputFiles(cardPaths)
     await page.waitForTimeout(6_000)
     await page.screenshot({ path: 'instagram-upload.png' })
-    console.log('[Instagram] 업로드 후 스크린샷 → instagram-upload.png')
+    console.log('[Instagram] 4장 업로드 완료')
 
-    // 다음 버튼 (모달 헤더 우측) — 2단계 반복
+    // 다음 버튼 2번
     for (let step = 1; step <= 2; step++) {
       const nextBtn = page.locator('div[role="dialog"] >> text=다음').last()
         .or(page.locator('div[role="dialog"] >> text=Next').last())
@@ -112,21 +120,20 @@ export async function postInstagram(): Promise<void> {
       await nextBtn.click()
       console.log(`[Instagram] 다음 ${step}단계 클릭`)
       await page.waitForTimeout(3_000)
-      await page.screenshot({ path: `instagram-step${step}.png` })
     }
 
     // 캡션 입력
     const captionBox = page.locator(
-      '[aria-label*="문구"], [aria-label*="caption"], [aria-label*="Caption"], [aria-multiline="true"], [contenteditable="true"]'
+      '[aria-label*="문구"], [aria-label*="caption"], [aria-label*="Caption"], [contenteditable="true"]'
     ).first()
     await captionBox.waitFor({ timeout: 8_000 })
     await captionBox.click()
     await page.waitForTimeout(500)
-    await captionBox.type(content, { delay: 25 })
+    await captionBox.type(caption, { delay: 20 })
     await page.waitForTimeout(1_000)
     await page.screenshot({ path: 'instagram-before-share.png' })
 
-    // 공유하기 버튼
+    // 공유하기
     const shareBtn = page.getByRole('button', { name: 'Share', exact: true }).first()
       .or(page.getByRole('button', { name: '공유하기', exact: true }).first())
     await shareBtn.first().waitFor({ timeout: 12_000 })

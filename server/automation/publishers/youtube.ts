@@ -66,9 +66,14 @@ export async function postYoutube(): Promise<void> {
   await generateVideo(content, VIDEO_PATH)
 
   const lines = content.split('\n').filter(l => l.trim())
-  const title = lines[0].replace(/[*#👉✨😭😔🫧💙🩸💪🌙]/g, '').trim().slice(0, 90)
+  // 첫 줄을 제목으로, 특수문자/이모지 제거 후 50자 이내
+  const title = lines[0]
+    .replace(/[^\uAC00-\uD7A3\u0020-\u007E]/g, '')
+    .replace(/[*#>]/g, '')
+    .trim()
+    .slice(0, 50)
   const body = lines.slice(1).join('\n').trim()
-  const description = `${body}\n\n홀시 앱 → https://hol-si.com\n\n#홀시 #여성건강 #생리주기 #Shorts`
+  const description = `${body}\n\n홀시 앱 → https://hol-si.com\n\n#홀시 #여성건강 #생리주기 #생리통 #PMS #호르몬 #Shorts`
 
   const auth = await getAuthClient()
   const youtube = google.youtube({ version: 'v3', auth })
@@ -79,7 +84,7 @@ export async function postYoutube(): Promise<void> {
       snippet: {
         title,
         description,
-        tags: ['홀시', '여성건강', '생리주기'],
+        tags: ['홀시', '여성건강', '생리주기', '생리통', 'PMS', '호르몬', 'Shorts'],
         categoryId: '22',
       },
       status: {
