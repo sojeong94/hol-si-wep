@@ -111,15 +111,24 @@ export async function postYoutube(): Promise<void> {
       console.log(`[YouTube] 다음 ${i + 1}단계`)
     }
 
-    // 공개 설정 → "공개"
-    const publicBtn = page.locator('[name="PUBLIC"], label:has-text("공개")').first()
-    if (await publicBtn.isVisible({ timeout: 5_000 }).catch(() => false)) {
-      await publicBtn.click()
+    // 공개 설정 화면 스크린샷
+    await page.screenshot({ path: 'youtube-public.png' })
+
+    // 공개 설정 → "공개" (JS 클릭)
+    const publicBtn = page.locator('[name="PUBLIC"], label:has-text("공개"), input[value="PUBLIC"]').first()
+    const publicVisible = await publicBtn.isVisible({ timeout: 5_000 }).catch(() => false)
+    if (publicVisible) {
+      await publicBtn.evaluate((el: HTMLElement) => el.click())
       await page.waitForTimeout(1_000)
+      console.log('[YouTube] 공개 설정 완료')
+    } else {
+      console.log('[YouTube] 공개 버튼 못 찾음 — 스크린샷 확인 필요')
     }
 
+    await page.screenshot({ path: 'youtube-before-save.png' })
+
     // 저장 / 게시 (JS 클릭으로 오버레이 우회)
-    const saveBtn = page.locator('button:has-text("저장"), button:has-text("Save"), ytcp-button:has-text("저장")').last()
+    const saveBtn = page.locator('button:has-text("저장"), button:has-text("Save"), ytcp-button:has-text("저장"), button:has-text("게시")').last()
     await saveBtn.waitFor({ state: 'attached', timeout: 10_000 })
     await saveBtn.evaluate((el: HTMLElement) => el.click())
     await page.waitForTimeout(8_000)
