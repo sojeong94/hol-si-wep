@@ -88,7 +88,7 @@ export async function postYoutube(): Promise<void> {
     await page.screenshot({ path: 'youtube-debug.png' })
     await titleInput.evaluate((el: HTMLElement) => el.click())
     await page.waitForTimeout(500)
-    await page.keyboard.selectAll()
+    await page.keyboard.press('Control+a')
     await page.keyboard.press('Delete')
     await titleInput.type(title, { delay: 30 })
     console.log('[YouTube] 제목 입력 완료')
