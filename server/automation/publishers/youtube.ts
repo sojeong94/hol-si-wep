@@ -93,18 +93,20 @@ export async function postYoutube(): Promise<void> {
     await titleInput.type(title, { delay: 30 })
     console.log('[YouTube] 제목 입력 완료')
 
-    // 설명 입력
-    const descInput = page.locator('#description-textarea [contenteditable], [aria-label*="설명"]').first()
-    if (await descInput.isVisible({ timeout: 3_000 }).catch(() => false)) {
-      await descInput.click()
+    // 설명 입력 (JS 클릭으로 오버레이 우회, 실패 시 건너뜀)
+    const descInput = page.locator('#description-textarea [contenteditable]').first()
+    const descVisible = await descInput.isVisible({ timeout: 3_000 }).catch(() => false)
+    if (descVisible) {
+      await descInput.evaluate((el: HTMLElement) => el.click())
+      await page.waitForTimeout(500)
       await descInput.type(description, { delay: 20 })
     }
 
     // "다음" 3번 클릭 (세부정보 → 동영상 요소 → 공개 설정)
     for (let i = 0; i < 3; i++) {
-      const nextBtn = page.locator('button:has-text("다음"), [aria-label*="다음"]').last()
+      const nextBtn = page.locator('button:has-text("다음"), [aria-label*="다음"], button:has-text("Next")').last()
       await nextBtn.waitFor({ timeout: 10_000 })
-      await nextBtn.click()
+      await nextBtn.evaluate((el: HTMLElement) => el.click())
       await page.waitForTimeout(2_000)
       console.log(`[YouTube] 다음 ${i + 1}단계`)
     }
