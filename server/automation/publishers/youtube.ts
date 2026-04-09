@@ -28,9 +28,15 @@ export async function loginYoutube(): Promise<void> {
   console.log(url)
   console.log('\n로그인 후 리디렉션된 URL 전체를 복사해서 붙여넣어주세요:')
 
-  const code = await new Promise<string>(resolve => {
+  const input = await new Promise<string>(resolve => {
     process.stdin.once('data', d => resolve(d.toString().trim()))
   })
+
+  // URL 전체 또는 code 값만 입력해도 처리
+  let code = input
+  if (input.includes('code=')) {
+    code = new URL(input).searchParams.get('code') ?? input
+  }
 
   const { tokens } = await auth.getToken(code)
   fs.mkdirSync(path.dirname(TOKEN_PATH), { recursive: true })
