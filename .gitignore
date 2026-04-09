@@ -16,6 +16,7 @@ node_modules
 dist
 server/subscriptions.json
 server/automation/sessions/
+server/automation/client_secret.json
 dist-ssr
 *.local
 

@@ -1,191 +1,87 @@
-import { chromium } from 'playwright'
+import { google } from 'googleapis'
+import { OAuth2Client } from 'google-auth-library'
+import fs from 'fs'
 import path from 'path'
 import { fileURLToPath } from 'url'
-import { hasSession, getStorageState, saveSession } from '../session-manager.js'
 import { generateContent } from '../content-generator.js'
 import { generateVideo } from '../video-generator.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const VIDEO_PATH = path.join(__dirname, '..', 'youtube-output.mp4')
+const CLIENT_SECRET_PATH = path.join(__dirname, '..', 'client_secret.json')
+const TOKEN_PATH = path.join(__dirname, '..', 'sessions', 'youtube-token.json')
 
-const STEALTH_ARGS = [
-  '--disable-blink-features=AutomationControlled',
-  '--no-sandbox',
-  '--disable-setuid-sandbox',
-]
-const USER_AGENT =
-  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36'
+function getOAuth2Client(): OAuth2Client {
+  const secret = JSON.parse(fs.readFileSync(CLIENT_SECRET_PATH, 'utf-8'))
+  const { client_id, client_secret, redirect_uris } = secret.installed ?? secret.web
+  return new google.auth.OAuth2(client_id, client_secret, redirect_uris[0])
+}
 
 export async function loginYoutube(): Promise<void> {
-  const browser = await chromium.launch({ headless: false, args: STEALTH_ARGS })
-  const context = await browser.newContext({
-    userAgent: USER_AGENT,
-    viewport: { width: 1280, height: 800 },
-    locale: 'ko-KR',
-    timezoneId: 'Asia/Seoul',
+  const auth = getOAuth2Client()
+  const url = auth.generateAuthUrl({
+    access_type: 'offline',
+    scope: ['https://www.googleapis.com/auth/youtube.upload'],
   })
 
-  await context.addInitScript(() => {
-    Object.defineProperty(navigator, 'webdriver', { get: () => undefined })
+  console.log('[YouTube] 아래 URL을 브라우저에서 열어 Google 계정으로 로그인해주세요:')
+  console.log(url)
+  console.log('\n로그인 후 리디렉션된 URL 전체를 복사해서 붙여넣어주세요:')
+
+  const code = await new Promise<string>(resolve => {
+    process.stdin.once('data', d => resolve(d.toString().trim()))
   })
 
-  const page = await context.newPage()
+  const { tokens } = await auth.getToken(code)
+  fs.mkdirSync(path.dirname(TOKEN_PATH), { recursive: true })
+  fs.writeFileSync(TOKEN_PATH, JSON.stringify(tokens))
+  console.log('[YouTube] 토큰 저장 완료 ✓')
+}
 
-  console.log('[YouTube] 브라우저가 열립니다. Google 계정으로 YouTube에 로그인해주세요.')
-  console.log('[YouTube] 로그인 완료 후 유튜브 홈이 뜨면 터미널에서 Enter를 눌러주세요...')
-
-  await page.goto('https://www.youtube.com', { waitUntil: 'domcontentloaded' })
-
-  await new Promise<void>(resolve => {
-    process.stdin.once('data', () => resolve())
+async function getAuthClient(): Promise<OAuth2Client> {
+  const auth = getOAuth2Client()
+  const tokens = JSON.parse(fs.readFileSync(TOKEN_PATH, 'utf-8'))
+  auth.setCredentials(tokens)
+  // 토큰 갱신 시 자동 저장
+  auth.on('tokens', t => {
+    const updated = { ...tokens, ...t }
+    fs.writeFileSync(TOKEN_PATH, JSON.stringify(updated))
   })
-
-  await saveSession(context, 'youtube')
-  await browser.close()
-  console.log('[YouTube] 세션 저장 완료 ✓')
+  return auth
 }
 
 export async function postYoutube(): Promise<void> {
-  if (!hasSession('youtube')) {
-    throw new Error('[YouTube] 세션이 없습니다. 먼저 "npm run automate login youtube"를 실행하세요.')
+  if (!fs.existsSync(TOKEN_PATH)) {
+    throw new Error('[YouTube] 토큰이 없습니다. 먼저 "npm run automate login youtube"를 실행하세요.')
   }
 
-  // 1. 콘텐츠 + 영상 생성
   const content = await generateContent('threads')
   console.log('[YouTube] 생성된 콘텐츠:\n', content)
   await generateVideo(content, VIDEO_PATH)
 
-  // 제목: 첫 줄 사용
-  const title = content.split('\n')[0].replace(/[*#👉✨😭😔]/g, '').trim().slice(0, 90)
+  const title = content.split('\n')[0].replace(/[*#👉✨😭😔🫧💙🩸💪🌙]/g, '').trim().slice(0, 90)
   const description = `${content}\n\n홀시 앱 → https://hol-si.com`
 
-  const browser = await chromium.launch({ headless: true, args: STEALTH_ARGS })
-  const context = await browser.newContext({
-    storageState: getStorageState('youtube') as any,
-    userAgent: USER_AGENT,
-    viewport: { width: 1280, height: 900 },
+  const auth = await getAuthClient()
+  const youtube = google.youtube({ version: 'v3', auth })
+
+  const res = await youtube.videos.insert({
+    part: ['snippet', 'status'],
+    requestBody: {
+      snippet: {
+        title,
+        description,
+        tags: ['홀시', '여성건강', '생리주기'],
+        categoryId: '22',
+      },
+      status: {
+        privacyStatus: 'public',
+      },
+    },
+    media: {
+      body: fs.createReadStream(VIDEO_PATH),
+    },
   })
 
-  await context.addInitScript(() => {
-    Object.defineProperty(navigator, 'webdriver', { get: () => undefined })
-  })
-
-  const page = await context.newPage()
-
-  try {
-    await page.goto('https://www.youtube.com/upload', { waitUntil: 'domcontentloaded' })
-    await page.waitForTimeout(3_000)
-
-    // 파일 업로드
-    const fileInput = page.locator('input[type="file"]').first()
-    await fileInput.setInputFiles(VIDEO_PATH)
-    await page.waitForTimeout(3_000)
-    console.log('[YouTube] 파일 업로드 완료')
-
-    // 본인 인증 팝업 닫기
-    const verifyPopup = page.getByRole('button', { name: '다음' }).first()
-    const hasPopup = await verifyPopup.isVisible({ timeout: 3_000 }).catch(() => false)
-    if (hasPopup) {
-      await verifyPopup.evaluate((el: HTMLElement) => el.click())
-      await page.waitForTimeout(1_000)
-      console.log('[YouTube] 본인 인증 팝업 닫음')
-    }
-
-    // 제목 입력 (기존 텍스트 전체 선택 후 교체)
-    const titleInput = page.locator('#title-textarea [contenteditable]').first()
-    await titleInput.waitFor({ timeout: 15_000 })
-    await titleInput.evaluate((el: HTMLElement) => {
-      el.focus()
-      ;(document as any).execCommand('selectAll')
-      ;(document as any).execCommand('delete')
-    })
-    await page.waitForTimeout(300)
-    await titleInput.type(title, { delay: 30 })
-    console.log('[YouTube] 제목 입력 완료')
-
-    // 설명 입력 (JS 클릭으로 오버레이 우회, 실패 시 건너뜀)
-    const descInput = page.locator('#description-textarea [contenteditable]').first()
-    const descVisible = await descInput.isVisible({ timeout: 3_000 }).catch(() => false)
-    if (descVisible) {
-      await descInput.evaluate((el: HTMLElement) => el.click())
-      await page.waitForTimeout(500)
-      await descInput.type(description, { delay: 20 })
-    }
-
-    // 아동용 동영상 여부 선택 (필수)
-    const notForKids = page.getByText('아니요, 아동용이 아닙니다').first()
-      .or(page.getByText("No, it's not made for kids").first())
-    const hasKidsQ = await notForKids.isVisible({ timeout: 3_000 }).catch(() => false)
-    if (hasKidsQ) {
-      await notForKids.evaluate((el: HTMLElement) => el.click())
-      console.log('[YouTube] 아동용 아님 선택')
-    }
-
-    // "다음" 3번 클릭 (세부정보 → 동영상 요소 → 공개 설정)
-    for (let i = 0; i < 3; i++) {
-      // 본인 인증 팝업 있으면 닫기
-      const popup = page.locator('yt-confirm-dialog-renderer button, tp-yt-paper-dialog button').getByText('다음').first()
-        .or(page.locator('yt-confirm-dialog-renderer button, tp-yt-paper-dialog button').getByText('Next').first())
-      const hasPopup2 = await popup.isVisible({ timeout: 1_000 }).catch(() => false)
-      if (hasPopup2) {
-        await popup.evaluate((el: HTMLElement) => el.click())
-        await page.waitForTimeout(500)
-      }
-
-      const nextBtn = page.locator('#next-button button').first()
-      await nextBtn.waitFor({ state: 'attached', timeout: 10_000 })
-      await nextBtn.evaluate((el: HTMLElement) => el.click())
-      await page.waitForTimeout(2_000)
-      console.log(`[YouTube] 다음 ${i + 1}단계`)
-    }
-
-    // 공개 설정 화면 스크린샷
-    await page.screenshot({ path: 'youtube-public.png' })
-
-    // 본인 인증 팝업 닫기 — 팝업 내 버튼만 정확히 클릭
-    const dismissPopup = async () => {
-      const popup = page.locator('yt-confirm-dialog-renderer, ytcp-confirmation-dialog').first()
-      const visible = await popup.isVisible({ timeout: 2_000 }).catch(() => false)
-      if (visible) {
-        const btn = popup.getByRole('button', { name: '다음' })
-          .or(popup.getByRole('button', { name: 'Next' }))
-        await btn.click({ force: true })
-        await popup.waitFor({ state: 'hidden', timeout: 5_000 }).catch(() => {})
-        await page.waitForTimeout(500)
-        console.log('[YouTube] 팝업 닫음')
-      }
-    }
-    await dismissPopup()
-
-    // 공개 선택 — 라디오 버튼 직접 JS 클릭
-    await page.evaluate(() => {
-      const labels = Array.from(document.querySelectorAll('label, tp-yt-paper-radio-button'))
-      const pub = labels.find(el => el.textContent?.trim().startsWith('공개') || el.textContent?.trim().startsWith('Public'))
-      if (pub) (pub as HTMLElement).click()
-    })
-    await page.waitForTimeout(1_000)
-    console.log('[YouTube] 공개 설정 완료')
-
-    await page.waitForTimeout(1_000)
-
-    // 팝업 무시하고 게시 버튼 force 클릭
-    const publishBtn = page.locator('.ytcpButtonShapeImpl__button-text-content')
-      .filter({ hasText: /^(게시|저장|Publish|Save)$/ })
-      .locator('xpath=ancestor::button')
-      .last()
-    await publishBtn.waitFor({ state: 'attached', timeout: 5_000 })
-    await publishBtn.click({ force: true })
-    console.log('[YouTube] 게시 버튼 force 클릭')
-    await page.screenshot({ path: 'youtube-after-save.png' })
-    await page.waitForTimeout(8_000)
-
-    console.log('[YouTube] Shorts 업로드 완료 ✓')
-    await saveSession(context, 'youtube')
-  } catch (err) {
-    console.error('[YouTube] 발행 실패:', err)
-    await page.screenshot({ path: 'youtube-error.png' })
-    throw err
-  } finally {
-    await browser.close()
-  }
+  console.log('[YouTube] Shorts 업로드 완료 ✓ ID:', res.data.id)
 }
