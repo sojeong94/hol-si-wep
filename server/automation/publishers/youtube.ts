@@ -165,17 +165,21 @@ export async function postYoutube(): Promise<void> {
 
     await dismissPopup()
     await page.waitForTimeout(500)
+    await page.screenshot({ path: 'youtube-before-save.png' })
 
-    // 저장 버튼 — ytcp-button 포함 전체 탐색
-    await page.evaluate(() => {
-      const all = Array.from(document.querySelectorAll('button, ytcp-button, [role="button"]'))
-      const save = all.find(el => {
-        const t = el.textContent?.trim()
-        return t === '저장' || t === 'Save'
-      })
-      if (save) (save as HTMLElement).click()
-      else console.warn('저장 버튼 못 찾음')
+    // 저장 버튼 — 내부 button 직접 클릭
+    const clicked = await page.evaluate(() => {
+      // 1) #save-button 내부 button
+      const btn1 = document.querySelector('#save-button button') as HTMLElement | null
+      if (btn1) { btn1.click(); return '#save-button button' }
+      // 2) ytcpButtonShapeImpl__button-text-content 중 저장/Save 텍스트
+      const spans = Array.from(document.querySelectorAll('.ytcpButtonShapeImpl__button-text-content'))
+      const span = spans.find(el => el.textContent?.trim() === '저장' || el.textContent?.trim() === 'Save')
+      const btn2 = span?.closest('button') as HTMLElement | null
+      if (btn2) { btn2.click(); return 'span closest button' }
+      return null
     })
+    console.log('[YouTube] 저장 버튼 클릭:', clicked)
     await page.waitForTimeout(8_000)
 
     console.log('[YouTube] Shorts 업로드 완료 ✓')
