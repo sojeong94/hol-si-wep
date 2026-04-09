@@ -165,10 +165,14 @@ export async function postYoutube(): Promise<void> {
 
     await dismissPopup()
     await page.waitForTimeout(500)
-    await page.screenshot({ path: 'youtube-before-save.png' })
 
-    // 게시/저장 버튼 클릭
+    // 팝업 완전 제거 후 게시 클릭
     const clicked = await page.evaluate(() => {
+      // 1. 팝업 DOM 제거
+      document.querySelectorAll('yt-confirm-dialog-renderer, tp-yt-paper-dialog, ytcp-confirmation-dialog').forEach(el => el.remove())
+      document.querySelectorAll('tp-yt-iron-overlay-backdrop').forEach(el => el.remove())
+
+      // 2. 게시/저장 버튼 클릭
       const spans = Array.from(document.querySelectorAll('.ytcpButtonShapeImpl__button-text-content'))
       const span = spans.find(el => {
         const t = el.textContent?.trim()
@@ -179,6 +183,7 @@ export async function postYoutube(): Promise<void> {
       return null
     })
     console.log('[YouTube] 게시/저장 버튼 클릭:', clicked)
+    await page.screenshot({ path: 'youtube-after-save.png' })
     await page.waitForTimeout(8_000)
 
     console.log('[YouTube] Shorts 업로드 완료 ✓')
