@@ -4,7 +4,7 @@ import { useRecordStore } from '@/store/useRecordStore'
 import { getAverageCycle, getAveragePeriodDays } from '@/utils/cycleCalculators'
 import { Card } from '@/components/ui/Card'
 import { Modal } from '@/components/ui/Modal'
-import { Bell, Download, Upload, Info, UserRound, Pencil } from 'lucide-react'
+import { Bell, Download, Upload, Info, UserRound, Pencil, Users, MessageSquare } from 'lucide-react'
 import { subscribePush, unsubscribePush } from '@/lib/pushService'
 import { usePillStore } from '@/store/usePillStore'
 
@@ -260,6 +260,41 @@ export function MyPage() {
               </div>
             </Card>
           </label>
+        </div>
+      </section>
+
+      <section>
+        <h3 className="text-sm font-extrabold text-zinc-500 mb-2 ml-1 tracking-wide">커뮤니티 & 지원</h3>
+        <div className="space-y-3">
+          <Card
+            className="flex items-center justify-between p-4 cursor-pointer hover:bg-zinc-800 transition-colors bg-zinc-900 border border-zinc-800 !rounded-[var(--radius-xl)]"
+            onClick={() => window.open('https://open.kakao.com/o/gGEIsxpi', '_blank')}
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-yellow-400/10 shadow-inner flex items-center justify-center text-yellow-400 border border-yellow-400/20">
+                <Users size={20} />
+              </div>
+              <div>
+                <p className="font-bold text-white">홀시 반상회</p>
+                <p className="text-xs text-zinc-500 font-medium mt-0.5">카카오톡 오픈채팅 커뮤니티에 참여해보세요</p>
+              </div>
+            </div>
+          </Card>
+
+          <Card
+            className="flex items-center justify-between p-4 cursor-pointer hover:bg-zinc-800 transition-colors bg-zinc-900 border border-zinc-800 !rounded-[var(--radius-xl)]"
+            onClick={() => window.open('https://forms.gle/JnKHiYTAc2579xjh6', '_blank')}
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-pink-500/10 shadow-inner flex items-center justify-center text-[var(--color-primary)] border border-pink-500/20">
+                <MessageSquare size={20} />
+              </div>
+              <div>
+                <p className="font-bold text-white">문의하기</p>
+                <p className="text-xs text-zinc-500 font-medium mt-0.5">버그 제보, 기능 제안, 칭찬과 격려도 환영해요</p>
+              </div>
+            </div>
+          </Card>
         </div>
       </section>
 
