@@ -78,10 +78,21 @@ export async function postInstagram(): Promise<void> {
     await page.waitForTimeout(4_000)
     await page.screenshot({ path: 'instagram-debug.png' })
 
-    // 새로운 게시물 버튼 클릭
-    const createBtn = page.locator('[aria-label="새로운 게시물"]').first()
-    await createBtn.waitFor({ timeout: 10_000 })
-    await createBtn.click()
+    // 새로운 게시물 버튼 클릭 (여러 선택자 시도)
+    const createBtn = page.locator([
+      '[aria-label="새로운 게시물"]',
+      '[aria-label="New post"]',
+      '[aria-label="Create"]',
+      'svg[aria-label="새로운 게시물"]',
+    ].join(', ')).first()
+
+    const found = await createBtn.isVisible({ timeout: 8_000 }).catch(() => false)
+    if (found) {
+      await createBtn.click()
+    } else {
+      // 직접 create 페이지로 이동
+      await page.goto('https://www.instagram.com/create/select/', { waitUntil: 'domcontentloaded' })
+    }
     await page.waitForTimeout(2_500)
 
     // 파일 업로드 input (숨겨진 요소)
