@@ -112,10 +112,9 @@ export async function postYoutube(): Promise<void> {
       await descInput.type(description, { delay: 20 })
     }
 
-    // "다음" 3번 클릭 (세부정보 → 동영상 요소 → 공개 설정) — 하단 버튼만 선택
+    // "다음" 3번 클릭 (세부정보 → 동영상 요소 → 공개 설정)
     for (let i = 0; i < 3; i++) {
-      const nextBtn = page.locator('ytcp-stepper-step + * button, .ytcp-uploads-dialog button:has-text("다음"), .ytcp-uploads-dialog button:has-text("Next")').last()
-        .or(page.locator('[id="next-button"]'))
+      const nextBtn = page.locator('#next-button button').first()
       await nextBtn.waitFor({ timeout: 10_000 })
       await nextBtn.evaluate((el: HTMLElement) => el.click())
       await page.waitForTimeout(2_000)
