@@ -98,18 +98,20 @@ export async function postInstagram(): Promise<void> {
     // 파일 업로드 input (숨겨진 요소)
     const fileInput = page.locator('input[type="file"]').first()
     await fileInput.setInputFiles(CARD_PATH)
-    await page.waitForTimeout(4_000)
+    await page.waitForTimeout(6_000)
     await page.screenshot({ path: 'instagram-upload.png' })
     console.log('[Instagram] 업로드 후 스크린샷 → instagram-upload.png')
 
-    // 다음 버튼 (모달 헤더 우측 텍스트 버튼) — 2단계 반복
+    // 다음 버튼 (모달 헤더 우측) — 2단계 반복
     for (let step = 1; step <= 2; step++) {
-      // 텍스트로 직접 찾기 (가장 신뢰성 높음)
-      const nextBtn = page.getByText('다음', { exact: true }).last()
-      await nextBtn.waitFor({ timeout: 10_000 })
+      const nextBtn = page.locator('div[role="dialog"] >> text=다음').last()
+        .or(page.locator('div[role="dialog"] >> text=Next').last())
+        .or(page.getByRole('button', { name: '다음' }).last())
+        .or(page.getByRole('button', { name: 'Next' }).last())
+      await nextBtn.waitFor({ timeout: 15_000 })
       await nextBtn.click()
       console.log(`[Instagram] 다음 ${step}단계 클릭`)
-      await page.waitForTimeout(2_500)
+      await page.waitForTimeout(3_000)
       await page.screenshot({ path: `instagram-step${step}.png` })
     }
 
