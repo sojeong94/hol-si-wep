@@ -82,14 +82,24 @@ export async function postYoutube(): Promise<void> {
     await page.waitForTimeout(3_000)
     console.log('[YouTube] 파일 업로드 완료')
 
-    // 제목 입력 (오버레이 무시하고 JS로 포커스)
-    const titleInput = page.locator('#title-textarea [contenteditable], #title [contenteditable], [aria-label*="제목"]').first()
+    // 본인 인증 팝업 닫기
+    const verifyPopup = page.getByRole('button', { name: '다음' }).first()
+    const hasPopup = await verifyPopup.isVisible({ timeout: 3_000 }).catch(() => false)
+    if (hasPopup) {
+      await verifyPopup.evaluate((el: HTMLElement) => el.click())
+      await page.waitForTimeout(1_000)
+      console.log('[YouTube] 본인 인증 팝업 닫음')
+    }
+
+    // 제목 입력 (기존 텍스트 전체 선택 후 교체)
+    const titleInput = page.locator('#title-textarea [contenteditable]').first()
     await titleInput.waitFor({ timeout: 15_000 })
-    await page.screenshot({ path: 'youtube-debug.png' })
-    await titleInput.evaluate((el: HTMLElement) => el.click())
-    await page.waitForTimeout(500)
-    await page.keyboard.press('Control+a')
-    await page.keyboard.press('Delete')
+    await titleInput.evaluate((el: HTMLElement) => {
+      el.focus()
+      ;(document as any).execCommand('selectAll')
+      ;(document as any).execCommand('delete')
+    })
+    await page.waitForTimeout(300)
     await titleInput.type(title, { delay: 30 })
     console.log('[YouTube] 제목 입력 완료')
 
@@ -102,9 +112,10 @@ export async function postYoutube(): Promise<void> {
       await descInput.type(description, { delay: 20 })
     }
 
-    // "다음" 3번 클릭 (세부정보 → 동영상 요소 → 공개 설정)
+    // "다음" 3번 클릭 (세부정보 → 동영상 요소 → 공개 설정) — 하단 버튼만 선택
     for (let i = 0; i < 3; i++) {
-      const nextBtn = page.locator('button:has-text("다음"), [aria-label*="다음"], button:has-text("Next")').last()
+      const nextBtn = page.locator('ytcp-stepper-step + * button, .ytcp-uploads-dialog button:has-text("다음"), .ytcp-uploads-dialog button:has-text("Next")').last()
+        .or(page.locator('[id="next-button"]'))
       await nextBtn.waitFor({ timeout: 10_000 })
       await nextBtn.evaluate((el: HTMLElement) => el.click())
       await page.waitForTimeout(2_000)
