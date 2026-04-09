@@ -15,6 +15,7 @@ lerna-debug.log*
 node_modules
 dist
 server/subscriptions.json
+server/automation/sessions/
 dist-ssr
 *.local
 

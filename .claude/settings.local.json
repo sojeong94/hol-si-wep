@@ -12,7 +12,25 @@
       "Bash(curl -s -o /dev/null -w \"calendar: HTTP:%{http_code}\\\\n\" http://localhost:3001/calendar)",
       "Bash(curl -s -o /dev/null -w \"manifest: HTTP:%{http_code}\\\\n\" http://localhost:3001/manifest.webmanifest)",
       "Bash(curl -s -o /dev/null -w \"sw: HTTP:%{http_code}\\\\n\" http://localhost:3001/sw.js)",
-      "Bash(curl -s -o /dev/null -w \"push-handler: HTTP:%{http_code}\\\\n\" http://localhost:3001/push-handler.js)"
+      "Bash(curl -s -o /dev/null -w \"push-handler: HTTP:%{http_code}\\\\n\" http://localhost:3001/push-handler.js)",
+      "Bash(venv/Scripts/python.exe -c ':*)",
+      "Bash(grep -v \"^$\")",
+      "Bash(c:/Users/회의실용1/OneDrive/바탕 화면/naver \\(2\\)/naver/venv/Scripts/python.exe:*)",
+      "Bash(curl -s \"http://127.0.0.1:50325/api/v1/browser/list?page=1&page_size=5\")",
+      "Bash(\"c:/Users/회의실용1/OneDrive/바탕 화면/naver \\(2\\)/naver/venv/Scripts/pip.exe\" install --force-reinstall Pillow)",
+      "Bash(venv/Scripts/python -c ':*)",
+      "Bash(ls -t \"/c/Users/회의실용1/OneDrive/바탕 화면/naver \\(2\\)/naver/bot_log\"*.txt)",
+      "Bash(\"/c/Python314/python.exe\" main.py)",
+      "Bash(sleep 5 ls bot_log_*.txt)",
+      "WebFetch(domain:forms.gle)",
+      "WebFetch(domain:open.kakao.com)",
+      "WebFetch(domain:docs.google.com)",
+      "Bash(npm run:*)",
+      "WebFetch(domain:github.com)",
+      "Bash(curl -s \"https://api.github.com/repos/johunsang/makeke-releases/releases/tags/v1.1.53\")",
+      "Bash(python -c \"import json,sys; d=json.load\\(sys.stdin\\); [print\\(a['name'], a['browser_download_url']\\) for a in d.get\\('assets',[]\\)]\")",
+      "WebFetch(domain:makeke.io)",
+      "WebFetch(domain:makeke.kr)"
     ]
   }
 }

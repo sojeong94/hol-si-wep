@@ -234,6 +234,10 @@ cron.schedule('* * * * *', async () => {
 
 console.log('알림 자동화 cron 시작 (매 분 체크)')
 
+// ─── SNS 자동 발행 스케줄러 ────────────────────────────────────────────────────
+import { startAutomationScheduler } from './automation/scheduler.js'
+startAutomationScheduler()
+
 // ─── 홀시 맞춤 조언 + 영양제 추천 ─────────────────────────────────────────
 // Claude 호출 엔드포인트는 비용 보호를 위해 IP 당 분당 6회로 제한
 const aiLimiter = rateLimit(6, 60_000)
