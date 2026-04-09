@@ -166,21 +166,16 @@ export async function postYoutube(): Promise<void> {
     await page.waitForTimeout(1_000)
     console.log('[YouTube] 공개 설정 완료')
 
-    await dismissPopup()
     await page.waitForTimeout(1_000)
 
-    // 게시/저장 버튼 클릭
-    const clicked = await page.evaluate(() => {
-      const spans = Array.from(document.querySelectorAll('.ytcpButtonShapeImpl__button-text-content'))
-      const span = spans.find(el => {
-        const t = el.textContent?.trim()
-        return t === '게시' || t === '저장' || t === 'Publish' || t === 'Save'
-      })
-      const btn = span?.closest('button') as HTMLElement | null
-      if (btn) { btn.click(); return span?.textContent?.trim() ?? 'found' }
-      return null
-    })
-    console.log('[YouTube] 게시/저장 버튼 클릭:', clicked)
+    // 팝업 무시하고 게시 버튼 force 클릭
+    const publishBtn = page.locator('.ytcpButtonShapeImpl__button-text-content')
+      .filter({ hasText: /^(게시|저장|Publish|Save)$/ })
+      .locator('xpath=ancestor::button')
+      .last()
+    await publishBtn.waitFor({ state: 'attached', timeout: 5_000 })
+    await publishBtn.click({ force: true })
+    console.log('[YouTube] 게시 버튼 force 클릭')
     await page.screenshot({ path: 'youtube-after-save.png' })
     await page.waitForTimeout(8_000)
 
