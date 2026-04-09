@@ -61,12 +61,14 @@ export async function postYoutube(): Promise<void> {
     throw new Error('[YouTube] 토큰이 없습니다. 먼저 "npm run automate login youtube"를 실행하세요.')
   }
 
-  const content = await generateContent('threads')
+  const content = await generateContent('youtube')
   console.log('[YouTube] 생성된 콘텐츠:\n', content)
   await generateVideo(content, VIDEO_PATH)
 
-  const title = content.split('\n')[0].replace(/[*#👉✨😭😔🫧💙🩸💪🌙]/g, '').trim().slice(0, 90)
-  const description = `${content}\n\n홀시 앱 → https://hol-si.com`
+  const lines = content.split('\n').filter(l => l.trim())
+  const title = lines[0].replace(/[*#👉✨😭😔🫧💙🩸💪🌙]/g, '').trim().slice(0, 90)
+  const body = lines.slice(1).join('\n').trim()
+  const description = `${body}\n\n홀시 앱 → https://hol-si.com\n\n#홀시 #여성건강 #생리주기 #Shorts`
 
   const auth = await getAuthClient()
   const youtube = google.youtube({ version: 'v3', auth })

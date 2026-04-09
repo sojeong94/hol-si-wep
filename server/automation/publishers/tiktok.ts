@@ -45,13 +45,32 @@ export async function loginTiktok(): Promise<void> {
   console.log('[TikTok] 세션 저장 완료 ✓')
 }
 
+async function dismissTiktokModal(page: any): Promise<void> {
+  // "Got it" / "알겠어요" 류 버튼이 있는 안내 팝업 닫기
+  const gotItBtn = page.getByRole('button', { name: /got it|알겠|확인|닫기/i }).first()
+  if (await gotItBtn.isVisible({ timeout: 3_000 }).catch(() => false)) {
+    await gotItBtn.click()
+    await page.waitForTimeout(1_000)
+    console.log('[TikTok] 안내 팝업 닫음 (Got it)')
+    return
+  }
+
+  // TUXModal 계열 팝업 — Escape
+  const modal = page.locator('.TUXModal-overlay, [class*="modal-desc"], [class*="TUXModal"]').first()
+  if (await modal.isVisible({ timeout: 2_000 }).catch(() => false)) {
+    await page.keyboard.press('Escape')
+    await page.waitForTimeout(1_000)
+    console.log('[TikTok] 팝업 닫음 (Escape)')
+  }
+}
+
 export async function postTiktok(): Promise<void> {
   if (!hasSession('tiktok')) {
     throw new Error('[TikTok] 세션이 없습니다. 먼저 "npm run automate login tiktok"을 실행하세요.')
   }
 
   // 1. 콘텐츠 + 영상 생성
-  const content = await generateContent('threads')
+  const content = await generateContent('tiktok')
   console.log('[TikTok] 생성된 콘텐츠:\n', content)
   await generateVideo(content, VIDEO_PATH)
 
@@ -77,33 +96,47 @@ export async function postTiktok(): Promise<void> {
   const page = await context.newPage()
 
   try {
-    await page.goto('https://www.tiktok.com/upload', { waitUntil: 'domcontentloaded' })
-    await page.waitForTimeout(4_000)
+    // Creator Studio 업로드 페이지로 이동
+    await page.goto('https://www.tiktok.com/creator-center/upload', { waitUntil: 'domcontentloaded', timeout: 60_000 })
+    await page.waitForTimeout(6_000)
     await page.screenshot({ path: 'tiktok-debug.png' })
 
-    // 파일 업로드
+    // 파일 업로드 — file input은 항상 hidden이므로 attached 상태만 확인
     const fileInput = page.locator('input[type="file"]').first()
+    await fileInput.waitFor({ state: 'attached', timeout: 15_000 })
     await fileInput.setInputFiles(VIDEO_PATH)
-    await page.waitForTimeout(8_000) // 업로드 처리 대기
+    await page.waitForTimeout(10_000) // 업로드 처리 대기
     console.log('[TikTok] 파일 업로드 완료')
+    await page.screenshot({ path: 'tiktok-after-upload.png' })
 
-    // 캡션 입력
-    const captionInput = page.locator(
-      '[contenteditable="true"], [data-placeholder*="설명"], [data-placeholder*="caption"]'
-    ).first()
+    // 팝업/모달 닫기 (업로드 후 뜨는 안내 팝업)
+    await dismissTiktokModal(page)
+
+    // 캡션 입력 — DraftEditor 직접 타입
+    const captionInput = page.locator('.public-DraftEditor-content').first()
+      .or(page.locator('[contenteditable="true"]').first())
     await captionInput.waitFor({ timeout: 15_000 })
-    await captionInput.click()
-    await captionInput.type(caption, { delay: 25 })
+    await captionInput.click({ force: true })
+    await page.waitForTimeout(500)
+    await captionInput.type(caption, { delay: 30 })
     await page.waitForTimeout(1_000)
     console.log('[TikTok] 캡션 입력 완료')
 
+    // 자동 콘텐츠 검사 팝업이 뜰 수 있음 → 오른쪽 확인 버튼 클릭
+    const contentCheckModal = page.locator('[class*="modal"], [class*="Modal"]').filter({ hasText: /content check|콘텐츠 검사/i }).first()
+    if (await contentCheckModal.isVisible({ timeout: 5_000 }).catch(() => false)) {
+      const confirmBtn = contentCheckModal.getByRole('button').last()
+      await confirmBtn.click()
+      await page.waitForTimeout(2_000)
+      console.log('[TikTok] 콘텐츠 검사 팝업 확인')
+    }
+
     // 게시 버튼
-    const postBtn = page.getByText('게시', { exact: true })
-      .or(page.getByText('Post', { exact: true }))
-      .last()
-    await postBtn.waitFor({ timeout: 10_000 })
+    const postBtn = page.locator('button[data-e2e="post_video_button"]')
+    await postBtn.waitFor({ timeout: 20_000 })
     await postBtn.click()
-    await page.waitForTimeout(8_000)
+    await page.waitForTimeout(10_000)
+    await page.screenshot({ path: 'tiktok-result.png' })
 
     console.log('[TikTok] 업로드 완료 ✓')
     await saveSession(context, 'tiktok')

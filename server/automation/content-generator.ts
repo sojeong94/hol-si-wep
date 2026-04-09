@@ -5,7 +5,7 @@ dotenv.config()
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
-export type Platform = 'twitter' | 'threads'
+export type Platform = 'twitter' | 'threads' | 'youtube' | 'tiktok'
 
 // 홀시 콘텐츠 주제 풀 — 매번 다른 주제 순환
 const TOPICS = [
@@ -28,6 +28,8 @@ function pickTopic(): string {
 const PLATFORM_GUIDE: Record<Platform, string> = {
   twitter: '트위터(X) 게시글: 200자 이내 (해시태그+링크 포함), 핵심만 임팩트 있게, 해시태그 최대 3개',
   threads: '스레드 게시글: 350자 이내, 친근하고 공감 가는 말투, 해시태그 5개 이하',
+  youtube: 'YouTube Shorts 영상 대본: 30~40초 분량(300자 내외), 자연스러운 구어체로 귀에 쏙 들어오게, 첫 줄은 영상 제목(50자 이내), 이모지 1~2개만, 해시태그 없음(description에 따로 붙임)',
+  tiktok: 'TikTok 영상 대본: 30초 이내(200자 내외), 강렬한 첫 문장으로 시작, Z세대도 공감하는 친근한 구어체, 이모지 2~3개, 해시태그 없음',
 }
 
 export async function generateContent(platform: Platform): Promise<string> {

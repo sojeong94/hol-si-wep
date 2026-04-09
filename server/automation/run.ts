@@ -55,14 +55,21 @@ if (!action) {
 명령어:
   login   twitter                      — X 로그인 (브라우저 창 열림, 최초 1회)
   login   threads                      — Threads 로그인 (브라우저 창 열림, 최초 1회)
+  login   instagram                    — Instagram 로그인 (브라우저 창 열림, 최초 1회)
+  login   youtube                      — YouTube OAuth2 인증 (최초 1회)
+  login   tiktok                       — TikTok 로그인 (브라우저 창 열림, 최초 1회)
   import  twitter  [cookies.json]      — 쿠키 파일로 X 세션 생성 (기본: twitter-cookies.json)
   import  threads  [cookies.json]      — 쿠키 파일로 Threads 세션 생성 (기본: threads-cookies.json)
   post    twitter                      — X 트윗 즉시 발행 (테스트)
   post    threads                      — Threads 즉시 발행 (테스트)
   post    instagram                    — Instagram 카드 이미지 발행 (테스트)
+  post    youtube                      — YouTube Shorts 즉시 업로드 (테스트)
+  post    tiktok                       — TikTok 영상 즉시 업로드 (테스트)
   clear   twitter                      — X 세션 초기화
   clear   threads                      — Threads 세션 초기화
   clear   instagram                    — Instagram 세션 초기화
+  clear   youtube                      — YouTube 토큰 초기화
+  clear   tiktok                       — TikTok 세션 초기화
   `)
   process.exit(1)
 }
