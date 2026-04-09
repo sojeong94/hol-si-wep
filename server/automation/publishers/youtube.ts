@@ -112,8 +112,26 @@ export async function postYoutube(): Promise<void> {
       await descInput.type(description, { delay: 20 })
     }
 
+    // 아동용 동영상 여부 선택 (필수)
+    const notForKids = page.getByText('아니요, 아동용이 아닙니다').first()
+      .or(page.getByText("No, it's not made for kids").first())
+    const hasKidsQ = await notForKids.isVisible({ timeout: 3_000 }).catch(() => false)
+    if (hasKidsQ) {
+      await notForKids.evaluate((el: HTMLElement) => el.click())
+      console.log('[YouTube] 아동용 아님 선택')
+    }
+
     // "다음" 3번 클릭 (세부정보 → 동영상 요소 → 공개 설정)
     for (let i = 0; i < 3; i++) {
+      // 본인 인증 팝업 있으면 닫기
+      const popup = page.locator('yt-confirm-dialog-renderer button, tp-yt-paper-dialog button').getByText('다음').first()
+        .or(page.locator('yt-confirm-dialog-renderer button, tp-yt-paper-dialog button').getByText('Next').first())
+      const hasPopup2 = await popup.isVisible({ timeout: 1_000 }).catch(() => false)
+      if (hasPopup2) {
+        await popup.evaluate((el: HTMLElement) => el.click())
+        await page.waitForTimeout(500)
+      }
+
       const nextBtn = page.locator('#next-button button').first()
       await nextBtn.waitFor({ timeout: 10_000 })
       await nextBtn.evaluate((el: HTMLElement) => el.click())
