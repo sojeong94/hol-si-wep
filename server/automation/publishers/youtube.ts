@@ -118,10 +118,10 @@ export async function postYoutube(): Promise<void> {
       await page.waitForTimeout(1_000)
     }
 
-    // 저장 / 게시
-    const saveBtn = page.getByText('저장', { exact: true }).last()
-    await saveBtn.waitFor({ timeout: 10_000 })
-    await saveBtn.click()
+    // 저장 / 게시 (JS 클릭으로 오버레이 우회)
+    const saveBtn = page.locator('button:has-text("저장"), button:has-text("Save"), ytcp-button:has-text("저장")').last()
+    await saveBtn.waitFor({ state: 'attached', timeout: 10_000 })
+    await saveBtn.evaluate((el: HTMLElement) => el.click())
     await page.waitForTimeout(8_000)
 
     console.log('[YouTube] Shorts 업로드 완료 ✓')
