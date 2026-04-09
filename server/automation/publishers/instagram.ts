@@ -126,16 +126,11 @@ export async function postInstagram(): Promise<void> {
     await page.waitForTimeout(1_000)
     await page.screenshot({ path: 'instagram-before-share.png' })
 
-    // 공유하기 버튼 (다양한 선택자 시도)
-    const shareBtn = page.locator([
-      'div[role="dialog"] div:has-text("공유하기")',
-      'div[role="dialog"] span:has-text("공유하기")',
-      '[role="dialog"] >> text=공유하기',
-    ].join(', ')).last()
-      .or(page.getByRole('button', { name: '공유하기' }))
-      .or(page.getByRole('button', { name: 'Share' }))
-    await shareBtn.waitFor({ timeout: 12_000 })
-    await shareBtn.click()
+    // 공유하기 버튼
+    const shareBtn = page.getByRole('button', { name: 'Share', exact: true }).first()
+      .or(page.getByRole('button', { name: '공유하기', exact: true }).first())
+    await shareBtn.first().waitFor({ timeout: 12_000 })
+    await shareBtn.first().click()
     await page.waitForTimeout(5_000)
 
     console.log('[Instagram] 게시 완료 ✓')
