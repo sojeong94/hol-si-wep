@@ -133,7 +133,7 @@ export async function postYoutube(): Promise<void> {
       }
 
       const nextBtn = page.locator('#next-button button').first()
-      await nextBtn.waitFor({ timeout: 10_000 })
+      await nextBtn.waitFor({ state: 'attached', timeout: 10_000 })
       await nextBtn.evaluate((el: HTMLElement) => el.click())
       await page.waitForTimeout(2_000)
       console.log(`[YouTube] 다음 ${i + 1}단계`)
