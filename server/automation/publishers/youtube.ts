@@ -154,21 +154,28 @@ export async function postYoutube(): Promise<void> {
     }
     await dismissPopup()
 
-    // 공개 선택
-    const publicRadio = page.getByText('공개', { exact: true }).last()
-      .or(page.getByText('Public', { exact: true }).last())
-    await publicRadio.waitFor({ state: 'attached', timeout: 5_000 }).catch(() => {})
-    await publicRadio.evaluate((el: HTMLElement) => el.click()).catch(() => {})
+    // 공개 선택 — 라디오 버튼 직접 JS 클릭
+    await page.evaluate(() => {
+      const labels = Array.from(document.querySelectorAll('label, tp-yt-paper-radio-button'))
+      const pub = labels.find(el => el.textContent?.trim().startsWith('공개') || el.textContent?.trim().startsWith('Public'))
+      if (pub) (pub as HTMLElement).click()
+    })
     await page.waitForTimeout(1_000)
     console.log('[YouTube] 공개 설정 완료')
 
     await dismissPopup()
+    await page.waitForTimeout(500)
 
-    // 저장
-    const saveBtn = page.locator('#save-button button').first()
-      .or(page.locator('button:has-text("저장")').last())
-    await saveBtn.waitFor({ state: 'attached', timeout: 10_000 })
-    await saveBtn.evaluate((el: HTMLElement) => el.click())
+    // 저장 버튼 — ytcp-button 포함 전체 탐색
+    await page.evaluate(() => {
+      const all = Array.from(document.querySelectorAll('button, ytcp-button, [role="button"]'))
+      const save = all.find(el => {
+        const t = el.textContent?.trim()
+        return t === '저장' || t === 'Save'
+      })
+      if (save) (save as HTMLElement).click()
+      else console.warn('저장 버튼 못 찾음')
+    })
     await page.waitForTimeout(8_000)
 
     console.log('[YouTube] Shorts 업로드 완료 ✓')
