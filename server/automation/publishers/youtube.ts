@@ -1,100 +1,138 @@
-import { google } from 'googleapis'
-import { OAuth2Client } from 'google-auth-library'
-import fs from 'fs'
+import { chromium } from 'playwright'
 import path from 'path'
 import { fileURLToPath } from 'url'
-import { generateContent } from '../content-generator.js'
+import { generateContent, ContentOptions } from '../content-generator.js'
 import { generateVideo } from '../video-generator.js'
+import { startAdsPower, stopAdsPower } from '../adspower-client.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const VIDEO_PATH = path.join(__dirname, '..', 'youtube-output.mp4')
-const CLIENT_SECRET_PATH = path.join(__dirname, '..', 'client_secret.json')
-const TOKEN_PATH = path.join(__dirname, '..', 'sessions', 'youtube-token.json')
 
-function getOAuth2Client(): OAuth2Client {
-  const secret = JSON.parse(fs.readFileSync(CLIENT_SECRET_PATH, 'utf-8'))
-  const { client_id, client_secret, redirect_uris } = secret.installed ?? secret.web
-  return new google.auth.OAuth2(client_id, client_secret, redirect_uris[0])
-}
+const PROFILE_ID = process.env.ADSPOWER_SNS_PROFILE_ID ?? 'k1bchih2'
 
 export async function loginYoutube(): Promise<void> {
-  const auth = getOAuth2Client()
-  const url = auth.generateAuthUrl({
-    access_type: 'offline',
-    scope: ['https://www.googleapis.com/auth/youtube.upload'],
-  })
-
-  console.log('[YouTube] 아래 URL을 브라우저에서 열어 Google 계정으로 로그인해주세요:')
-  console.log(url)
-  console.log('\n로그인 후 리디렉션된 URL 전체를 복사해서 붙여넣어주세요:')
-
-  const input = await new Promise<string>(resolve => {
-    process.stdin.once('data', d => resolve(d.toString().trim()))
-  })
-
-  // URL 전체 또는 code 값만 입력해도 처리
-  let code = input
-  if (input.includes('code=')) {
-    code = new URL(input).searchParams.get('code') ?? input
-  }
-
-  const { tokens } = await auth.getToken(code)
-  fs.mkdirSync(path.dirname(TOKEN_PATH), { recursive: true })
-  fs.writeFileSync(TOKEN_PATH, JSON.stringify(tokens))
-  console.log('[YouTube] 토큰 저장 완료 ✓')
+  console.log('[YouTube] AdsPower 프로필 방식으로 세션을 관리합니다.')
+  console.log(`[YouTube] AdsPower에서 프로필 "${PROFILE_ID}"을 열고 YouTube에 직접 로그인 후`)
+  console.log('[YouTube] AdsPower에서 브라우저를 닫으면 세션이 프로필에 자동 저장됩니다.')
 }
 
-async function getAuthClient(): Promise<OAuth2Client> {
-  const auth = getOAuth2Client()
-  const tokens = JSON.parse(fs.readFileSync(TOKEN_PATH, 'utf-8'))
-  auth.setCredentials(tokens)
-  // 토큰 갱신 시 자동 저장
-  auth.on('tokens', t => {
-    const updated = { ...tokens, ...t }
-    fs.writeFileSync(TOKEN_PATH, JSON.stringify(updated))
-  })
-  return auth
-}
-
-export async function postYoutube(): Promise<void> {
-  if (!fs.existsSync(TOKEN_PATH)) {
-    throw new Error('[YouTube] 토큰이 없습니다. 먼저 "npm run automate login youtube"를 실행하세요.')
-  }
-
-  const content = await generateContent('youtube')
+// sharedVideoPath: post-all.ts에서 Instagram 카드 슬라이드쇼 영상 전달 시 재생성 생략
+export async function postYoutube(
+  options?: ContentOptions,
+  sharedVideoPath?: string
+): Promise<string> {
+  const content = await generateContent('youtube', options)
   console.log('[YouTube] 생성된 콘텐츠:\n', content)
-  await generateVideo(content, VIDEO_PATH)
 
+  const videoFile = sharedVideoPath ?? VIDEO_PATH
+  if (sharedVideoPath) {
+    console.log('[YouTube] 공유 슬라이드쇼 영상 사용 ✓', sharedVideoPath)
+  } else {
+    await generateVideo(content, VIDEO_PATH)
+  }
+
+  // 제목: 첫 줄, 특수문자 제거, 100자 이내
   const lines = content.split('\n').filter(l => l.trim())
-  // 첫 줄을 제목으로, 특수문자/이모지 제거 후 50자 이내
-  const title = lines[0]
-    .replace(/[^\uAC00-\uD7A3\u0020-\u007E]/g, '')
-    .replace(/[*#>]/g, '')
-    .trim()
-    .slice(0, 50)
-  const body = lines.slice(1).join('\n').trim()
+  const title = lines[0].replace(/[*#>]/g, '').trim().slice(0, 100)
+  const body  = lines.slice(1).join('\n').trim()
   const description = `${body}\n\n홀시 앱 → https://hol-si.com\n\n#홀시 #여성건강 #생리주기 #생리통 #PMS #호르몬 #Shorts`
 
-  const auth = await getAuthClient()
-  const youtube = google.youtube({ version: 'v3', auth })
+  const wsUrl  = await startAdsPower(PROFILE_ID)
+  const browser = await chromium.connectOverCDP(wsUrl)
+  const context = browser.contexts()[0]
+  const page    = await context.newPage()
 
-  const res = await youtube.videos.insert({
-    part: ['snippet', 'status'],
-    requestBody: {
-      snippet: {
-        title,
-        description,
-        tags: ['홀시', '여성건강', '생리주기', '생리통', 'PMS', '호르몬', 'Shorts'],
-        categoryId: '22',
-      },
-      status: {
-        privacyStatus: 'public',
-      },
-    },
-    media: {
-      body: fs.createReadStream(VIDEO_PATH),
-    },
-  })
+  try {
+    // ── 1. YouTube Studio 접속 ─────────────────────────────────────────────
+    await page.goto('https://studio.youtube.com', { waitUntil: 'domcontentloaded', timeout: 60_000 })
+    await page.waitForTimeout(4_000)
 
-  console.log('[YouTube] Shorts 업로드 완료 ✓ ID:', res.data.id)
+    // ── 2. 만들기 버튼 ────────────────────────────────────────────────────
+    const createBtn = page.locator('#create-icon, [aria-label="만들기"], [aria-label="Create"]').first()
+    await createBtn.waitFor({ timeout: 15_000 })
+    await createBtn.click()
+    await page.waitForTimeout(1_500)
+
+    // ── 3. 동영상 업로드 메뉴 ─────────────────────────────────────────────
+    const uploadMenu = page.locator('tp-yt-paper-item').filter({ hasText: /동영상 업로드|Upload video/i }).first()
+    await uploadMenu.waitFor({ timeout: 10_000 })
+    await uploadMenu.click()
+    await page.waitForTimeout(2_000)
+
+    // ── 4. 파일 선택 ──────────────────────────────────────────────────────
+    const fileInput = page.locator('input[type="file"]').first()
+    await fileInput.waitFor({ state: 'attached', timeout: 15_000 })
+    await fileInput.setInputFiles(videoFile)
+    console.log('[YouTube] 파일 업로드 중...')
+
+    // 업로드 처리 대기 (진행바 사라질 때까지)
+    await page.waitForTimeout(8_000)
+
+    // ── 5. 제목 입력 ──────────────────────────────────────────────────────
+    const titleBox = page.locator('#title-textarea [contenteditable="true"], #textbox').first()
+    await titleBox.waitFor({ timeout: 30_000 })
+    await titleBox.click({ clickCount: 3 })
+    await titleBox.fill(title)
+    console.log('[YouTube] 제목 입력:', title)
+    await page.waitForTimeout(800)
+
+    // ── 6. 설명 입력 ──────────────────────────────────────────────────────
+    const descBox = page.locator('#description-textarea [contenteditable="true"]').first()
+    if (await descBox.isVisible({ timeout: 5_000 }).catch(() => false)) {
+      await descBox.click()
+      await descBox.fill(description)
+      console.log('[YouTube] 설명 입력 완료')
+      await page.waitForTimeout(800)
+    }
+
+    // ── 7. 아동용 아님 선택 ───────────────────────────────────────────────
+    const notForKids = page.locator('tp-yt-paper-radio-button[name="VIDEO_MADE_FOR_KIDS_NOT_MFK"]')
+      .or(page.locator('ytcp-radio-group').getByText(/아니요|No, it/i).first())
+    if (await notForKids.isVisible({ timeout: 5_000 }).catch(() => false)) {
+      await notForKids.click()
+      await page.waitForTimeout(500)
+    }
+
+    // ── 8. 다음 버튼 3회 (세부정보 → 동영상 요소 → 검사 → 공개 설정) ──────
+    for (let i = 0; i < 3; i++) {
+      const nextBtn = page.locator('ytcp-button#next-button').first()
+      await nextBtn.waitFor({ timeout: 20_000 })
+      await nextBtn.click()
+      console.log(`[YouTube] 다음 ${i + 1}/3`)
+      await page.waitForTimeout(3_000)
+    }
+
+    // ── 9. 공개 선택 ──────────────────────────────────────────────────────
+    const publicRadio = page.locator('tp-yt-paper-radio-button[name="PUBLIC"]')
+      .or(page.locator('ytcp-radio-group').getByText(/^공개$|^Public$/i).first())
+    await publicRadio.waitFor({ timeout: 15_000 })
+    await publicRadio.click()
+    await page.waitForTimeout(1_000)
+
+    // ── 10. 게시 버튼 ─────────────────────────────────────────────────────
+    const publishBtn = page.locator('ytcp-button#done-button').first()
+    await publishBtn.waitFor({ timeout: 15_000 })
+    await publishBtn.click()
+    await page.waitForTimeout(6_000)
+    console.log('[YouTube] Shorts 업로드 완료 ✓')
+
+    // ── 11. 업로드된 영상 URL 캡처 ────────────────────────────────────────
+    await page.goto('https://studio.youtube.com/videos/upload', { waitUntil: 'domcontentloaded' }).catch(() => {})
+    await page.goto('https://studio.youtube.com', { waitUntil: 'domcontentloaded' })
+    await page.waitForTimeout(4_000)
+    const videoHref = await page.locator('a[href*="youtu.be"], a[href*="youtube.com/shorts"]').first()
+      .getAttribute('href').catch(() => null)
+    const channelHandle = process.env.YOUTUBE_HANDLE ?? '@Hormone_sister'
+    const videoUrl = videoHref
+      ? (videoHref.startsWith('http') ? videoHref : `https://www.youtube.com${videoHref}`)
+      : `https://www.youtube.com/${channelHandle}`
+
+    return videoUrl
+  } catch (err) {
+    console.error('[YouTube] 업로드 실패:', err)
+    throw err
+  } finally {
+    await page.close()
+    await stopAdsPower(PROFILE_ID)
+  }
 }

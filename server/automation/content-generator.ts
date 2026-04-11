@@ -5,7 +5,7 @@ dotenv.config()
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
-export type Platform = 'twitter' | 'threads' | 'instagram' | 'youtube' | 'tiktok'
+export type Platform = 'twitter' | 'threads' | 'instagram' | 'youtube' | 'tiktok' | 'naver'
 
 const TOPICS = [
   '생리통이 심한 이유와 완화법',
@@ -68,6 +68,20 @@ const PLATFORM_GUIDE: Record<Platform, string> = {
 - 본문: 40-60초 분량(350자 내외), 자연스러운 구어체, 핵심 정보 전달, TTS로 읽히는 문장
 - 문장은 짧고 명확하게`,
 
+  naver: `네이버 블로그 포스트. 규칙:
+- 이모지 사용 금지
+- 첫 줄: SEO 최적화 제목 (키워드 포함, 30자 이내)
+- 빈 줄 1개 후 본문 시작
+- 본문 700-1000자, 자연스러운 구어체
+- 소제목은 [소제목] 형식으로 구분
+- 구성:
+  도입부: 공감형 도입 (100자 내외)
+  [소제목1]: 원인/배경 설명 (200자 내외)
+  [소제목2]: 핵심 정보/해결법 (200자 내외)
+  [소제목3]: 실천 방법 (200자 내외)
+  마무리: 홀시 앱 언급 + https://hol-si.com (100자 내외)
+- 마지막: 해시태그 5-7개 (#생리주기 #여성건강 등)`,
+
   tiktok: `TikTok 영상 대본. 규칙:
 - 이모지 사용 금지
 - 해시태그 없음
@@ -76,8 +90,17 @@ const PLATFORM_GUIDE: Record<Platform, string> = {
 - 문장은 짧고 리듬감 있게`,
 }
 
-export async function generateContent(platform: Platform): Promise<string> {
-  const topic = pickTopic()
+export interface ContentOptions {
+  keyword?: string   // 구글 시트에서 가져온 메인 키워드
+  title?: string     // 구글 시트에서 가져온 제목
+}
+
+export async function generateContent(platform: Platform, options?: ContentOptions): Promise<string> {
+  const topic = options?.keyword
+    ? options.title
+      ? `${options.keyword} — ${options.title}`
+      : options.keyword
+    : pickTopic()
 
   const msg = await anthropic.messages.create({
     model: 'claude-haiku-4-5-20251001',
@@ -87,7 +110,7 @@ export async function generateContent(platform: Platform): Promise<string> {
         role: 'user',
         content: `너는 '홀시(hol-si.com)' 여성 건강 앱 SNS 담당자야.
 
-주제: ${topic}
+주제/키워드: ${topic}
 플랫폼 규칙: ${PLATFORM_GUIDE[platform]}
 
 추가 조건:

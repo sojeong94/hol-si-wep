@@ -1,86 +1,51 @@
 import { chromium } from 'playwright'
 import path from 'path'
 import { fileURLToPath } from 'url'
-import { hasSession, getStorageState, saveSession } from '../session-manager.js'
-import { generateContent } from '../content-generator.js'
+import { generateContent, ContentOptions } from '../content-generator.js'
 import { renderInstagramCards } from '../card-renderer.js'
+import { startAdsPower, stopAdsPower } from '../adspower-client.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const CARDS_DIR = path.join(__dirname, '..')
 
-const STEALTH_ARGS = [
-  '--disable-blink-features=AutomationControlled',
-  '--no-sandbox',
-  '--disable-setuid-sandbox',
-]
-const USER_AGENT =
-  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36'
-
-export async function loginInstagram(): Promise<void> {
-  const browser = await chromium.launch({ headless: false, args: STEALTH_ARGS })
-  const context = await browser.newContext({
-    userAgent: USER_AGENT,
-    viewport: { width: 1280, height: 800 },
-    locale: 'ko-KR',
-    timezoneId: 'Asia/Seoul',
-  })
-
-  await context.addInitScript(() => {
-    Object.defineProperty(navigator, 'webdriver', { get: () => undefined })
-  })
-
-  const page = await context.newPage()
-
-  console.log('[Instagram] 브라우저가 열립니다. Instagram에 직접 로그인해주세요.')
-  console.log('[Instagram] 홈 화면이 뜨면 터미널에서 Enter를 눌러주세요...')
-
-  await page.goto('https://www.instagram.com/accounts/login/', { waitUntil: 'domcontentloaded' })
-
-  await new Promise<void>(resolve => {
-    process.stdin.once('data', () => resolve())
-  })
-
-  await saveSession(context, 'instagram')
-  await browser.close()
-  console.log('[Instagram] 세션 저장 완료 ✓')
-}
+const PROFILE_ID = process.env.ADSPOWER_SNS_PROFILE_ID ?? 'k1bchih2'
 
 // 4장 카드 내용으로 Instagram 캡션 생성
 function buildCaption(content: string): string {
   const parts = content.split('---').map(p => p.trim()).filter(Boolean)
-  // HOOK + CORE 조합으로 캡션 구성
   const hook = parts[0] ?? ''
   const core = parts[2] ?? ''
   return `${hook}\n\n${core}\n\n👉 https://hol-si.com\n\n#홀시 #여성건강 #생리주기 #생리통 #호르몬건강 #PMS #영양제 #자기관리 #건강정보 #웰니스`
 }
 
-export async function postInstagram(): Promise<void> {
-  if (!hasSession('instagram')) {
-    throw new Error('[Instagram] 세션이 없습니다. 먼저 "npm run automate login instagram"을 실행하세요.')
+export async function loginInstagram(): Promise<void> {
+  console.log('[Instagram] AdsPower 프로필 방식으로 세션을 관리합니다.')
+  console.log(`[Instagram] AdsPower에서 프로필 "${PROFILE_ID}"을 열고 Instagram에 직접 로그인 후`)
+  console.log('[Instagram] AdsPower에서 브라우저를 닫으면 세션이 프로필에 자동 저장됩니다.')
+}
+
+// preGenerated: post-all.ts에서 사전 생성된 카드 전달 시 재생성 생략
+export async function postInstagram(
+  options?: ContentOptions,
+  preGenerated?: { cardPaths: string[]; content: string }
+): Promise<string> {
+  // 1. 콘텐츠 + 카드 (사전 생성이 없을 때만 생성)
+  const content   = preGenerated?.content   ?? await generateContent('instagram', options)
+  const cardPaths = preGenerated?.cardPaths ?? await renderInstagramCards(content, CARDS_DIR)
+
+  if (!preGenerated) {
+    console.log('[Instagram] 생성된 콘텐츠:\n', content)
+    console.log('[Instagram] 카드 이미지 생성 완료:', cardPaths)
+  } else {
+    console.log('[Instagram] 사전 생성 카드 사용 ✓')
   }
-
-  // 1. 콘텐츠 생성 (4장 구조)
-  const content = await generateContent('instagram')
-  console.log('[Instagram] 생성된 콘텐츠:\n', content)
-
-  // 2. 4장 카드 이미지 생성
-  const cardPaths = await renderInstagramCards(content, CARDS_DIR)
-  console.log('[Instagram] 카드 이미지 생성 완료:', cardPaths)
 
   const caption = buildCaption(content)
 
-  // 3. Instagram 발행
-  const browser = await chromium.launch({ headless: true, args: STEALTH_ARGS })
-  const context = await browser.newContext({
-    storageState: getStorageState('instagram') as any,
-    userAgent: USER_AGENT,
-    viewport: { width: 1280, height: 900 },
-  })
-
-  await context.addInitScript(() => {
-    Object.defineProperty(navigator, 'webdriver', { get: () => undefined })
-  })
-
+  // 3. AdsPower 프로필로 브라우저 연결 (이미 Instagram 로그인 상태)
+  const wsUrl = await startAdsPower(PROFILE_ID)
+  const browser = await chromium.connectOverCDP(wsUrl)
+  const context = browser.contexts()[0]
   const page = await context.newPage()
 
   try {
@@ -140,13 +105,25 @@ export async function postInstagram(): Promise<void> {
     await shareBtn.first().click()
     await page.waitForTimeout(5_000)
 
+    // 프로필에서 최신 게시물 URL 캡처
+    const username = process.env.INSTAGRAM_USERNAME ?? ''
+    const profileUrl = `https://www.instagram.com/${username}/`
+    await page.goto(profileUrl, { waitUntil: 'domcontentloaded' })
+    await page.waitForTimeout(3_000)
+    const firstHref = await page.locator('a[href*="/p/"], a[href*="/reel/"]').first()
+      .getAttribute('href').catch(() => null)
+    const postUrl = firstHref
+      ? (firstHref.startsWith('http') ? firstHref : `https://www.instagram.com${firstHref}`)
+      : profileUrl
+
     console.log('[Instagram] 게시 완료 ✓')
-    await saveSession(context, 'instagram')
+    return postUrl
   } catch (err) {
     console.error('[Instagram] 발행 실패:', err)
     await page.screenshot({ path: 'instagram-error.png' })
     throw err
   } finally {
-    await browser.close()
+    await page.close()
+    await stopAdsPower(PROFILE_ID)
   }
 }

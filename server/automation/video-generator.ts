@@ -71,25 +71,76 @@ async function combineToVideo(
   })
 }
 
-// 전체 파이프라인: 콘텐츠 → 카드 이미지 + TTS → MP4
+// ── 단일 카드 → MP4 (기존, 개별 테스트용) ────────────────────────────────────
 export async function generateVideo(content: string, outputVideoPath: string): Promise<void> {
-  const imagePath = path.join(__dirname, 'video-card.png')
-  const audioPath = path.join(__dirname, 'video-audio.mp3')
+  const baseName = path.basename(outputVideoPath, path.extname(outputVideoPath))
+  const imagePath = path.join(__dirname, `temp-${baseName}-card.png`)
+  const audioPath = path.join(__dirname, `temp-${baseName}-audio.mp3`)
 
   try {
-    // 1. 세로형 카드 이미지 생성
     await renderCard(content, imagePath, 'portrait')
-
-    // 2. TTS 오디오 생성
     const ttsText = cleanForTTS(content)
     console.log('[VideoGenerator] TTS 텍스트:', ttsText.slice(0, 80), '...')
     await generateAudio(ttsText, audioPath)
-
-    // 3. 이미지 + 오디오 → MP4
     await combineToVideo(imagePath, audioPath, outputVideoPath)
   } finally {
-    // 임시 파일 정리
     if (fs.existsSync(imagePath)) fs.unlinkSync(imagePath)
     if (fs.existsSync(audioPath)) fs.unlinkSync(audioPath)
+  }
+}
+
+// ── Instagram 4장 카드 → 슬라이드쇼 MP4 (TikTok / YouTube Shorts 공용) ────────
+// cardPaths: 4장 카드 이미지 경로 (renderInstagramCards 결과)
+// content: TTS 낭독용 텍스트 (instagram content 재사용)
+export async function generateVideoFromCards(
+  cardPaths: string[],
+  content: string,
+  outputVideoPath: string
+): Promise<void> {
+  const audioPath = outputVideoPath.replace(/\.mp4$/, '-audio.mp3')
+  const listPath  = outputVideoPath + '.txt'
+  const SECS_PER_CARD = 7  // 장당 표시 시간 (총 28초 → -shortest로 TTS 길이에 맞춤)
+
+  try {
+    // 1. TTS 오디오 생성 (instagram 콘텐츠 재사용)
+    const ttsText = cleanForTTS(content)
+    console.log('[VideoGenerator] 슬라이드쇼 TTS:', ttsText.slice(0, 80), '...')
+    await generateAudio(ttsText, audioPath)
+
+    // 2. ffmpeg concat 목록 파일 생성
+    // Windows 경로 → forward slash 변환 (ffmpeg 요구사항)
+    const toFfmpegPath = (p: string) => p.replace(/\\/g, '/')
+    const listLines = cardPaths.flatMap(p => [
+      `file '${toFfmpegPath(p)}'`,
+      `duration ${SECS_PER_CARD}`,
+    ])
+    // 마지막 카드 한 번 더 추가 (ffmpeg concat duration 버그 방지)
+    listLines.push(`file '${toFfmpegPath(cardPaths[cardPaths.length - 1])}'`)
+    fs.writeFileSync(listPath, listLines.join('\n'), 'utf-8')
+
+    // 3. concat(4장 슬라이드쇼) + TTS 오디오 → 세로형 1080×1920 MP4
+    await new Promise<void>((resolve, reject) => {
+      ffmpeg()
+        .input(listPath).inputOptions(['-f concat', '-safe 0'])
+        .input(audioPath)
+        .outputOptions([
+          '-vf', 'scale=1080:1920:force_original_aspect_ratio=decrease,pad=1080:1920:(ow-iw)/2:(oh-ih)/2:black',
+          '-c:v', 'libx264',
+          '-c:a', 'aac',
+          '-b:a', '192k',
+          '-pix_fmt', 'yuv420p',
+          '-shortest',
+        ])
+        .output(outputVideoPath)
+        .on('end', () => {
+          console.log(`[VideoGenerator] 슬라이드쇼 영상 완성 → ${outputVideoPath}`)
+          resolve()
+        })
+        .on('error', (err) => reject(new Error(`ffmpeg 슬라이드쇼 오류: ${err.message}`)))
+        .run()
+    })
+  } finally {
+    if (fs.existsSync(audioPath)) fs.unlinkSync(audioPath)
+    if (fs.existsSync(listPath))  fs.unlinkSync(listPath)
   }
 }

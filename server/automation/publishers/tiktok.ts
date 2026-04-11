@@ -1,52 +1,22 @@
 import { chromium } from 'playwright'
 import path from 'path'
 import { fileURLToPath } from 'url'
-import { hasSession, getStorageState, saveSession } from '../session-manager.js'
-import { generateContent } from '../content-generator.js'
+import { generateContent, ContentOptions } from '../content-generator.js'
 import { generateVideo } from '../video-generator.js'
+import { startAdsPower, stopAdsPower } from '../adspower-client.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const VIDEO_PATH = path.join(__dirname, '..', 'tiktok-output.mp4')
 
-const STEALTH_ARGS = [
-  '--disable-blink-features=AutomationControlled',
-  '--no-sandbox',
-  '--disable-setuid-sandbox',
-]
-const USER_AGENT =
-  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36'
+const PROFILE_ID = process.env.ADSPOWER_SNS_PROFILE_ID ?? 'k1bchih2'
 
 export async function loginTiktok(): Promise<void> {
-  const browser = await chromium.launch({ headless: false, args: STEALTH_ARGS })
-  const context = await browser.newContext({
-    userAgent: USER_AGENT,
-    viewport: { width: 1280, height: 800 },
-    locale: 'ko-KR',
-    timezoneId: 'Asia/Seoul',
-  })
-
-  await context.addInitScript(() => {
-    Object.defineProperty(navigator, 'webdriver', { get: () => undefined })
-  })
-
-  const page = await context.newPage()
-
-  console.log('[TikTok] 브라우저가 열립니다. TikTok에 직접 로그인해주세요.')
-  console.log('[TikTok] 로그인 완료 후 홈이 뜨면 터미널에서 Enter를 눌러주세요...')
-
-  await page.goto('https://www.tiktok.com/login', { waitUntil: 'domcontentloaded' })
-
-  await new Promise<void>(resolve => {
-    process.stdin.once('data', () => resolve())
-  })
-
-  await saveSession(context, 'tiktok')
-  await browser.close()
-  console.log('[TikTok] 세션 저장 완료 ✓')
+  console.log('[TikTok] AdsPower 프로필 방식으로 세션을 관리합니다.')
+  console.log(`[TikTok] AdsPower에서 프로필 "${PROFILE_ID}"을 열고 TikTok에 직접 로그인 후`)
+  console.log('[TikTok] AdsPower에서 브라우저를 닫으면 세션이 프로필에 자동 저장됩니다.')
 }
 
 async function dismissTiktokModal(page: any): Promise<void> {
-  // "Got it" / "알겠어요" 류 버튼이 있는 안내 팝업 닫기
   const gotItBtn = page.getByRole('button', { name: /got it|알겠|확인|닫기/i }).first()
   if (await gotItBtn.isVisible({ timeout: 3_000 }).catch(() => false)) {
     await gotItBtn.click()
@@ -55,7 +25,6 @@ async function dismissTiktokModal(page: any): Promise<void> {
     return
   }
 
-  // TUXModal 계열 팝업 — Escape
   const modal = page.locator('.TUXModal-overlay, [class*="modal-desc"], [class*="TUXModal"]').first()
   if (await modal.isVisible({ timeout: 2_000 }).catch(() => false)) {
     await page.keyboard.press('Escape')
@@ -64,15 +33,21 @@ async function dismissTiktokModal(page: any): Promise<void> {
   }
 }
 
-export async function postTiktok(): Promise<void> {
-  if (!hasSession('tiktok')) {
-    throw new Error('[TikTok] 세션이 없습니다. 먼저 "npm run automate login tiktok"을 실행하세요.')
-  }
-
-  // 1. 콘텐츠 + 영상 생성
-  const content = await generateContent('tiktok')
+// sharedVideoPath: post-all.ts에서 Instagram 카드 슬라이드쇼 영상 전달 시 재생성 생략
+export async function postTiktok(
+  options?: ContentOptions,
+  sharedVideoPath?: string
+): Promise<string> {
+  // 1. 캡션용 콘텐츠 생성 (영상은 공유본 사용 가능)
+  const content = await generateContent('tiktok', options)
   console.log('[TikTok] 생성된 콘텐츠:\n', content)
-  await generateVideo(content, VIDEO_PATH)
+
+  if (sharedVideoPath) {
+    console.log('[TikTok] 공유 슬라이드쇼 영상 사용 ✓', sharedVideoPath)
+  } else {
+    await generateVideo(content, VIDEO_PATH)
+  }
+  const videoFile = sharedVideoPath ?? VIDEO_PATH
 
   const caption = content
     .split('\n')
@@ -82,47 +57,50 @@ export async function postTiktok(): Promise<void> {
     .trim()
     .slice(0, 150) + ' #홀시 #여성건강 #생리주기 https://hol-si.com'
 
-  const browser = await chromium.launch({ headless: true, args: STEALTH_ARGS })
-  const context = await browser.newContext({
-    storageState: getStorageState('tiktok') as any,
-    userAgent: USER_AGENT,
-    viewport: { width: 1280, height: 900 },
-  })
-
-  await context.addInitScript(() => {
-    Object.defineProperty(navigator, 'webdriver', { get: () => undefined })
-  })
-
+  // 2. AdsPower 프로필로 브라우저 연결 (이미 TikTok 로그인 상태)
+  const wsUrl = await startAdsPower(PROFILE_ID)
+  const browser = await chromium.connectOverCDP(wsUrl)
+  const context = browser.contexts()[0]
   const page = await context.newPage()
 
   try {
-    // Creator Studio 업로드 페이지로 이동
     await page.goto('https://www.tiktok.com/creator-center/upload', { waitUntil: 'domcontentloaded', timeout: 60_000 })
     await page.waitForTimeout(6_000)
-    await page.screenshot({ path: 'tiktok-debug.png' })
+    await page.screenshot({ path: 'tiktok-debug.png', timeout: 10_000 }).catch(() => {})
 
-    // 파일 업로드 — file input은 항상 hidden이므로 attached 상태만 확인
+    // 파일 업로드
     const fileInput = page.locator('input[type="file"]').first()
     await fileInput.waitFor({ state: 'attached', timeout: 15_000 })
-    await fileInput.setInputFiles(VIDEO_PATH)
-    await page.waitForTimeout(10_000) // 업로드 처리 대기
+    await fileInput.setInputFiles(videoFile)
+    await page.waitForTimeout(10_000)
     console.log('[TikTok] 파일 업로드 완료')
-    await page.screenshot({ path: 'tiktok-after-upload.png' })
+    await page.screenshot({ path: 'tiktok-after-upload.png', timeout: 10_000 }).catch(() => {})
 
-    // 팝업/모달 닫기 (업로드 후 뜨는 안내 팝업)
+    // 팝업/모달 닫기
     await dismissTiktokModal(page)
 
-    // 캡션 입력 — DraftEditor 직접 타입
+    // 캡션 입력
     const captionInput = page.locator('.public-DraftEditor-content').first()
       .or(page.locator('[contenteditable="true"]').first())
     await captionInput.waitFor({ timeout: 15_000 })
     await captionInput.click({ force: true })
     await page.waitForTimeout(500)
-    await captionInput.type(caption, { delay: 30 })
+    // DraftEditor는 execCommand가 가장 안정적
+    await page.evaluate((text) => {
+      document.execCommand('insertText', false, text)
+    }, caption)
     await page.waitForTimeout(1_000)
+    // 입력이 안 됐으면 keyboard.type으로 재시도
+    const inserted = await captionInput.textContent().catch(() => '')
+    if (!inserted || inserted.trim().length < 5) {
+      await captionInput.click({ force: true })
+      await page.waitForTimeout(300)
+      await page.keyboard.type(caption, { delay: 20 })
+      await page.waitForTimeout(1_000)
+    }
     console.log('[TikTok] 캡션 입력 완료')
 
-    // 자동 콘텐츠 검사 팝업이 뜰 수 있음 → 오른쪽 확인 버튼 클릭
+    // 자동 콘텐츠 검사 팝업
     const contentCheckModal = page.locator('[class*="modal"], [class*="Modal"]').filter({ hasText: /content check|콘텐츠 검사/i }).first()
     if (await contentCheckModal.isVisible({ timeout: 5_000 }).catch(() => false)) {
       const confirmBtn = contentCheckModal.getByRole('button').last()
@@ -135,16 +113,41 @@ export async function postTiktok(): Promise<void> {
     const postBtn = page.locator('button[data-e2e="post_video_button"]')
     await postBtn.waitFor({ timeout: 20_000 })
     await postBtn.click()
-    await page.waitForTimeout(10_000)
-    await page.screenshot({ path: 'tiktok-result.png' })
+    await page.waitForTimeout(4_000)
+
+    // "Continue to post?" (저작권 검사 진행 중 팝업) → Post now 클릭
+    const continueModal = page.locator('[class*="modal"], [class*="Modal"], [role="dialog"]')
+      .filter({ hasText: /continue to post|계속 게시/i }).first()
+    if (await continueModal.isVisible({ timeout: 5_000 }).catch(() => false)) {
+      const postNowBtn = continueModal.getByRole('button', { name: /post now|지금 게시/i }).first()
+        .or(continueModal.locator('button').last())
+      await postNowBtn.click()
+      await page.waitForTimeout(3_000)
+      console.log('[TikTok] "Continue to post?" 팝업 → Post now 클릭 ✓')
+    }
+
+    await page.waitForTimeout(6_000)
+    await page.screenshot({ path: 'tiktok-result.png', timeout: 10_000 }).catch(() => {})
+
+    // Creator Studio 콘텐츠 목록에서 최신 영상 URL 캡처
+    const username = process.env.TIKTOK_USERNAME ?? ''
+    const profileUrl = username ? `https://www.tiktok.com/@${username}` : 'https://www.tiktok.com/foryou'
+    await page.goto('https://www.tiktok.com/creator-center/content', { waitUntil: 'domcontentloaded' })
+    await page.waitForTimeout(5_000)
+    const firstHref = await page.locator('a[href*="/video/"]').first()
+      .getAttribute('href').catch(() => null)
+    const tiktokUrl = firstHref
+      ? (firstHref.startsWith('http') ? firstHref : `https://www.tiktok.com${firstHref}`)
+      : profileUrl
 
     console.log('[TikTok] 업로드 완료 ✓')
-    await saveSession(context, 'tiktok')
+    return tiktokUrl
   } catch (err) {
     console.error('[TikTok] 발행 실패:', err)
-    await page.screenshot({ path: 'tiktok-error.png' })
+    await page.screenshot({ path: 'tiktok-error.png', timeout: 10_000 }).catch(() => {})
     throw err
   } finally {
-    await browser.close()
+    await page.close()
+    await stopAdsPower(PROFILE_ID)
   }
 }

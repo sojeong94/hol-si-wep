@@ -1,6 +1,6 @@
 import { chromium } from 'playwright'
 import { hasSession, getStorageState, saveSession } from '../session-manager.js'
-import { generateContent } from '../content-generator.js'
+import { generateContent, ContentOptions } from '../content-generator.js'
 
 const USER = (process.env.TWITTER_USERNAME ?? '').replace(/^@/, '') // @ 자동 제거
 const PASS = process.env.TWITTER_PASSWORD!
@@ -51,12 +51,12 @@ export async function loginTwitter(): Promise<void> {
 }
 
 // 자동 발행 — 저장된 세션 재사용
-export async function postTweet(): Promise<void> {
+export async function postTweet(options?: ContentOptions): Promise<string> {
   if (!hasSession('twitter')) {
     throw new Error('[Twitter] 세션이 없습니다. 먼저 "npm run automate login twitter"를 실행하세요.')
   }
 
-  const content = await generateContent('twitter')
+  const content = await generateContent('twitter', options)
   console.log('[Twitter] 생성된 콘텐츠:\n', content)
 
   const browser = await chromium.launch({ headless: true, args: STEALTH_ARGS })
@@ -82,8 +82,18 @@ export async function postTweet(): Promise<void> {
     await page.click('[data-testid="tweetButtonInline"]')
     await page.waitForTimeout(3_000)
 
+    // 프로필에서 최신 트윗 URL 캡처
+    await page.goto(`https://x.com/${USER}`, { waitUntil: 'domcontentloaded' })
+    await page.waitForTimeout(3_000)
+    // Twitter는 /status/ 링크가 여러 형태로 존재 — time 태그 부모 a 태그에서 추출
+    const firstHref = await page.locator('a[href*="/status/"]').first()
+      .getAttribute('href').catch(() => null)
+    const tweetUrl = firstHref
+      ? (firstHref.startsWith('http') ? firstHref : `https://x.com${firstHref}`)
+      : `https://x.com/${USER}`
     console.log('[Twitter] 트윗 발행 완료 ✓')
-    await saveSession(context, 'twitter') // 세션 갱신
+    await saveSession(context, 'twitter')
+    return tweetUrl
   } catch (err) {
     console.error('[Twitter] 발행 실패:', err)
     throw err

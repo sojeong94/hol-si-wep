@@ -1,6 +1,6 @@
 import { chromium } from 'playwright'
 import { hasSession, getStorageState, saveSession } from '../session-manager.js'
-import { generateContent } from '../content-generator.js'
+import { generateContent, ContentOptions } from '../content-generator.js'
 
 // Threads는 Instagram 계정으로 로그인
 const USER = process.env.THREADS_USERNAME!
@@ -48,12 +48,12 @@ export async function loginThreads(): Promise<void> {
 }
 
 // 자동 발행 — 저장된 세션 재사용
-export async function postThread(): Promise<void> {
+export async function postThread(options?: ContentOptions): Promise<string> {
   if (!hasSession('threads')) {
     throw new Error('[Threads] 세션이 없습니다. 먼저 "npm run automate login threads"를 실행하세요.')
   }
 
-  const content = await generateContent('threads')
+  const content = await generateContent('threads', options)
   console.log('[Threads] 생성된 콘텐츠:\n', content)
 
   const browser = await chromium.launch({ headless: true, args: STEALTH_ARGS })
@@ -102,9 +102,19 @@ export async function postThread(): Promise<void> {
     await postBtn.click()
     console.log('[Threads] 게시 버튼 클릭')
 
+    // 프로필에서 최신 스레드 URL 캡처
+    const username = (process.env.THREADS_USERNAME ?? '').replace(/^@/, '')
+    const profileUrl = `https://www.threads.net/@${username}`
+    await page.goto(profileUrl, { waitUntil: 'domcontentloaded' })
     await page.waitForTimeout(3_000)
+    const firstHref = await page.locator('a[href*="/post/"]').first()
+      .getAttribute('href').catch(() => null)
+    const threadUrl = firstHref
+      ? (firstHref.startsWith('http') ? firstHref : `https://www.threads.net${firstHref}`)
+      : profileUrl
     console.log('[Threads] 스레드 발행 완료 ✓')
     await saveSession(context, 'threads')
+    return threadUrl
   } catch (err) {
     console.error('[Threads] 발행 실패:', err)
     throw err
