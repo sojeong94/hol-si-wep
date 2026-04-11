@@ -55,7 +55,7 @@ export async function postTiktok(
     .join(' ')
     .replace(/\*\*/g, '')
     .trim()
-    .slice(0, 150) + ' #홀시 #여성건강 #생리주기 https://hol-si.com'
+    .slice(0, 150) + ' #홀시 #여성건강 #생리주기 https://hol-si.com?utm_source=tiktok&utm_medium=social&utm_campaign=silo'
 
   // 2. AdsPower 프로필로 브라우저 연결 (이미 TikTok 로그인 상태)
   const wsUrl = await startAdsPower(PROFILE_ID)

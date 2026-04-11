@@ -30,7 +30,7 @@ const PLATFORM_GUIDE: Record<Platform, string> = {
 - 이모지 사용 금지
 - 형식: 많은 사람들이 공감하는 생리/호르몬 경험을 짧고 강하게. 질문형 또는 공감형으로 바이럴 유도. 경험 나눔을 유도하는 문장.
 - 해시태그 2-3개를 본문 끝에 (주제와 직접 관련된 것 + 트래픽 높은 것 혼합)
-- 마지막 줄: https://hol-si.com`,
+- 마지막 줄: https://hol-si.com?utm_source=twitter&utm_medium=social&utm_campaign=silo`,
 
   threads: `스레드 게시글. 규칙:
 - 300자 내외
@@ -38,7 +38,7 @@ const PLATFORM_GUIDE: Record<Platform, string> = {
 - 형식:
   첫 줄: 주제 관련 해시태그 1개
   본문: 공감형 경험 나눔 또는 질문형, 친근한 반말체, 줄바꿈 활용해 읽기 쉽게
-  끝에서 2-3줄: 해시태그 2-3개 + https://hol-si.com
+  끝에서 2-3줄: 해시태그 2-3개 + https://hol-si.com?utm_source=threads&utm_medium=social&utm_campaign=silo
 - 해시태그는 주제 관련 + 트래픽 높은 태그 혼합`,
 
   instagram: `인스타그램 카드뉴스 4장. 규칙:
@@ -79,7 +79,7 @@ const PLATFORM_GUIDE: Record<Platform, string> = {
   [소제목1]: 원인/배경 설명 (200자 내외)
   [소제목2]: 핵심 정보/해결법 (200자 내외)
   [소제목3]: 실천 방법 (200자 내외)
-  마무리: 홀시 앱 언급 + https://hol-si.com (100자 내외)
+  마무리: 홀시 앱 언급 + https://hol-si.com?utm_source=naver_blog&utm_medium=blog&utm_campaign=silo (100자 내외)
 - 마지막: 해시태그 5-7개 (#생리주기 #여성건강 등)`,
 
   tiktok: `TikTok 영상 대본. 규칙:

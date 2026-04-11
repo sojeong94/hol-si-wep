@@ -35,7 +35,7 @@ export async function postYoutube(
   const lines = content.split('\n').filter(l => l.trim())
   const title = lines[0].replace(/[*#>]/g, '').trim().slice(0, 100)
   const body  = lines.slice(1).join('\n').trim()
-  const description = `${body}\n\n홀시 앱 → https://hol-si.com\n\n#홀시 #여성건강 #생리주기 #생리통 #PMS #호르몬 #Shorts`
+  const description = `${body}\n\n홀시 앱 → https://hol-si.com?utm_source=youtube&utm_medium=social&utm_campaign=silo\n\n#홀시 #여성건강 #생리주기 #생리통 #PMS #호르몬 #Shorts`
 
   const wsUrl  = await startAdsPower(PROFILE_ID)
   const browser = await chromium.connectOverCDP(wsUrl)

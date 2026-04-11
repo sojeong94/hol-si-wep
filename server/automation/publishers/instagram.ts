@@ -15,7 +15,7 @@ function buildCaption(content: string): string {
   const parts = content.split('---').map(p => p.trim()).filter(Boolean)
   const hook = parts[0] ?? ''
   const core = parts[2] ?? ''
-  return `${hook}\n\n${core}\n\n👉 https://hol-si.com\n\n#홀시 #여성건강 #생리주기 #생리통 #호르몬건강 #PMS #영양제 #자기관리 #건강정보 #웰니스`
+  return `${hook}\n\n${core}\n\n👉 https://hol-si.com?utm_source=instagram&utm_medium=social&utm_campaign=silo\n\n#홀시 #여성건강 #생리주기 #생리통 #호르몬건강 #PMS #영양제 #자기관리 #건강정보 #웰니스`
 }
 
 export async function loginInstagram(): Promise<void> {
