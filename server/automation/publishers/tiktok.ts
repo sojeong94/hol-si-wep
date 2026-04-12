@@ -79,21 +79,32 @@ export async function postTiktok(
     // 팝업/모달 닫기
     await dismissTiktokModal(page)
 
-    // 캡션 입력
+    // 캡션 입력 (기존 자동완성 텍스트 먼저 제거 후 삽입)
     const captionInput = page.locator('.public-DraftEditor-content').first()
       .or(page.locator('[contenteditable="true"]').first())
     await captionInput.waitFor({ timeout: 15_000 })
     await captionInput.click({ force: true })
     await page.waitForTimeout(500)
+
+    // 기존 내용 전체 선택 후 삭제 (파일명 자동완성 제거)
+    await page.keyboard.press('Control+A')
+    await page.waitForTimeout(200)
+    await page.keyboard.press('Delete')
+    await page.waitForTimeout(300)
+
     // DraftEditor는 execCommand가 가장 안정적
     await page.evaluate((text) => {
       document.execCommand('insertText', false, text)
     }, caption)
     await page.waitForTimeout(1_000)
-    // 입력이 안 됐으면 keyboard.type으로 재시도
+
+    // 입력 확인 — 여전히 파일명이 남아있거나 비어있으면 keyboard.type으로 재시도
     const inserted = await captionInput.textContent().catch(() => '')
-    if (!inserted || inserted.trim().length < 5) {
+    if (!inserted || inserted.trim().length < 5 || inserted.includes('shared-slideshow') || inserted.includes('.mp4')) {
       await captionInput.click({ force: true })
+      await page.keyboard.press('Control+A')
+      await page.waitForTimeout(200)
+      await page.keyboard.press('Delete')
       await page.waitForTimeout(300)
       await page.keyboard.type(caption, { delay: 20 })
       await page.waitForTimeout(1_000)
