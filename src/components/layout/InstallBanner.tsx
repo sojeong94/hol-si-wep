@@ -39,20 +39,37 @@ export function InstallBanner() {
     }
   }, [])
 
+  const gtag = (window as any).gtag
+
   const handleDismiss = () => {
     localStorage.setItem('holsi-install-dismissed', 'true')
     setIsVisible(false)
+    gtag?.('event', 'install_banner_dismissed', { event_category: 'PWA' })
   }
 
   const handleInstallClick = async () => {
+    gtag?.('event', 'install_button_click', { event_category: 'PWA' })
     if (!deferredPrompt) return
     deferredPrompt.prompt()
     const { outcome } = await deferredPrompt.userChoice
     if (outcome === 'accepted') {
       setIsVisible(false)
+      gtag?.('event', 'install_accepted', {
+        event_category: 'PWA',
+        event_label: 'conversion',
+      })
+    } else {
+      gtag?.('event', 'install_rejected', { event_category: 'PWA' })
     }
     setDeferredPrompt(null)
   }
+
+  // 배너 노출 시 이벤트
+  useEffect(() => {
+    if (isVisible) {
+      gtag?.('event', 'install_banner_shown', { event_category: 'PWA' })
+    }
+  }, [isVisible])
 
   if (!isVisible) return null
 
