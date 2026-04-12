@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { track } from '@/lib/analytics'
 import { useRecordStore } from '@/store/useRecordStore'
 import { useSettingStore } from '@/store/useSettingStore'
 import { getAverageCycle, getAveragePeriodDays, getOvulationDate, getOvulationPeriod, parseLocalDate } from '@/utils/cycleCalculators'
@@ -301,7 +302,7 @@ export function CalendarPage() {
       <section>
         <h3 className="text-lg font-extrabold mb-3 text-zinc-100 drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">{format(selectedDate, 'M월 d일')} 생리 기록</h3>
         {!currentRecord ? (
-          <button onClick={() => addRecord(selectedDateStr)} className="w-full h-14 bg-zinc-900 border border-zinc-800 shadow-sm rounded-[var(--radius-xl)] flex items-center justify-center gap-2 hover:bg-zinc-800 transition-colors active:scale-[0.98]">
+          <button onClick={() => { addRecord(selectedDateStr); track('record_added', { total: records.length + 1 }) }} className="w-full h-14 bg-zinc-900 border border-zinc-800 shadow-sm rounded-[var(--radius-xl)] flex items-center justify-center gap-2 hover:bg-zinc-800 transition-colors active:scale-[0.98]">
             <span className="w-3 h-3 rounded-full bg-[var(--color-primary)] shadow-[0_0_8px_rgba(255,42,122,0.8)]"></span>
             <span className="font-bold text-white text-lg">이날 터진 날</span>
           </button>
@@ -321,7 +322,7 @@ export function CalendarPage() {
                   <span className="font-bold text-white text-lg">끝난 날 기록 취소</span>
                 </button>
               ) : (
-                <button onClick={() => endRecord(currentRecord.id, selectedDateStr)} className="w-full h-14 bg-zinc-800 border border-zinc-700 shadow-sm rounded-[var(--radius-xl)] flex items-center justify-center gap-2 hover:bg-zinc-700 transition-all text-zinc-300 active:scale-[0.98]">
+                <button onClick={() => { endRecord(currentRecord.id, selectedDateStr); track('record_ended') }} className="w-full h-14 bg-zinc-800 border border-zinc-700 shadow-sm rounded-[var(--radius-xl)] flex items-center justify-center gap-2 hover:bg-zinc-700 transition-all text-zinc-300 active:scale-[0.98]">
                   <span className="w-3 h-3 rounded-full bg-pink-700 shadow-sm"></span>
                   <span className="font-bold text-white text-lg">이날 끝난 날로 변경</span>
                 </button>
