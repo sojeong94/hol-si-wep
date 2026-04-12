@@ -39,35 +39,36 @@ export function InstallBanner() {
     }
   }, [])
 
-  const gtag = (window as any).gtag
+  // gtag는 항상 최신 참조로 (로드 타이밍 문제 방지)
+  const fireEvent = (name: string, params?: object) => {
+    ;(window as any).gtag?.('event', name, { event_category: 'PWA', ...params })
+  }
 
   const handleDismiss = () => {
     localStorage.setItem('holsi-install-dismissed', 'true')
     setIsVisible(false)
-    gtag?.('event', 'install_banner_dismissed', { event_category: 'PWA' })
+    fireEvent('install_banner_dismissed')
   }
 
   const handleInstallClick = async () => {
-    gtag?.('event', 'install_button_click', { event_category: 'PWA' })
+    fireEvent('install_button_click')
     if (!deferredPrompt) return
     deferredPrompt.prompt()
     const { outcome } = await deferredPrompt.userChoice
     if (outcome === 'accepted') {
       setIsVisible(false)
-      gtag?.('event', 'install_accepted', {
-        event_category: 'PWA',
-        event_label: 'conversion',
-      })
+      fireEvent('install_accepted', { event_label: 'conversion' })
     } else {
-      gtag?.('event', 'install_rejected', { event_category: 'PWA' })
+      fireEvent('install_rejected')
     }
     setDeferredPrompt(null)
   }
 
-  // 배너 노출 시 이벤트
+  // 배너 노출 시 이벤트 (Android/iOS 공통)
   useEffect(() => {
     if (isVisible) {
-      gtag?.('event', 'install_banner_shown', { event_category: 'PWA' })
+      const platform = showIosBanner ? 'ios' : 'android'
+      fireEvent('install_banner_shown', { event_label: platform })
     }
   }, [isVisible])
 
