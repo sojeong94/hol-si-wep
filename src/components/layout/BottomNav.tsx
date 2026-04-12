@@ -13,10 +13,7 @@ export function BottomNav() {
   ]
 
   return (
-    <div
-      className="fixed bottom-0 left-0 right-0 z-50 flex justify-center w-full pointer-events-none"
-      style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
-    >
+    <div className="fixed bottom-0 left-0 right-0 z-50 flex flex-col items-center pointer-events-none">
       <nav className="h-16 bg-white/60 backdrop-blur-3xl border-t-[1.5px] border-white/90 flex items-center justify-around px-2 w-full max-w-md shadow-[0_-4px_32px_rgba(255,100,0,0.08)] pointer-events-auto">
         {navItems.map((item) => {
           const Icon = item.icon
@@ -37,6 +34,11 @@ export function BottomNav() {
           )
         })}
       </nav>
+      {/* safe-area 영역도 동일한 배경으로 채워 틈 제거 */}
+      <div
+        className="w-full max-w-md bg-white/60 backdrop-blur-3xl pointer-events-none"
+        style={{ height: 'env(safe-area-inset-bottom)' }}
+      />
     </div>
   )
 }
