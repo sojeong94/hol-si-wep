@@ -6,7 +6,7 @@ import { differenceInDays, format } from 'date-fns'
 import { Card } from '@/components/ui/Card'
 import { Modal } from '@/components/ui/Modal'
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { Share, Wind, RefreshCw, Info } from 'lucide-react'
+import { Share, Wind, RefreshCw, Info, MessageCircle, Send, Loader2 } from 'lucide-react'
 import { track } from '@/lib/analytics'
 import { RecommendCards, type Recommendation } from '@/components/ui/RecommendCards'
 
@@ -154,6 +154,35 @@ export function Home() {
       window.removeEventListener('focus', handleVisible)
     }
   }, [fetchAdvice])
+
+  // 영양제 상담 (홈)
+  const [isAdvisorOpen, setIsAdvisorOpen] = useState(false)
+  const [advisorQuestion, setAdvisorQuestion] = useState('')
+  const [advisorAnswer, setAdvisorAnswer] = useState('')
+  const [advisorRecommendations, setAdvisorRecommendations] = useState<Recommendation[]>([])
+  const [isAsking, setIsAsking] = useState(false)
+
+  const askAdvisor = async () => {
+    if (!advisorQuestion.trim() || isAsking) return
+    setIsAsking(true)
+    setAdvisorAnswer('')
+    setAdvisorRecommendations([])
+    track('advisor_question', { phase: dDay !== null ? String(dDay) : 'unknown' })
+    try {
+      const res = await fetch('/api/pill-advisor', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ question: advisorQuestion, pills, dDay, userName }),
+      })
+      const data = await res.json()
+      setAdvisorAnswer(data.answer ?? '답변을 가져오지 못했어요.')
+      setAdvisorRecommendations(data.recommendations ?? [])
+    } catch {
+      setAdvisorAnswer('서버 연결에 실패했어요. 잠시 후 다시 시도해주세요.')
+    } finally {
+      setIsAsking(false)
+    }
+  }
 
   const [trashText, setTrashText] = useState('')
   const [isBurning, setIsBurning] = useState(false)
@@ -396,9 +425,78 @@ export function Home() {
         )}
       </section>
 
+      {/* 영양제 상담 */}
+      <section>
+        <h3 className="text-lg font-extrabold mb-3 flex items-center gap-2 text-zinc-50 tracking-wide drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">영양제 상담</h3>
+        <Card
+          className="p-5 bg-zinc-900 border border-zinc-800 shadow-xl rounded-[2rem] cursor-pointer active:scale-[0.98] transition-all"
+          onClick={() => { setIsAdvisorOpen(true); setAdvisorAnswer(''); setAdvisorQuestion('') }}
+        >
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 bg-[var(--color-primary)]/20 border border-[var(--color-primary)]/30 rounded-2xl flex items-center justify-center shrink-0">
+              <MessageCircle size={22} className="text-[var(--color-primary)]" />
+            </div>
+            <div className="flex-1">
+              <p className="font-bold text-zinc-100 text-sm mb-0.5">지금 주기에 맞는 영양제 알아보기</p>
+              <p className="text-xs text-zinc-500">같이 먹으면 안 되는 조합, 지금 챙겨야 할 것들</p>
+            </div>
+          </div>
+          <div className="flex flex-wrap gap-2 mt-4">
+            {['지금 먹으면 좋은 영양제 뭐야?', '같이 먹으면 안 되는 조합 있어?', '생리통에 좋은 영양제 알려줘'].map(q => (
+              <button
+                key={q}
+                onClick={e => { e.stopPropagation(); setAdvisorQuestion(q); setIsAdvisorOpen(true) }}
+                className="text-xs bg-zinc-800 border border-zinc-700 text-zinc-300 px-3 py-1.5 rounded-full hover:border-pink-500/50 transition-colors"
+              >
+                {q}
+              </button>
+            ))}
+          </div>
+        </Card>
+      </section>
+
+      {/* 영양제 상담 모달 */}
+      <Modal isOpen={isAdvisorOpen} onClose={() => setIsAdvisorOpen(false)} title="영양제 상담">
+        <div className="space-y-4">
+          {advisorAnswer && (
+            <Card className="p-4 bg-zinc-900 border border-zinc-700 text-sm text-zinc-200 leading-relaxed whitespace-pre-wrap">
+              {advisorAnswer}
+              <RecommendCards recommendations={advisorRecommendations} label="관련 영양제 보기" />
+            </Card>
+          )}
+          <div className="flex w-full gap-2 items-center">
+            <input
+              type="text"
+              value={advisorQuestion}
+              onChange={e => setAdvisorQuestion(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && askAdvisor()}
+              placeholder="예: 칼슘이랑 마그네슘 같이 먹어도 돼?"
+              className="flex-1 min-w-0 bg-zinc-900 border border-zinc-700 rounded-xl px-4 py-3 text-white text-base focus:outline-none focus:border-[var(--color-primary)] transition-all"
+            />
+            <button
+              onClick={askAdvisor}
+              disabled={isAsking || !advisorQuestion.trim()}
+              className="shrink-0 w-12 h-12 bg-[var(--color-primary)] disabled:opacity-40 rounded-xl flex items-center justify-center active:scale-95 transition-all shadow-[0_0_10px_rgba(255,42,122,0.4)]"
+            >
+              {isAsking ? <Loader2 size={18} className="text-white animate-spin" /> : <Send size={18} className="text-white" />}
+            </button>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {['지금 먹으면 좋은 영양제 뭐야?', '같이 먹으면 안 되는 조합 있어?', '생리통에 좋은 영양제 알려줘', '월경 기간에 더 챙겨야 할 게 있어?'].map(q => (
+              <button
+                key={q}
+                onClick={() => setAdvisorQuestion(q)}
+                className="text-xs bg-zinc-800 border border-zinc-700 text-zinc-300 px-3 py-1.5 rounded-full hover:border-pink-500/50 transition-colors"
+              >
+                {q}
+              </button>
+            ))}
+          </div>
+        </div>
+      </Modal>
+
       {/* 광고 배너 */}
       {/* <AdBanner slot="5445746484" className="my-2" /> */}
-
 
       {/* 감정 쓰레기통 */}
       <section ref={trashRef}>
