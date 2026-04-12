@@ -3,7 +3,7 @@ import { useEffect } from 'react'
 import { format } from 'date-fns'
 import { usePillStore } from '@/store/usePillStore'
 import { useSettingStore } from '@/store/useSettingStore'
-import { TopNav } from '@/components/layout/TopNav'
+import { BottomNav } from '@/components/layout/BottomNav'
 import { syncPillsToServer } from '@/lib/pushService'
 
 import { Home } from '@/pages/Home'
@@ -89,9 +89,9 @@ function App() {
 
           <div
             className="max-w-md mx-auto relative min-h-screen"
-            style={{ paddingTop: 'calc(4rem + env(safe-area-inset-top))' }}
+            style={{ paddingBottom: 'calc(4rem + env(safe-area-inset-bottom))' }}
           >
-            <TopNav />
+            <BottomNav />
             <AlarmRingingModal />
             <Routes>
               <Route path="/" element={<Home />} />
