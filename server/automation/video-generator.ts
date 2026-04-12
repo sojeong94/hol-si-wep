@@ -26,16 +26,14 @@ function cleanForTTS(content: string): string {
     .slice(0, 400) // 약 30~40초 분량
 }
 
-// TTS: 텍스트 → MP3
+// TTS: 텍스트 → MP3 (node-gtts — API 키 불필요, 한국어)
 async function generateAudio(text: string, outputPath: string): Promise<void> {
   return new Promise((resolve, reject) => {
-    const tts = (gtts as any)('ko')
-    tts.save(outputPath, text, (err: any) => {
-      if (err) reject(new Error(`TTS 생성 실패: ${err}`))
-      else {
-        console.log(`[VideoGenerator] 오디오 생성 완료 → ${outputPath}`)
-        resolve()
-      }
+    const tts = gtts('ko')
+    tts.save(outputPath, text, (err: Error | null) => {
+      if (err) return reject(new Error(`TTS 오류: ${err.message}`))
+      console.log(`[VideoGenerator] 오디오 생성 완료 → ${outputPath}`)
+      resolve()
     })
   })
 }
