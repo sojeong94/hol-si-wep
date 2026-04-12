@@ -18,6 +18,22 @@ function App() {
   const { pills, setTriggerAlarm } = usePillStore()
   const { pushEnabled } = useSettingStore()
 
+  // 앱 실행 모드 추적 (GA4)
+  useEffect(() => {
+    const gtag = (window as any).gtag
+    if (!gtag) return
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches
+      || ('standalone' in navigator && (navigator as any).standalone)
+    // 홈화면에서 실행 = PWA 설치 완료 상태
+    gtag('event', 'app_launch', {
+      event_category: 'PWA',
+      event_label: isStandalone ? 'standalone' : 'browser',
+    })
+    if (isStandalone) {
+      gtag('event', 'app_launch_standalone', { event_category: 'PWA' })
+    }
+  }, [])
+
   // 영양제 변경 시 서버 자동 동기화 (push 활성화된 경우에만)
   useEffect(() => {
     if (pushEnabled && Notification.permission === 'granted') {
