@@ -28,14 +28,22 @@ function cleanForTTS(content: string): string {
 
 // TTS: 텍스트 → MP3 (node-gtts — API 키 불필요, 한국어)
 async function generateAudio(text: string, outputPath: string): Promise<void> {
-  return new Promise((resolve, reject) => {
+  await new Promise<void>((resolve, reject) => {
     const tts = gtts('ko')
     tts.save(outputPath, text, (err: Error | null) => {
       if (err) return reject(new Error(`TTS 오류: ${err.message}`))
-      console.log(`[VideoGenerator] 오디오 생성 완료 → ${outputPath}`)
       resolve()
     })
   })
+  // node-gtts 콜백이 파일 완전히 쓰이기 전에 호출될 수 있어 파일 확인 대기
+  for (let i = 0; i < 10; i++) {
+    if (fs.existsSync(outputPath) && fs.statSync(outputPath).size > 0) break
+    await new Promise(r => setTimeout(r, 500))
+  }
+  if (!fs.existsSync(outputPath) || fs.statSync(outputPath).size === 0) {
+    throw new Error(`TTS 파일 생성 실패: ${outputPath}`)
+  }
+  console.log(`[VideoGenerator] 오디오 생성 완료 → ${outputPath}`)
 }
 
 // 이미지 + 오디오 → MP4 (세로형 1080×1920)
@@ -44,11 +52,12 @@ async function combineToVideo(
   audioPath: string,
   outputPath: string
 ): Promise<void> {
+  const toFwd = (p: string) => p.replace(/\\/g, '/')
   return new Promise((resolve, reject) => {
     ffmpeg()
-      .input(imagePath)
+      .input(toFwd(imagePath))
       .inputOptions(['-loop 1', '-framerate 1'])
-      .input(audioPath)
+      .input(toFwd(audioPath))
       .outputOptions([
         '-c:v libx264',
         '-tune stillimage',
@@ -119,8 +128,8 @@ export async function generateVideoFromCards(
     // 3. concat(4장 슬라이드쇼) + TTS 오디오 → 세로형 1080×1920 MP4
     await new Promise<void>((resolve, reject) => {
       ffmpeg()
-        .input(listPath).inputOptions(['-f concat', '-safe 0'])
-        .input(audioPath)
+        .input(toFfmpegPath(listPath)).inputOptions(['-f concat', '-safe 0'])
+        .input(toFfmpegPath(audioPath))
         .outputOptions([
           '-vf', 'scale=1080:1920:force_original_aspect_ratio=decrease,pad=1080:1920:(ow-iw)/2:(oh-ih)/2:black',
           '-c:v', 'libx264',
