@@ -126,16 +126,61 @@ export async function updateDashboard(): Promise<void> {
 
     const allValues = [...headerValues, ...historyRows]
 
-    // ── 시트 초기화 후 데이터 기입 ──────────────────────────────────────────
+    // ── 상단 요약 섹션만 초기화 후 최신 데이터 기입 ────────────────────────
+    const SUMMARY_ROWS = allValues.length
     await sheets.spreadsheets.values.clear({
       spreadsheetId: SPREADSHEET_ID,
-      range: `${DASHBOARD_TITLE}!A1:Z200`,
+      range: `${DASHBOARD_TITLE}!A1:Z${SUMMARY_ROWS + 5}`,
     })
     await sheets.spreadsheets.values.update({
       spreadsheetId: SPREADSHEET_ID,
       range: `${DASHBOARD_TITLE}!A1`,
       valueInputOption: 'USER_ENTERED',
       requestBody: { values: allValues },
+    })
+
+    // ── 날짜별 통계 누적 기록 (하단에 append) ──────────────────────────────
+    const logSection = SUMMARY_ROWS + 7
+    // 이력 헤더가 없으면 추가
+    const existingLog = await sheets.spreadsheets.values.get({
+      spreadsheetId: SPREADSHEET_ID,
+      range: `${DASHBOARD_TITLE}!A${logSection}:A${logSection}`,
+    })
+    const hasLogHeader = existingLog.data.values?.[0]?.[0] === '[날짜별 누적 통계]'
+    if (!hasLogHeader) {
+      await sheets.spreadsheets.values.update({
+        spreadsheetId: SPREADSHEET_ID,
+        range: `${DASHBOARD_TITLE}!A${logSection}`,
+        valueInputOption: 'USER_ENTERED',
+        requestBody: {
+          values: [
+            ['[날짜별 누적 통계]', '', '', '', '', '', '', ''],
+            ['날짜', '총발행', '네이버', 'Twitter', 'Threads', 'Instagram', 'YouTube', 'TikTok', '활성사용자', '세션', '페이지뷰'],
+          ],
+        },
+      })
+    }
+    // 오늘 날짜 행 추가 (append)
+    await sheets.spreadsheets.values.append({
+      spreadsheetId: SPREADSHEET_ID,
+      range: `${DASHBOARD_TITLE}!A${logSection}`,
+      valueInputOption: 'USER_ENTERED',
+      insertDataOption: 'INSERT_ROWS',
+      requestBody: {
+        values: [[
+          today,
+          total,
+          counts.naver,
+          counts.twitter,
+          counts.threads,
+          counts.instagram,
+          counts.youtube,
+          counts.tiktok,
+          ga4?.activeUsers ?? '-',
+          ga4?.sessions ?? '-',
+          ga4?.pageViews ?? '-',
+        ]],
+      },
     })
 
     // 동적 행 인덱스 계산
