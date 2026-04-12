@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { track } from '@/lib/analytics'
 import { usePillStore } from '@/store/usePillStore'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
@@ -130,7 +131,7 @@ export function Pills() {
 
                 {!isEditMode && (
                   <label className="relative inline-flex items-center cursor-pointer">
-                    <input type="checkbox" className="sr-only peer" checked={pill.isActive !== false} onChange={() => togglePill(pill.id)} />
+                    <input type="checkbox" className="sr-only peer" checked={pill.isActive !== false} onChange={() => { togglePill(pill.id); track('pill_checked', { pill_name: pill.name }) }} />
                     <div className="w-14 h-8 bg-black/50 border border-zinc-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-[24px] after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-7 after:w-7 after:transition-all peer-checked:bg-[var(--color-primary)] peer-checked:border-[var(--color-primary)] shadow-inner"></div>
                   </label>
                 )}

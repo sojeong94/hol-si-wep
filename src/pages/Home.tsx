@@ -7,6 +7,7 @@ import { Card } from '@/components/ui/Card'
 import { Modal } from '@/components/ui/Modal'
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { Share, Wind, RefreshCw, Info } from 'lucide-react'
+import { track } from '@/lib/analytics'
 import { RecommendCards, type Recommendation } from '@/components/ui/RecommendCards'
 
 export function Home() {
@@ -24,6 +25,7 @@ export function Home() {
     if (tempName.trim()) {
       setUserName(tempName.trim())
       setShowNameModal(false)
+      track('onboarding_complete')
     }
   }
 
@@ -382,7 +384,7 @@ export function Home() {
                         type="checkbox"
                         className="sr-only peer"
                         checked={isActive}
-                        onChange={() => togglePill(pill.id)}
+                        onChange={() => { togglePill(pill.id); track('pill_checked', { pill_name: pill.name }) }}
                       />
                       <div className="w-14 h-8 bg-black/50 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-[24px] after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-7 after:w-7 after:transition-all peer-checked:bg-[var(--color-primary)] shadow-inner"></div>
                     </label>
