@@ -1,7 +1,7 @@
 import { chromium } from 'playwright'
 import path from 'path'
 import { fileURLToPath } from 'url'
-import { generateContent, ContentOptions } from '../content-generator.js'
+import { generateContent, coupangLink, ContentOptions } from '../content-generator.js'
 import { generateVideo } from '../video-generator.js'
 import { startAdsPower, stopAdsPower } from '../adspower-client.js'
 
@@ -35,7 +35,8 @@ export async function postYoutube(
   const lines = content.split('\n').filter(l => l.trim())
   const title = lines[0].replace(/[*#>]/g, '').trim().slice(0, 100)
   const body  = lines.slice(1).join('\n').trim()
-  const description = `${body}\n\n홀시 앱 → https://hol-si.com?utm_source=youtube&utm_medium=social&utm_campaign=silo\n\n#홀시 #여성건강 #생리주기 #생리통 #PMS #호르몬 #Shorts`
+  const coupang = options?.keyword ? `\n\n추천 제품 → ${coupangLink(options.keyword)}\n※ 파트너스 활동으로 수수료를 받을 수 있습니다` : ''
+  const description = `${body}\n\n홀시 앱 → https://hol-si.com?utm_source=youtube&utm_medium=social&utm_campaign=silo${coupang}\n\n#홀시 #여성건강 #생리주기 #생리통 #PMS #호르몬 #Shorts`
 
   const wsUrl  = await startAdsPower(PROFILE_ID)
   const browser = await chromium.connectOverCDP(wsUrl)

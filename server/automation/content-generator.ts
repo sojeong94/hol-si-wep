@@ -95,6 +95,23 @@ export interface ContentOptions {
   title?: string     // 구글 시트에서 가져온 제목
 }
 
+const COUPANG_PARTNER_ID = process.env.COUPANG_PARTNER_ID ?? 'AF6147593'
+
+// 키워드 기반 쿠팡 파트너스 검색 링크 생성
+export function coupangLink(keyword: string): string {
+  const encoded = encodeURIComponent(keyword)
+  return `https://www.coupang.com/np/search?q=${encoded}&channel=user&subId1=${COUPANG_PARTNER_ID}`
+}
+
+// 플랫폼별 쿠팡 링크 삽입 지원 여부
+// youtube는 publisher에서 description에 직접 추가
+const SUPPORTS_COUPANG: Partial<Record<Platform, boolean>> = {
+  threads: true,
+  naver: true,
+  // twitter: 150자 제한으로 제외
+  // instagram/tiktok: 캡션 링크 클릭 안 됨
+}
+
 export async function generateContent(platform: Platform, options?: ContentOptions): Promise<string> {
   const topic = options?.keyword
     ? options.title
@@ -121,5 +138,14 @@ export async function generateContent(platform: Platform, options?: ContentOptio
     ],
   })
 
-  return (msg.content[0] as Anthropic.TextBlock).text.trim()
+  let text = (msg.content[0] as Anthropic.TextBlock).text.trim()
+
+  // 쿠팡 파트너스 링크 자동 삽입 (지원 플랫폼만)
+  if (SUPPORTS_COUPANG[platform] && options?.keyword) {
+    const link = coupangLink(options.keyword)
+    const label = `\n\n이 글의 추천 제품 → ${link}\n※ 파트너스 활동으로 수수료를 받을 수 있습니다`
+    text += label
+  }
+
+  return text
 }
