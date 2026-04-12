@@ -6,11 +6,13 @@ import { differenceInDays, format } from 'date-fns'
 import { Card } from '@/components/ui/Card'
 import { Modal } from '@/components/ui/Modal'
 import { useState, useEffect, useRef, useCallback } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Share, Wind, RefreshCw, Info, MessageCircle, Send, Loader2 } from 'lucide-react'
 import { track } from '@/lib/analytics'
 import { RecommendCards, type Recommendation } from '@/components/ui/RecommendCards'
 
 export function Home() {
+  const navigate = useNavigate()
   const { records } = useRecordStore()
   const { pills, togglePill } = usePillStore()
   const { defaultCycle, isManualCycle, manualCycleDays, userName, setUserName } = useSettingStore()
@@ -331,7 +333,7 @@ export function Home() {
       </header>
 
       {/* 터짐주의 위젯 */}
-      <Card className={`relative overflow-hidden p-6 border transition-all duration-700 ease-out ${dDayContent.gradient}`}>
+      <Card onClick={() => navigate('/calendar')} className={`relative overflow-hidden p-6 border transition-all duration-700 ease-out cursor-pointer active:scale-[0.98] ${dDayContent.gradient}`}>
         <div className="relative z-10">
           <p className="opacity-90 font-medium mb-3 text-xs tracking-wider">{nextDateStr ? `다음 예정일 ${nextDateStr}` : '주기를 예측할 수 없어요'}</p>
           <div className="flex flex-col gap-1">
@@ -375,54 +377,6 @@ export function Home() {
           {/* 쿠팡 파트너스 추천 */}
           <RecommendCards recommendations={aiRecommendations} />
         </Card>
-      </section>
-
-      {/* 영양제 체크리스트 */}
-      <section>
-        <div className="flex items-center justify-between mb-3">
-          <h3 className="text-lg font-extrabold text-zinc-50 tracking-wide drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">알림</h3>
-        </div>
-        {pills.length === 0 ? (
-          <Card className="flex flex-col items-center justify-center p-8 text-center border-dashed border-2 border-zinc-700 bg-zinc-900/50 backdrop-blur-sm group cursor-pointer transition-all hover:bg-zinc-800" onClick={() => window.location.href = '/pills'}>
-            <p className="font-bold text-[var(--color-primary)] mb-1">나를 위한 작은 홀시비서</p>
-            <p className="text-xs text-zinc-500 font-medium">루틴을 설정하고 나를 더 아껴봐요!</p>
-          </Card>
-        ) : (
-          <div className="space-y-3">
-            {pills.map(pill => {
-              const isActive = pill.isActive !== false
-              return (
-                <Card
-                  key={pill.id}
-                  className={`flex items-center justify-between p-4 transition-all ${isActive ? 'bg-[#18181A] border-zinc-700' : 'opacity-40 bg-black border-transparent'}`}
-                >
-                  <div className="flex items-center justify-between w-full">
-                    <div className="flex items-center gap-3">
-                      <div>
-                        <p className={`font-bold flex items-center gap-2 ${!isActive ? 'text-zinc-600' : 'text-zinc-100'}`}>
-                          {pill.name}
-                        </p>
-                        <p className="text-xs font-medium flex items-center gap-1 mt-0.5 text-zinc-500">
-                          <span className={`inline-block w-2 h-2 rounded-full ${!isActive ? 'bg-zinc-700' : 'bg-[var(--color-primary)]'}`} />
-                          {pill.time}
-                        </p>
-                      </div>
-                    </div>
-                    <label className="relative inline-flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
-                        className="sr-only peer"
-                        checked={isActive}
-                        onChange={() => { togglePill(pill.id); track('pill_checked', { pill_name: pill.name }) }}
-                      />
-                      <div className="w-14 h-8 bg-black/50 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-[24px] after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-7 after:w-7 after:transition-all peer-checked:bg-[var(--color-primary)] shadow-inner"></div>
-                    </label>
-                  </div>
-                </Card>
-              )
-            })}
-          </div>
-        )}
       </section>
 
       {/* 영양제 상담 */}
@@ -494,6 +448,54 @@ export function Home() {
           </div>
         </div>
       </Modal>
+
+      {/* 영양제 체크리스트 */}
+      <section>
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-lg font-extrabold text-zinc-50 tracking-wide drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">알림</h3>
+        </div>
+        {pills.length === 0 ? (
+          <Card className="flex flex-col items-center justify-center p-8 text-center border-dashed border-2 border-zinc-700 bg-zinc-900/50 backdrop-blur-sm group cursor-pointer transition-all hover:bg-zinc-800" onClick={() => navigate('/pills')}>
+            <p className="font-bold text-[var(--color-primary)] mb-1">나를 위한 작은 홀시비서</p>
+            <p className="text-xs text-zinc-500 font-medium">루틴을 설정하고 나를 더 아껴봐요!</p>
+          </Card>
+        ) : (
+          <div className="space-y-3">
+            {pills.map(pill => {
+              const isActive = pill.isActive !== false
+              return (
+                <Card
+                  key={pill.id}
+                  className={`flex items-center justify-between p-4 transition-all ${isActive ? 'bg-[#18181A] border-zinc-700' : 'opacity-40 bg-black border-transparent'}`}
+                >
+                  <div className="flex items-center justify-between w-full">
+                    <div className="flex items-center gap-3">
+                      <div>
+                        <p className={`font-bold flex items-center gap-2 ${!isActive ? 'text-zinc-600' : 'text-zinc-100'}`}>
+                          {pill.name}
+                        </p>
+                        <p className="text-xs font-medium flex items-center gap-1 mt-0.5 text-zinc-500">
+                          <span className={`inline-block w-2 h-2 rounded-full ${!isActive ? 'bg-zinc-700' : 'bg-[var(--color-primary)]'}`} />
+                          {pill.time}
+                        </p>
+                      </div>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        className="sr-only peer"
+                        checked={isActive}
+                        onChange={() => { togglePill(pill.id); track('pill_checked', { pill_name: pill.name }) }}
+                      />
+                      <div className="w-14 h-8 bg-black/50 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-[24px] after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-7 after:w-7 after:transition-all peer-checked:bg-[var(--color-primary)] shadow-inner"></div>
+                    </label>
+                  </div>
+                </Card>
+              )
+            })}
+          </div>
+        )}
+      </section>
 
       {/* 광고 배너 */}
       {/* <AdBanner slot="5445746484" className="my-2" /> */}
