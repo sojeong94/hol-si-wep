@@ -36,10 +36,15 @@ workflows:
         script: npm run build
       - name: Sync Capacitor iOS
         script: npx cap sync ios
+      - name: Resolve SPM packages
+        script: |
+          xcodebuild -resolvePackageDependencies \
+            -project "$CM_BUILD_DIR/ios/App/App.xcodeproj" \
+            -scheme "App"
       - name: Build iOS IPA
         script: |
           xcode-project build-ipa \
-            --workspace "$CM_BUILD_DIR/ios/App/App.xcworkspace" \
+            --project "$CM_BUILD_DIR/ios/App/App.xcodeproj" \
             --scheme "App" \
             --config Release
     artifacts:
