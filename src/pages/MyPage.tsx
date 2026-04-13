@@ -22,7 +22,7 @@ export function MyPage() {
   } = useSettingStore()
   const { records } = useRecordStore()
   const { pills } = usePillStore()
-  const { user, token, logout } = useAuthStore()
+  const { user, logout } = useAuthStore()
 
   const handlePushToggle = async (enable: boolean) => {
     if (enable) {
