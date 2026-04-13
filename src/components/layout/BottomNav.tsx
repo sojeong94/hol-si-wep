@@ -1,15 +1,17 @@
 import { Home, Calendar as CalendarIcon, Pill, User } from 'lucide-react'
 import { Link, useLocation } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { cn } from '@/lib/utils'
 
 export function BottomNav() {
   const location = useLocation()
-  
+  const { t } = useTranslation()
+
   const navItems = [
-    { path: '/', label: '홈', icon: Home },
-    { path: '/calendar', label: '달력', icon: CalendarIcon },
-    { path: '/pills', label: '영양제', icon: Pill },
-    { path: '/mypage', label: '마이페이지', icon: User },
+    { path: '/', label: t('nav_home'), icon: Home },
+    { path: '/calendar', label: t('nav_calendar'), icon: CalendarIcon },
+    { path: '/pills', label: t('nav_pills'), icon: Pill },
+    { path: '/mypage', label: t('nav_mypage'), icon: User },
   ]
 
   return (
@@ -34,7 +36,6 @@ export function BottomNav() {
           )
         })}
       </nav>
-      {/* safe-area 영역도 동일한 배경으로 채워 틈 제거 */}
       <div
         className="w-full max-w-md bg-white/60 backdrop-blur-3xl pointer-events-none"
         style={{ height: 'env(safe-area-inset-bottom)' }}

@@ -1,14 +1,17 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useSettingStore } from '@/store/useSettingStore'
 import { useRecordStore } from '@/store/useRecordStore'
+import { useAuthStore } from '@/store/useAuthStore'
 import { getAverageCycle, getAveragePeriodDays } from '@/utils/cycleCalculators'
 import { Card } from '@/components/ui/Card'
 import { Modal } from '@/components/ui/Modal'
-import { Bell, Download, Upload, Info, UserRound, Pencil, Users, MessageSquare } from 'lucide-react'
+import { Bell, Download, Upload, Info, UserRound, Pencil, Users, MessageSquare, Globe, LogOut } from 'lucide-react'
 import { subscribePush, unsubscribePush } from '@/lib/pushService'
 import { usePillStore } from '@/store/usePillStore'
 
 export function MyPage() {
+  const { t, i18n } = useTranslation()
   const {
     pushEnabled, setPushEnabled,
     defaultCycle, defaultPeriodDays,
@@ -19,6 +22,7 @@ export function MyPage() {
   } = useSettingStore()
   const { records } = useRecordStore()
   const { pills } = usePillStore()
+  const { user, token, logout } = useAuthStore()
 
   const handlePushToggle = async (enable: boolean) => {
     if (enable) {
@@ -102,46 +106,89 @@ export function MyPage() {
     }
   }
 
+  const handleOAuthLogin = (provider: 'google' | 'kakao') => {
+    window.location.href = `/api/auth/${provider}`
+  }
+
+  const handleLogout = () => {
+    logout()
+  }
+
+  const changeLanguage = (lang: string) => {
+    i18n.changeLanguage(lang)
+  }
+
   return (
     <div className="p-5 pb-8 space-y-6 animate-in fade-in duration-500 bg-[var(--color-secondary)] min-h-screen text-white">
       <header className="pt-2 flex items-center gap-3">
         <div className="w-12 h-12 bg-zinc-900 backdrop-blur-md rounded-full shadow-inner flex items-center justify-center border border-zinc-800">
-          <UserRound size={24} className="text-[var(--color-primary)] drop-shadow-[0_0_8px_rgba(255,42,122,0.4)]" />
+          {user?.avatar
+            ? <img src={user.avatar} alt="" className="w-12 h-12 rounded-full object-cover" />
+            : <UserRound size={24} className="text-[var(--color-primary)] drop-shadow-[0_0_8px_rgba(255,42,122,0.4)]" />
+          }
         </div>
-        <h1 className="text-2xl font-black tracking-tight drop-shadow-[0_0_10px_rgba(255,255,255,0.2)]">마이페이지</h1>
+        <h1 className="text-2xl font-black tracking-tight drop-shadow-[0_0_10px_rgba(255,255,255,0.2)]">{t('mypage_title')}</h1>
       </header>
 
       {/* 내 정보 (닉네임 & 소셜 연동) */}
       <section>
-        <h3 className="text-sm font-extrabold text-zinc-500 mb-2 ml-1 tracking-wide">내 정보</h3>
+        <h3 className="text-sm font-extrabold text-zinc-500 mb-2 ml-1 tracking-wide">{t('mypage_info')}</h3>
         <Card className="flex flex-col gap-4 p-5 bg-zinc-900 border border-zinc-800">
            <div className="flex justify-between items-center">
              <div>
-               <p className="text-xs text-zinc-400 mb-1 font-medium">나의 애칭</p>
-               <p className="text-xl font-bold">{userName || '미설정'} 님</p>
+               <p className="text-xs text-zinc-400 mb-1 font-medium">{t('mypage_nickname_label')}</p>
+               <p className="text-xl font-bold">{userName || t('mypage_nickname_default')} {t('mypage_nickname_suffix')}</p>
              </div>
-             <button 
+             <button
                onClick={() => { setTempName(userName || ''); setIsNameModalOpen(true); }}
                className="p-2 bg-[#18181A] rounded-xl border border-zinc-700 text-zinc-400 hover:text-white transition-colors"
              >
                <Pencil size={18} />
              </button>
            </div>
-           
+
            <div className="h-[1px] w-full bg-zinc-800 my-2"></div>
-           
+
            <div>
-             <p className="text-xs text-zinc-400 mb-3 font-medium">계정 연동 (추후 결제 및 복구 지원)</p>
-             <div className="flex gap-2">
-               <button className="flex-1 py-3 flex justify-center items-center gap-2 bg-[#111] border border-zinc-700 rounded-xl opacity-60 hover:opacity-100 transition-opacity">
-                 <span className="w-4 h-4 rounded-full bg-yellow-400 block shrink-0"></span>
-                 <span className="text-sm font-bold text-zinc-300">카카오 로그인</span>
-               </button>
-               <button className="flex-1 py-3 flex justify-center items-center gap-2 bg-[#111] border border-zinc-700 rounded-xl opacity-60 hover:opacity-100 transition-opacity">
-                 <span className="w-4 h-4 rounded-full bg-white block shrink-0"></span>
-                 <span className="text-sm font-bold text-zinc-300">Google 연동</span>
-               </button>
-             </div>
+             <p className="text-xs text-zinc-400 mb-3 font-medium">{t('mypage_account_label')}</p>
+             {user ? (
+               <div className="space-y-2">
+                 <div className="flex items-center gap-3 bg-zinc-800 rounded-xl p-3">
+                   {user.avatar && <img src={user.avatar} alt="" className="w-8 h-8 rounded-full" />}
+                   <div className="flex-1 min-w-0">
+                     <p className="text-xs text-zinc-400">{t('mypage_logged_in_as')}</p>
+                     <p className="font-bold text-sm truncate">{user.name ?? user.email ?? user.provider}</p>
+                   </div>
+                   <span className={`text-xs px-2 py-1 rounded-full font-bold shrink-0 ${
+                     user.provider === 'google' ? 'bg-blue-500/20 text-blue-400' : 'bg-yellow-500/20 text-yellow-400'
+                   }`}>{user.provider}</span>
+                 </div>
+                 <button
+                   onClick={handleLogout}
+                   className="w-full py-2.5 flex justify-center items-center gap-2 bg-zinc-800 border border-zinc-700 rounded-xl hover:bg-zinc-700 transition-colors"
+                 >
+                   <LogOut size={14} className="text-zinc-400" />
+                   <span className="text-sm font-bold text-zinc-300">{t('mypage_logout')}</span>
+                 </button>
+               </div>
+             ) : (
+               <div className="flex gap-2">
+                 <button
+                   onClick={() => handleOAuthLogin('kakao')}
+                   className="flex-1 py-3 flex justify-center items-center gap-2 bg-[#FEE500] border border-yellow-400 rounded-xl hover:brightness-95 transition-all"
+                 >
+                   <span className="w-4 h-4 rounded-full bg-zinc-900 block shrink-0"></span>
+                   <span className="text-sm font-bold text-zinc-900">{t('mypage_kakao_login')}</span>
+                 </button>
+                 <button
+                   onClick={() => handleOAuthLogin('google')}
+                   className="flex-1 py-3 flex justify-center items-center gap-2 bg-white border border-zinc-200 rounded-xl hover:brightness-95 transition-all"
+                 >
+                   <span className="w-4 h-4 rounded-full bg-zinc-800 block shrink-0"></span>
+                   <span className="text-sm font-bold text-zinc-800">{t('mypage_google_login')}</span>
+                 </button>
+               </div>
+             )}
            </div>
         </Card>
       </section>
@@ -149,9 +196,9 @@ export function MyPage() {
       {/* 내 건강 사이클 정보 영역 */}
       <section>
         <div className="flex justify-between items-center mb-2 ml-1">
-          <h3 className="text-sm font-extrabold text-zinc-500 tracking-wide">나의 주기 진단</h3>
+          <h3 className="text-sm font-extrabold text-zinc-500 tracking-wide">{t('mypage_cycle_title')}</h3>
           <div className="flex items-center gap-2">
-            <span className="text-xs font-bold text-zinc-400">수동 설정</span>
+            <span className="text-xs font-bold text-zinc-400">{t('mypage_manual_toggle')}</span>
             <label className="relative inline-flex items-center cursor-pointer">
               <input type="checkbox" className="sr-only peer" checked={isManualCycle} onChange={e => setIsManualCycle(e.target.checked)} />
               <div className="w-10 h-6 bg-black border border-zinc-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-[16px] after:content-[''] after:absolute after:top-[3px] after:left-[3px] after:bg-white after:border-zinc-300 after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[var(--color-primary)] peer-checked:border-[var(--color-primary)] shadow-inner"></div>
@@ -163,20 +210,20 @@ export function MyPage() {
           {!isManualCycle ? (
             <>
               <div className="flex justify-between items-center py-2 border-b border-zinc-800">
-                <span className="font-medium text-zinc-300">예측되는 평균 주기</span>
+                <span className="font-medium text-zinc-300">{t('mypage_avg_cycle')}</span>
                 <span className="text-xl font-bold text-[var(--color-primary)] drop-shadow-[0_0_8px_rgba(255,42,122,0.4)]">{avgCycle}일</span>
               </div>
               <div className="flex justify-between items-center py-3">
-                <span className="font-medium text-zinc-300">예측되는 터진 기간</span>
+                <span className="font-medium text-zinc-300">{t('mypage_avg_period')}</span>
                 <span className="text-xl font-bold text-pink-400">{avgPeriod}일</span>
               </div>
-              <p className="text-xs text-zinc-500 mt-2 bg-black/40 p-3 rounded-xl shadow-inner border border-zinc-800 font-medium">달력에 기록된 데이터를 바탕으로 AI가 자동 진단한 결과입니다. 기록이 많아질수록 정확해집니다.</p>
+              <p className="text-xs text-zinc-500 mt-2 bg-black/40 p-3 rounded-xl shadow-inner border border-zinc-800 font-medium">{t('mypage_cycle_help')}</p>
             </>
           ) : (
             <div className="space-y-4">
               <div>
                 <div className="flex justify-between items-center mb-1">
-                  <span className="font-medium text-zinc-300">평균 주기</span>
+                  <span className="font-medium text-zinc-300">{t('mypage_manual_cycle')}</span>
                   <span className="text-xl font-bold text-[var(--color-primary)] drop-shadow-[0_0_8px_rgba(255,42,122,0.4)]">{manualCycleDays}일</span>
                 </div>
                 <input 
@@ -188,7 +235,7 @@ export function MyPage() {
               </div>
               <div className="pt-2 border-t border-zinc-800">
                 <div className="flex justify-between items-center mb-1">
-                  <span className="font-medium text-zinc-300">터진 기간</span>
+                  <span className="font-medium text-zinc-300">{t('mypage_manual_period')}</span>
                   <span className="text-xl font-bold text-pink-400">{manualPeriodDays}일</span>
                 </div>
                 <input 
@@ -204,15 +251,15 @@ export function MyPage() {
       </section>
 
       <section>
-        <h3 className="text-sm font-extrabold text-zinc-500 mb-2 ml-1 tracking-wide">기본 제어</h3>
+        <h3 className="text-sm font-extrabold text-zinc-500 mb-2 ml-1 tracking-wide">{t('mypage_control')}</h3>
         <Card className="flex items-center justify-between p-4 bg-zinc-900 border border-zinc-800 !rounded-[var(--radius-xl)]">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-pink-500/10 shadow-inner flex items-center justify-center text-[var(--color-primary)] border border-pink-500/20">
               <Bell size={20} />
             </div>
             <div>
-              <p className="font-bold text-white">앱 푸시 알림 허용</p>
-              <p className="text-xs text-zinc-400 font-medium mt-0.5">배경에서도 영양제 복용 시간을 알려드려요</p>
+              <p className="font-bold text-white">{t('mypage_push_title')}</p>
+              <p className="text-xs text-zinc-400 font-medium mt-0.5">{t('mypage_push_desc')}</p>
             </div>
           </div>
           <button
@@ -232,7 +279,7 @@ export function MyPage() {
       </section>
 
       <section>
-        <h3 className="text-sm font-extrabold text-zinc-500 mb-2 ml-1 tracking-wide">커뮤니티 & 지원</h3>
+        <h3 className="text-sm font-extrabold text-zinc-500 mb-2 ml-1 tracking-wide">{t('mypage_community')}</h3>
         <div className="space-y-3">
           <Card
             className="flex items-center justify-between p-4 cursor-pointer hover:bg-zinc-800 transition-colors bg-zinc-900 border border-zinc-800 !rounded-[var(--radius-xl)]"
@@ -243,8 +290,8 @@ export function MyPage() {
                 <Users size={20} />
               </div>
               <div>
-                <p className="font-bold text-white">홀시 반상회</p>
-                <p className="text-xs text-zinc-500 font-medium mt-0.5">카카오톡 오픈채팅 커뮤니티에 참여해보세요</p>
+                <p className="font-bold text-white">{t('mypage_chat_title')}</p>
+                <p className="text-xs text-zinc-500 font-medium mt-0.5">{t('mypage_chat_desc')}</p>
               </div>
             </div>
           </Card>
@@ -258,8 +305,8 @@ export function MyPage() {
                 <MessageSquare size={20} />
               </div>
               <div>
-                <p className="font-bold text-white">문의하기</p>
-                <p className="text-xs text-zinc-500 font-medium mt-0.5">버그 제보, 기능 제안, 칭찬과 격려도 환영해요</p>
+                <p className="font-bold text-white">{t('mypage_feedback_title')}</p>
+                <p className="text-xs text-zinc-500 font-medium mt-0.5">{t('mypage_feedback_desc')}</p>
               </div>
             </div>
           </Card>
@@ -267,7 +314,7 @@ export function MyPage() {
       </section>
 
       <section>
-        <h3 className="text-sm font-extrabold text-zinc-500 mb-2 ml-1 tracking-wide">안전한 데이터 백업</h3>
+        <h3 className="text-sm font-extrabold text-zinc-500 mb-2 ml-1 tracking-wide">{t('mypage_backup')}</h3>
         <div className="space-y-3">
           <Card className="flex items-center justify-between p-4 cursor-pointer hover:bg-zinc-800 transition-colors bg-zinc-900 border border-zinc-800 !rounded-[var(--radius-xl)]" onClick={handleBackup}>
             <div className="flex items-center gap-3">
@@ -275,8 +322,8 @@ export function MyPage() {
                 <Download size={20} />
               </div>
               <div>
-                <p className="font-bold text-white">이 기기의 데이터 백업하기</p>
-                <p className="text-xs text-zinc-500 font-medium mt-0.5">안전하게 로컬 JSON 파일로 보관하세요</p>
+                <p className="font-bold text-white">{t('mypage_backup_button')}</p>
+                <p className="text-xs text-zinc-500 font-medium mt-0.5">{t('mypage_backup_desc')}</p>
               </div>
             </div>
           </Card>
@@ -289,8 +336,8 @@ export function MyPage() {
                   <Upload size={20} />
                 </div>
                 <div>
-                  <p className="font-bold text-white">다른 기기 데이터 복구하기</p>
-                  <p className="text-xs text-zinc-500 font-medium mt-0.5">기기를 변경해도 그대로 이어갈 수 있어요</p>
+                  <p className="font-bold text-white">{t('mypage_restore_button')}</p>
+                  <p className="text-xs text-zinc-500 font-medium mt-0.5">{t('mypage_restore_desc')}</p>
                 </div>
               </div>
             </Card>
@@ -298,19 +345,45 @@ export function MyPage() {
         </div>
       </section>
 
+      {/* 언어 설정 */}
+      <section>
+        <h3 className="text-sm font-extrabold text-zinc-500 mb-2 ml-1 tracking-wide">{t('mypage_language')}</h3>
+        <Card className="p-4 bg-zinc-900 border border-zinc-800 !rounded-[var(--radius-xl)]">
+          <div className="flex items-center gap-2 mb-3">
+            <Globe size={16} className="text-zinc-400" />
+            <span className="text-sm font-bold text-zinc-300">{t('mypage_language')}</span>
+          </div>
+          <div className="grid grid-cols-3 gap-2">
+            {(['ko', 'en', 'ja'] as const).map(lang => (
+              <button
+                key={lang}
+                onClick={() => changeLanguage(lang)}
+                className={`py-2.5 rounded-xl text-sm font-bold border transition-all ${
+                  i18n.language === lang
+                    ? 'bg-[var(--color-primary)] border-[var(--color-primary)] text-white'
+                    : 'bg-zinc-800 border-zinc-700 text-zinc-400 hover:text-white'
+                }`}
+              >
+                {t(`mypage_lang_${lang}`)}
+              </button>
+            ))}
+          </div>
+        </Card>
+      </section>
+
       <section>
         <Card className="flex items-center justify-between p-4 bg-transparent border border-zinc-800 shadow-none !rounded-xl">
           <div className="flex items-center gap-2 text-zinc-500">
             <Info size={16} />
-            <p className="font-medium text-sm">Holsi App Version</p>
+            <p className="font-medium text-sm">{t('mypage_version')}</p>
           </div>
           <span className="text-sm text-zinc-600 font-bold font-mono tracking-widest">v2.0.0</span>
         </Card>
       </section>
 
-      <Modal isOpen={isNameModalOpen} onClose={() => setIsNameModalOpen(false)} title="애칭 변경">
+      <Modal isOpen={isNameModalOpen} onClose={() => setIsNameModalOpen(false)} title={t('mypage_nickname_modal_title')}>
         <div className="space-y-4">
-          <p className="text-sm text-zinc-400">나를 부를 애칭을 자유롭게 정해주세요.</p>
+          <p className="text-sm text-zinc-400">{t('mypage_nickname_modal_desc')}</p>
           <input 
             type="text"
             className="w-full bg-[#111] border border-zinc-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[var(--color-primary)] transition-all"
@@ -323,7 +396,7 @@ export function MyPage() {
              onClick={handleSaveName}
              disabled={!tempName.trim()}
           >
-             수정 완료
+             {t('mypage_nickname_modal_button')}
           </button>
         </div>
       </Modal>

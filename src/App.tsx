@@ -1,18 +1,41 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, useSearchParams, useNavigate } from 'react-router-dom'
 import { useEffect } from 'react'
 import { format } from 'date-fns'
 import { usePillStore } from '@/store/usePillStore'
 import { useSettingStore } from '@/store/useSettingStore'
+import { useAuthStore } from '@/store/useAuthStore'
 import { BottomNav } from '@/components/layout/BottomNav'
 import { syncPillsToServer } from '@/lib/pushService'
 
 import { Home } from '@/pages/Home'
-
 import { CalendarPage } from '@/pages/Calendar'
 import { Pills } from '@/pages/Pills'
 import { MyPage } from '@/pages/MyPage'
+import { Admin } from '@/pages/Admin'
 import { AlarmRingingModal } from '@/components/ui/AlarmRingingModal'
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary'
+
+// OAuth 콜백 처리: /mypage?token=xxx
+function AuthCallback() {
+  const [params] = useSearchParams()
+  const navigate = useNavigate()
+  const { setAuth } = useAuthStore()
+
+  useEffect(() => {
+    const token = params.get('token')
+    if (!token) return
+    // 토큰으로 사용자 정보 조회
+    fetch('/api/auth/me', { headers: { Authorization: `Bearer ${token}` } })
+      .then(r => r.json())
+      .then(user => {
+        setAuth(token, user)
+        navigate('/mypage', { replace: true })
+      })
+      .catch(() => navigate('/mypage', { replace: true }))
+  }, [])
+
+  return null
+}
 
 function App() {
   const { pills, setTriggerAlarm } = usePillStore()
@@ -93,11 +116,13 @@ function App() {
           >
             <BottomNav />
             <AlarmRingingModal />
+            <AuthCallback />
             <Routes>
               <Route path="/" element={<Home />} />
               <Route path="/calendar" element={<CalendarPage />} />
               <Route path="/pills" element={<Pills />} />
               <Route path="/mypage" element={<MyPage />} />
+              <Route path="/admin" element={<Admin />} />
               <Route
                 path="*"
                 element={
