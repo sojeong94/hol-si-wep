@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { track } from '@/lib/analytics'
 import { usePillStore } from '@/store/usePillStore'
 import { Card } from '@/components/ui/Card'
@@ -8,9 +9,9 @@ import { Plus, MessageCircle, Send, Loader2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { RecommendCards, type Recommendation } from '@/components/ui/RecommendCards'
 
-const DAYS = ['일', '월', '화', '수', '목', '금', '토']
-
 export function Pills() {
+  const { t } = useTranslation()
+  const DAYS = [t('days_sun'), t('days_mon'), t('days_tue'), t('days_wed'), t('days_thu'), t('days_fri'), t('days_sat')]
   const { pills, addPill, removePill, togglePill, updatePillTime } = usePillStore()
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [isEditMode, setIsEditMode] = useState(false)
@@ -64,23 +65,23 @@ export function Pills() {
   }
 
   const getDaysText = (days: number[] = [0, 1, 2, 3, 4, 5, 6]) => {
-    if (days.length === 7) return '매일'
-    if (days.length === 0) return '안 함'
-    if (days.length === 5 && !days.includes(0) && !days.includes(6)) return '평일'
-    if (days.length === 2 && days.includes(0) && days.includes(6)) return '주말'
+    if (days.length === 7) return t('pills_everyday')
+    if (days.length === 0) return t('pills_none')
+    if (days.length === 5 && !days.includes(0) && !days.includes(6)) return t('pills_weekday')
+    if (days.length === 2 && days.includes(0) && days.includes(6)) return t('pills_weekend')
     return days.map(d => DAYS[d]).join(', ')
   }
 
   return (
     <div className="p-5 pb-8 space-y-4 animate-in fade-in duration-500 bg-[var(--color-secondary)] min-h-screen relative text-white">
       <header className="pt-2 flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-black tracking-tight drop-shadow-[0_0_10px_rgba(255,255,255,0.2)]">알람</h1>
+        <h1 className="text-3xl font-black tracking-tight drop-shadow-[0_0_10px_rgba(255,255,255,0.2)]">{t('pills_header')}</h1>
         <div className="flex items-center gap-4">
           <button
             onClick={() => setIsEditMode(!isEditMode)}
             className="text-pink-500 font-bold active:opacity-70 transition-opacity text-lg drop-shadow-[0_0_8px_rgba(255,42,122,0.4)]"
           >
-            {isEditMode ? '완료' : '편집'}
+            {isEditMode ? t('pills_done') : t('pills_edit')}
           </button>
           <button
             onClick={() => setIsModalOpen(true)}
@@ -93,8 +94,8 @@ export function Pills() {
 
       {pills.length === 0 ? (
         <Card className="flex flex-col items-center justify-center p-12 text-center text-zinc-500 border-none shadow-none bg-transparent">
-          <p className="mb-2 font-bold text-lg text-zinc-400">알람 없음</p>
-          <p className="text-sm">우측 상단의 + 버튼을 눌러 추가해주세요.</p>
+          <p className="mb-2 font-bold text-lg text-zinc-400">{t('pills_empty_title')}</p>
+          <p className="text-sm">{t('pills_empty_desc')}</p>
         </Card>
       ) : (
         <div className="space-y-0">
@@ -152,7 +153,7 @@ export function Pills() {
       )}
 
       {/* 영양제 상담 모달 */}
-      <Modal isOpen={isAdvisorOpen} onClose={() => setIsAdvisorOpen(false)} title="영양제 Q&A">
+      <Modal isOpen={isAdvisorOpen} onClose={() => setIsAdvisorOpen(false)} title={t('pills_qa_title')}>
         <div className="space-y-4">
 
           {advisorAnswer && (
@@ -168,7 +169,7 @@ export function Pills() {
               value={advisorQuestion}
               onChange={e => setAdvisorQuestion(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && askAdvisor()}
-              placeholder="예: 칼슘이랑 마그네슘 같이 먹어도 돼?"
+              placeholder={t('pills_qa_placeholder')}
               className="flex-1 min-w-0 bg-zinc-900 border border-zinc-700 rounded-xl px-4 py-3 text-white text-base focus:outline-none focus:border-[var(--color-primary)] transition-all"
             />
             <button
@@ -181,7 +182,7 @@ export function Pills() {
           </div>
 
           <div className="flex flex-wrap gap-2">
-            {['같이 먹으면 안 되는 조합이 있어?', '공복에 먹어도 돼?', '월경 기간에 더 챙겨야 할 게 있어?'].map(q => (
+            {[t('pills_qa_suggestion_1', '같이 먹으면 안 되는 조합이 있어?'), t('pills_qa_suggestion_2', '공복에 먹어도 돼?'), t('pills_qa_suggestion_3', '월경 기간에 더 챙겨야 할 게 있어?')].map(q => (
               <button
                 key={q}
                 onClick={() => setAdvisorQuestion(q)}
@@ -194,20 +195,20 @@ export function Pills() {
         </div>
       </Modal>
 
-      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="알람 추가">
+      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={t('pills_add_title')}>
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-zinc-400 mb-1">영양제 이름</label>
+            <label className="block text-sm font-medium text-zinc-400 mb-1">{t('pills_name_label')}</label>
             <input
               type="text"
               value={newPill.name}
               onChange={e => setNewPill({ ...newPill, name: e.target.value })}
               className="w-full bg-[#18181A] border border-zinc-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[var(--color-primary)] transition-all text-lg"
-              placeholder="예: 피임약, 유산균"
+              placeholder={t('pills_name_placeholder')}
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-zinc-400 mb-1">시간</label>
+            <label className="block text-sm font-medium text-zinc-400 mb-1">{t('pills_time_label')}</label>
             <input
               type="time"
               value={newPill.time}
@@ -216,7 +217,7 @@ export function Pills() {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-zinc-400 mb-2 mt-4">반복 요일</label>
+            <label className="block text-sm font-medium text-zinc-400 mb-2 mt-4">{t('pills_days_label')}</label>
             <div className="flex justify-between gap-1">
               {DAYS.map((day, idx) => (
                 <button
@@ -234,7 +235,7 @@ export function Pills() {
               ))}
             </div>
           </div>
-          <Button className="w-full mt-6 bg-[var(--color-primary)] text-white font-bold h-14 rounded-xl shadow-[0_0_15px_rgba(255,42,122,0.4)]" size="lg" onClick={handleAdd}>저장</Button>
+          <Button className="w-full mt-6 bg-[var(--color-primary)] text-white font-bold h-14 rounded-xl shadow-[0_0_15px_rgba(255,42,122,0.4)]" size="lg" onClick={handleAdd}>{t('pills_save')}</Button>
         </div>
       </Modal>
     </div>

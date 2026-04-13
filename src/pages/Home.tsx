@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { useRecordStore } from '@/store/useRecordStore'
 import { usePillStore } from '@/store/usePillStore'
 import { useSettingStore } from '@/store/useSettingStore'
@@ -12,6 +13,7 @@ import { track } from '@/lib/analytics'
 import { RecommendCards, type Recommendation } from '@/components/ui/RecommendCards'
 
 export function Home() {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const { records } = useRecordStore()
   const { pills, togglePill } = usePillStore()
@@ -273,20 +275,20 @@ export function Home() {
             onClick={() => { setShowWelcomeModal(false); setShowNameModal(true) }}
             className="w-full mt-4 bg-[var(--color-primary)] text-white font-bold py-3.5 rounded-xl transition-all shadow-[0_0_15px_rgba(255,42,122,0.3)] active:scale-95"
           >
-            시작하기
+            {t('home_welcome_button')}
           </button>
         </div>
       </Modal>
 
       {/* 닉네임 설정 모달 */}
-      <Modal isOpen={showNameModal} onClose={() => { }} title="반가워요!">
+      <Modal isOpen={showNameModal} onClose={() => { }} title={t('home_name_modal_title')}>
         <p className="text-zinc-400 font-medium text-sm mb-6">
-          들었을때 기분이 좋아지는 애칭을 알려주세요.
+          {t('home_name_modal_desc')}
         </p>
         <div className="space-y-4">
           <input
             type="text"
-            placeholder="이를테면 공주랄까..?"
+            placeholder={t('home_name_placeholder')}
             className="w-full bg-black/50 border border-zinc-700 rounded-xl px-4 py-3.5 text-white focus:outline-none focus:border-[var(--color-primary)] placeholder:text-zinc-600 transition-colors"
             value={tempName}
             onChange={e => setTempName(e.target.value)}
@@ -297,7 +299,7 @@ export function Home() {
             disabled={!tempName.trim()}
             className="w-full bg-[var(--color-primary)] disabled:opacity-50 text-white font-bold py-3.5 rounded-xl transition-all shadow-[0_0_15px_rgba(255,42,122,0.3)] active:scale-95"
           >
-            이 이름으로 시작하기
+            {t('home_name_button')}
           </button>
         </div>
       </Modal>
@@ -335,7 +337,7 @@ export function Home() {
       {/* 터짐주의 위젯 */}
       <Card onClick={() => navigate('/calendar')} className={`relative overflow-hidden p-6 border transition-all duration-700 ease-out cursor-pointer active:scale-[0.98] ${dDayContent.gradient}`}>
         <div className="relative z-10">
-          <p className="opacity-90 font-medium mb-3 text-xs tracking-wider">{nextDateStr ? `다음 예정일 ${nextDateStr}` : '주기를 예측할 수 없어요'}</p>
+          <p className="opacity-90 font-medium mb-3 text-xs tracking-wider">{nextDateStr ? `${t('home_dday_next')} ${nextDateStr}` : t('home_dday_no_data')}</p>
           <div className="flex flex-col gap-1">
             <h2 className="text-[1.6rem] leading-snug sm:text-3xl font-black tracking-tight drop-shadow-md break-keep">
               <span className="block">{dDayContent.title}</span>
@@ -349,12 +351,12 @@ export function Home() {
       {/* 홀시의 참견 - AI 맞춤 조언 */}
       <section>
         <h3 className="text-lg font-extrabold mb-3 flex items-center gap-2 text-zinc-50 tracking-wide drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]" style={{ fontFamily: '"Gowun Dodum", sans-serif' }}>
-          홀시의 참견
+          {t('home_advice_section')}
         </h3>
         <Card className="p-5 bg-zinc-900 border border-zinc-800 shadow-xl relative transition-all min-h-[160px] flex flex-col justify-center rounded-[2rem]">
           <div className="w-full bg-pink-500/10 border border-pink-500/20 rounded-2xl px-5 py-5 text-[15px] text-pink-50 transition-all min-h-[6.5rem] mb-4 break-keep flex items-center justify-center text-center font-medium shadow-inner leading-relaxed whitespace-pre-wrap" style={{ fontFamily: '"Gowun Dodum", sans-serif' }}>
             {isLoadingAdvice ? (
-              <span className="text-pink-400/70 animate-pulse">홀시가 생각 중이에요...</span>
+              <span className="text-pink-400/70 animate-pulse">{t('home_advice_loading')}</span>
             ) : (
               aiAdvice ?? dDayContent.advice
             )}
@@ -371,7 +373,7 @@ export function Home() {
               onClick={handleShare}
               className="flex-1 bg-[var(--color-primary)] hover:bg-pink-600 text-white font-bold py-3.5 rounded-xl transition-all active:scale-95 flex items-center justify-center gap-2 text-sm shadow-[0_0_15px_rgba(255,42,122,0.4)] border border-pink-400"
             >
-              <Share size={16} strokeWidth={2.5} /> 카톡에 공유하기
+              <Share size={16} strokeWidth={2.5} /> {t('home_advice_share')}
             </button>
           </div>
           {/* 쿠팡 파트너스 추천 */}
@@ -381,7 +383,7 @@ export function Home() {
 
       {/* 영양제 상담 */}
       <section>
-        <h3 className="text-lg font-extrabold mb-3 flex items-center gap-2 text-zinc-50 tracking-wide drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">영양제 상담</h3>
+        <h3 className="text-lg font-extrabold mb-3 flex items-center gap-2 text-zinc-50 tracking-wide drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">{t('home_consultation_section')}</h3>
         <Card
           className="p-5 bg-zinc-900 border border-zinc-800 shadow-xl rounded-[2rem] cursor-pointer active:scale-[0.98] transition-all"
           onClick={() => { setIsAdvisorOpen(true); setAdvisorAnswer(''); setAdvisorQuestion('') }}
@@ -391,8 +393,8 @@ export function Home() {
               <MessageCircle size={22} className="text-[var(--color-primary)]" />
             </div>
             <div className="flex-1">
-              <p className="font-bold text-zinc-100 text-sm mb-0.5">지금 주기에 맞는 영양제 알아보기</p>
-              <p className="text-xs text-zinc-500">같이 먹으면 안 되는 조합, 지금 챙겨야 할 것들</p>
+              <p className="font-bold text-zinc-100 text-sm mb-0.5">{t('home_consultation_title')}</p>
+              <p className="text-xs text-zinc-500">{t('home_consultation_desc')}</p>
             </div>
           </div>
           <div className="flex flex-wrap gap-2 mt-4">
@@ -410,7 +412,7 @@ export function Home() {
       </section>
 
       {/* 영양제 상담 모달 */}
-      <Modal isOpen={isAdvisorOpen} onClose={() => setIsAdvisorOpen(false)} title="영양제 상담">
+      <Modal isOpen={isAdvisorOpen} onClose={() => setIsAdvisorOpen(false)} title={t('home_consultation_modal_title')}>
         <div className="space-y-4">
           {advisorAnswer && (
             <Card className="p-4 bg-zinc-900 border border-zinc-700 text-sm text-zinc-200 leading-relaxed whitespace-pre-wrap">
@@ -424,7 +426,7 @@ export function Home() {
               value={advisorQuestion}
               onChange={e => setAdvisorQuestion(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && askAdvisor()}
-              placeholder="예: 칼슘이랑 마그네슘 같이 먹어도 돼?"
+              placeholder={t('home_consultation_placeholder')}
               className="flex-1 min-w-0 bg-zinc-900 border border-zinc-700 rounded-xl px-4 py-3 text-white text-base focus:outline-none focus:border-[var(--color-primary)] transition-all"
             />
             <button
@@ -452,12 +454,12 @@ export function Home() {
       {/* 영양제 체크리스트 */}
       <section>
         <div className="flex items-center justify-between mb-3">
-          <h3 className="text-lg font-extrabold text-zinc-50 tracking-wide drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">알림</h3>
+          <h3 className="text-lg font-extrabold text-zinc-50 tracking-wide drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">{t('home_pills_section')}</h3>
         </div>
         {pills.length === 0 ? (
           <Card className="flex flex-col items-center justify-center p-8 text-center border-dashed border-2 border-zinc-700 bg-zinc-900/50 backdrop-blur-sm group cursor-pointer transition-all hover:bg-zinc-800" onClick={() => navigate('/pills')}>
-            <p className="font-bold text-[var(--color-primary)] mb-1">나를 위한 작은 홀시비서</p>
-            <p className="text-xs text-zinc-500 font-medium">루틴을 설정하고 나를 더 아껴봐요!</p>
+            <p className="font-bold text-[var(--color-primary)] mb-1">{t('home_pills_empty_title')}</p>
+            <p className="text-xs text-zinc-500 font-medium">{t('home_pills_empty_desc')}</p>
           </Card>
         ) : (
           <div className="space-y-3">
@@ -502,18 +504,18 @@ export function Home() {
 
       {/* 감정 쓰레기통 */}
       <section ref={trashRef}>
-        <h3 className="text-lg font-extrabold mb-3 flex items-center gap-1.5 text-zinc-50 tracking-wide drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">비밀 상자</h3>
+        <h3 className="text-lg font-extrabold mb-3 flex items-center gap-1.5 text-zinc-50 tracking-wide drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">{t('home_trash_section')}</h3>
         <Card className="p-4 bg-zinc-900 border border-zinc-800 shadow-inner relative overflow-hidden transition-all duration-700 min-h-[160px] flex flex-col justify-center">
           {isBurned ? (
             <div className="flex flex-col items-center justify-center p-4 text-zinc-500 animate-in zoom-in-95 duration-500">
               <Wind size={32} className="mb-2 text-pink-500/50" />
-              <p className="font-bold text-sm text-zinc-300 mb-1">어둠 속으로 사라졌어요.</p>
-              <p className="text-xs text-zinc-600">이곳에 남긴 감정은 누구도 볼 수 없습니다.</p>
+              <p className="font-bold text-sm text-zinc-300 mb-1">{t('home_trash_burned_title')}</p>
+              <p className="text-xs text-zinc-600">{t('home_trash_burned_desc')}</p>
             </div>
           ) : (
             <div className={`transition-all duration-1000 ${isBurning ? 'opacity-0 translate-y-[-20px] blur-sm scale-95' : 'opacity-100'}`}>
               <textarea
-                placeholder="짜증, 우울, 혹은 말 못할 고민들. 이곳에 털어놓고 쿨하게 잊어버리세요."
+                placeholder={t('home_trash_placeholder')}
                 className="w-full bg-[#111] border border-zinc-800 rounded-xl px-4 py-3 text-base text-zinc-200 focus:outline-none focus:border-[var(--color-primary)] transition-all resize-none h-24 mb-3"
                 value={trashText}
                 onChange={(e) => setTrashText(e.target.value)}
@@ -524,7 +526,7 @@ export function Home() {
                 disabled={isBurning || !trashText.trim()}
                 className="w-full bg-zinc-800 hover:bg-zinc-700 disabled:bg-black/30 disabled:border-transparent disabled:text-zinc-600 border border-zinc-700 hover:border-zinc-500 text-zinc-300 hover:text-white font-bold py-3.5 rounded-xl transition-all active:scale-95 flex items-center justify-center gap-2 text-sm shadow-[0_0_15px_rgba(0,0,0,0.2)]"
               >
-                흔적 없이 날려버리기 <Wind size={16} />
+                {t('home_trash_button')} <Wind size={16} />
               </button>
             </div>
           )}

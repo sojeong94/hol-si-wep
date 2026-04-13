@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { track } from '@/lib/analytics'
 import { useRecordStore } from '@/store/useRecordStore'
 import { useSettingStore } from '@/store/useSettingStore'
@@ -14,6 +15,7 @@ import {
 } from 'date-fns'
 
 export function CalendarPage() {
+  const { t } = useTranslation()
   const [currentMonth, setCurrentMonth] = useState(new Date())
   const [selectedDate, setSelectedDate] = useState(new Date())
   const [isOCRModalOpen, setIsOCRModalOpen] = useState(false)
@@ -109,7 +111,7 @@ export function CalendarPage() {
     (!r.endDate && parseLocalDate(r.startDate).getTime() <= selectedDate.getTime())
   )
 
-  let insightText = "아직 분석할 데이터가 부족해요. 꾸준히 시작일을 기록해 주세요."
+  let insightText = t('calendar_cycle_insufficient')
 
   if (sortedRecords.length >= 2) {
     const latest = sortedRecords[sortedRecords.length - 1]
@@ -121,11 +123,11 @@ export function CalendarPage() {
       const prevDiff = differenceInDays(parseLocalDate(previous.startDate), parseLocalDate(older.startDate))
 
       const diffChange = curDiff - prevDiff
-      if (diffChange > 0) insightText = `지난번보다 주기가 ${diffChange}일 길어졌어요. 피로가 쌓였을 수 있으니 푹 휴식하세요.`
-      else if (diffChange < 0) insightText = `지난번보다 주기가 ${Math.abs(diffChange)}일 짧아졌어요. 스트레스나 환경 변화에 유의해 주세요.`
-      else insightText = "주기가 지난번과 동일하게 매우 일정합니다! 건강하게 유지되고 있어요."
+      if (diffChange > 0) insightText = t('calendar_insight_longer', { days: diffChange })
+      else if (diffChange < 0) insightText = t('calendar_insight_shorter', { days: Math.abs(diffChange) })
+      else insightText = t('calendar_insight_same')
     } else {
-      insightText = `기록된 첫 주기는 ${curDiff}일이었어요. 데이터가 한 번 더 쌓이면 변화를 비교 분석해드릴게요!`
+      insightText = t('calendar_insight_first', { days: curDiff })
     }
   }
 
@@ -160,7 +162,7 @@ export function CalendarPage() {
     }
 
     if (candidateDates.length === 0) {
-      alert('이미지에서 날짜를 찾지 못했어요. 생리 기록 날짜가 보이는 스크린샷을 사용해주세요.')
+      alert(t('calendar_ocr_no_date'))
       return
     }
 
@@ -172,7 +174,7 @@ export function CalendarPage() {
       .sort((a, b) => new Date(a).getTime() - new Date(b).getTime())
 
     if (validDates.length === 0) {
-      alert('인식된 날짜가 모두 2년 이전이거나 미래 날짜예요. 최근 기록이 포함된 이미지를 사용해주세요.')
+      alert(t('calendar_ocr_old_dates'))
       return
     }
 
@@ -206,14 +208,14 @@ export function CalendarPage() {
       return { records: newStRecords }
     })
     setIsConfirmModalOpen(false)
-    alert("과거 기록이 성공적으로 추가되었습니다!")
+    alert(t('calendar_ocr_saved_success'))
   }
 
   return (
     <div className="p-5 pb-8 space-y-6 animate-in fade-in duration-500 bg-[var(--color-secondary)] min-h-screen">
       <header className="pt-2 flex items-center justify-between">
         <h1 className="text-2xl font-black text-white flex items-center gap-2 tracking-tight drop-shadow-[0_0_10px_rgba(255,255,255,0.2)]">
-          내 주기 달력
+          {t('calendar_title')}
           <button onClick={() => setShowGuideModal(true)} className="p-1 text-zinc-500 hover:text-pink-400 transition-colors active:scale-95">
             <Info size={18} strokeWidth={2.5} />
           </button>
@@ -221,15 +223,15 @@ export function CalendarPage() {
         <div className="flex gap-2 items-center">
           <div className="flex items-center gap-1">
             <span className="w-2.5 h-2.5 rounded-full bg-[var(--color-primary)]"></span>
-            <span className="text-xs text-zinc-400 font-medium">터짐</span>
+            <span className="text-xs text-zinc-400 font-medium">{t('calendar_period')}</span>
           </div>
           <div className="flex items-center gap-1">
             <span className="w-2.5 h-2.5 rounded-full border border-[var(--color-primary)]"></span>
-            <span className="text-xs text-zinc-400 font-medium">예정</span>
+            <span className="text-xs text-zinc-400 font-medium">{t('calendar_expected')}</span>
           </div>
           <div className="flex items-center gap-1">
             <span className="w-2.5 h-2.5 rounded-full border border-white"></span>
-            <span className="text-xs text-zinc-400 font-medium">가임</span>
+            <span className="text-xs text-zinc-400 font-medium">{t('calendar_fertile')}</span>
           </div>
         </div>
       </header>
@@ -239,20 +241,20 @@ export function CalendarPage() {
           <button onClick={() => setCurrentMonth(subMonths(currentMonth, 1))} className="p-2 bg-zinc-800/80 hover:bg-zinc-700 rounded-xl active:scale-95 transition-all text-zinc-300 shadow-sm border border-zinc-700/50 flex items-center justify-center">
             <ChevronLeft size={22} strokeWidth={2.5} />
           </button>
-          <span className="font-black text-2xl text-white tracking-wide">{format(currentMonth, 'yyyy년 M월')}</span>
+          <span className="font-black text-2xl text-white tracking-wide">{format(currentMonth, t('calendar_month_fmt'))}</span>
           <button onClick={() => setCurrentMonth(addMonths(currentMonth, 1))} className="p-2 bg-zinc-800/80 hover:bg-zinc-700 rounded-xl active:scale-95 transition-all text-zinc-300 shadow-sm border border-zinc-700/50 flex items-center justify-center">
             <ChevronRight size={22} strokeWidth={2.5} />
           </button>
         </div>
 
         <div className="grid grid-cols-7 gap-y-4 mb-3 pb-3 border-b border-zinc-800/60 text-center text-[13px] font-bold text-zinc-400">
-          <div className="text-pink-400/80">일</div>
-          <div>월</div>
-          <div>화</div>
-          <div>수</div>
-          <div>목</div>
-          <div>금</div>
-          <div className="text-blue-400/80">토</div>
+          <div className="text-pink-400/80">{t('days_sun')}</div>
+          <div>{t('days_mon')}</div>
+          <div>{t('days_tue')}</div>
+          <div>{t('days_wed')}</div>
+          <div>{t('days_thu')}</div>
+          <div>{t('days_fri')}</div>
+          <div className="text-blue-400/80">{t('days_sat')}</div>
         </div>
 
         <div className="grid grid-cols-7 gap-y-3 gap-x-1 text-center">
@@ -300,18 +302,18 @@ export function CalendarPage() {
       </Card>
 
       <section>
-        <h3 className="text-lg font-extrabold mb-3 text-zinc-100 drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">{format(selectedDate, 'M월 d일')} 생리 기록</h3>
+        <h3 className="text-lg font-extrabold mb-3 text-zinc-100 drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">{format(selectedDate, t('calendar_date_fmt'))} {t('calendar_record_title')}</h3>
         {!currentRecord ? (
           <button onClick={() => { addRecord(selectedDateStr); track('record_added', { total: records.length + 1 }) }} className="w-full h-14 bg-zinc-900 border border-zinc-800 shadow-sm rounded-[var(--radius-xl)] flex items-center justify-center gap-2 hover:bg-zinc-800 transition-colors active:scale-[0.98]">
             <span className="w-3 h-3 rounded-full bg-[var(--color-primary)] shadow-[0_0_8px_rgba(255,42,122,0.8)]"></span>
-            <span className="font-bold text-white text-lg">이날 터진 날</span>
+            <span className="font-bold text-white text-lg">{t('calendar_start_button')}</span>
           </button>
         ) : (
           <div className="space-y-3">
             {selectedDateStr === currentRecord.startDate && (
               <button onClick={() => removeRecord(currentRecord.id)} className="w-full h-14 bg-[var(--color-primary)] border border-pink-600 shadow-[0_0_15px_rgba(255,42,122,0.4)] rounded-[var(--radius-xl)] flex items-center justify-center gap-2 hover:opacity-90 transition-all active:scale-[0.98]">
                 <span className="w-3 h-3 rounded-full border-2 border-white/80"></span>
-                <span className="font-bold text-white text-lg">터진 날 취소</span>
+                <span className="font-bold text-white text-lg">{t('calendar_cancel_start')}</span>
               </button>
             )}
 
@@ -319,12 +321,12 @@ export function CalendarPage() {
               currentRecord.endDate === selectedDateStr ? (
                 <button onClick={() => endRecord(currentRecord.id, null)} className="w-full h-14 bg-pink-600 border border-pink-500 shadow-md rounded-[var(--radius-xl)] flex items-center justify-center gap-2 hover:opacity-90 transition-all active:scale-[0.98]">
                   <span className="w-3 h-3 rounded-full border-2 border-white/80"></span>
-                  <span className="font-bold text-white text-lg">끝난 날 기록 취소</span>
+                  <span className="font-bold text-white text-lg">{t('calendar_cancel_end')}</span>
                 </button>
               ) : (
                 <button onClick={() => { endRecord(currentRecord.id, selectedDateStr); track('record_ended') }} className="w-full h-14 bg-zinc-800 border border-zinc-700 shadow-sm rounded-[var(--radius-xl)] flex items-center justify-center gap-2 hover:bg-zinc-700 transition-all text-zinc-300 active:scale-[0.98]">
                   <span className="w-3 h-3 rounded-full bg-pink-700 shadow-sm"></span>
-                  <span className="font-bold text-white text-lg">이날 끝난 날로 변경</span>
+                  <span className="font-bold text-white text-lg">{t('calendar_end_button')}</span>
                 </button>
               )
             )}
@@ -332,8 +334,8 @@ export function CalendarPage() {
             <Card className="bg-zinc-900 border border-zinc-800 py-3 text-center shadow-inner mt-2">
               <p className="text-sm font-bold text-zinc-300">
                 {currentRecord.endDate ?
-                  `${format(parseLocalDate(currentRecord.startDate), 'M월 d일')} ~ ${format(parseLocalDate(currentRecord.endDate), 'M월 d일')} (직접 기록됨)` :
-                  `${format(parseLocalDate(currentRecord.startDate), 'M월 d일')} ~ ${format(addDays(parseLocalDate(currentRecord.startDate), avgPeriod - 1), 'M월 d일')} (설정 기준 자동 적용)`}
+                  `${format(parseLocalDate(currentRecord.startDate), t('calendar_date_fmt'))} ~ ${format(parseLocalDate(currentRecord.endDate), t('calendar_date_fmt'))} (${t('calendar_manual_recorded')})` :
+                  `${format(parseLocalDate(currentRecord.startDate), t('calendar_date_fmt'))} ~ ${format(addDays(parseLocalDate(currentRecord.startDate), avgPeriod - 1), t('calendar_date_fmt'))} (${t('calendar_auto_applied')})`}
               </p>
             </Card>
           </div>
@@ -346,14 +348,14 @@ export function CalendarPage() {
           onClick={() => setIsOCRModalOpen(true)}
           className="w-full h-12 bg-[#18181A] border border-zinc-800 text-pink-400 font-bold rounded-[var(--radius-xl)] flex items-center justify-center gap-2 hover:bg-zinc-800 active:scale-95 transition-all text-sm mb-4"
         >
-          <Camera size={18} /> 과거 기록 가져오기
+          <Camera size={18} /> {t('calendar_import_past')}
         </button>
       </section>
 
       {/* 분석 차트 하단 섹션 */}
       {sortedRecords.length >= 2 && (
         <section className="mt-8 mb-4">
-          <h3 className="text-lg font-extrabold mb-3 text-zinc-100 drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">전체 주기 히스토리</h3>
+          <h3 className="text-lg font-extrabold mb-3 text-zinc-100 drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">{t('calendar_history')}</h3>
           <Card className="p-5 flex flex-col gap-4 bg-zinc-900 border border-zinc-800">
             <p className="text-sm font-medium text-zinc-300 bg-black/40 p-3.5 rounded-xl border border-zinc-800 shadow-inner leading-relaxed">
               {insightText}
@@ -389,24 +391,24 @@ export function CalendarPage() {
         onClose={() => setIsOCRModalOpen(false)}
         onScanResult={handleOCRResult}
         mode="period"
-        description="생리 기록 날짜가 보이는 스크린샷을 올려주세요. AI가 날짜를 자동으로 추출해요."
+        description={t('calendar_ocr_desc')}
       />
 
-      <Modal isOpen={isConfirmModalOpen} onClose={() => setIsConfirmModalOpen(false)} title="인식된 기록">
+      <Modal isOpen={isConfirmModalOpen} onClose={() => setIsConfirmModalOpen(false)} title={t('calendar_ocr_result_title')}>
         <div className="space-y-4">
           {parsedRecords.length === 0 ? (
-            <p className="text-center text-sm font-bold text-pink-500 py-6">날짜를 모두 지웠어요.</p>
+            <p className="text-center text-sm font-bold text-pink-500 py-6">{t('calendar_ocr_all_removed')}</p>
           ) : (
             <>
               <p className="text-center text-2xl font-black text-white">
-                {parsedRecords.length}개 주기
-                <span className="text-base font-medium text-zinc-400 ml-2">를 찾았어요</span>
+                {t('calendar_ocr_found', { count: parsedRecords.length })}
+                <span className="text-base font-medium text-zinc-400 ml-2">{t('calendar_ocr_found_suffix')}</span>
               </p>
-              <p className="text-center text-xs text-zinc-500">잘못된 항목은 X를 눌러 빼주세요</p>
+              <p className="text-center text-xs text-zinc-500">{t('calendar_ocr_remove_hint')}</p>
               <div className="max-h-60 overflow-y-auto space-y-2 pr-1">
                 {parsedRecords.map((r, idx) => {
-                  const startFmt = format(parseLocalDate(r.start), 'M월 d일')
-                  const endFmt = r.end ? format(parseLocalDate(r.end), 'M월 d일') : null
+                  const startFmt = format(parseLocalDate(r.start), t('calendar_date_fmt'))
+                  const endFmt = r.end ? format(parseLocalDate(r.end), t('calendar_date_fmt')) : null
                   return (
                     <div key={idx} className="flex items-center justify-between bg-zinc-900 border border-zinc-800 rounded-2xl px-4 py-3">
                       <div>
@@ -416,8 +418,8 @@ export function CalendarPage() {
                         </p>
                         <p className="text-xs text-zinc-600 mt-0.5">
                           {endFmt
-                            ? `${differenceInDays(parseLocalDate(r.end!), parseLocalDate(r.start)) + 1}일간`
-                            : '시작일만'}
+                            ? t('calendar_ocr_days_count', { days: differenceInDays(parseLocalDate(r.end!), parseLocalDate(r.start)) + 1 })
+                            : t('calendar_ocr_start_only')}
                         </p>
                       </div>
                       <button
@@ -437,13 +439,13 @@ export function CalendarPage() {
             disabled={parsedRecords.length === 0}
             className="w-full bg-[var(--color-primary)] text-white font-bold py-3.5 rounded-xl transition-all disabled:opacity-50 shadow-[0_0_15px_rgba(255,42,122,0.4)]"
           >
-            {parsedRecords.length > 0 ? `${parsedRecords.length}개 기록 저장하기` : '저장할 기록 없음'}
+            {parsedRecords.length > 0 ? t('calendar_ocr_save', { count: parsedRecords.length }) : t('calendar_ocr_save_empty')}
           </button>
         </div>
       </Modal>
 
       {/* 캘린더 이용 가이드 모달 */}
-      <Modal isOpen={showGuideModal} onClose={() => setShowGuideModal(false)} title="홀시 캘린더 이용 가이드 💡">
+      <Modal isOpen={showGuideModal} onClose={() => setShowGuideModal(false)} title={t('calendar_guide_button')}>
         <div className="space-y-4 mt-2">
           
           <div className="bg-[#18181A] border border-zinc-800 p-4 rounded-[1.25rem]">
@@ -477,7 +479,7 @@ export function CalendarPage() {
             onClick={() => setShowGuideModal(false)}
             className="w-full mt-2 bg-[var(--color-primary)] hover:bg-pink-600 text-white font-bold py-3.5 rounded-xl transition-all shadow-[0_0_15px_rgba(255,42,122,0.3)] active:scale-95"
           >
-            확인했어요!
+            {t('calendar_guide_confirm')}
           </button>
         </div>
       </Modal>
