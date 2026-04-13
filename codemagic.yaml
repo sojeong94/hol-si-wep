@@ -29,7 +29,7 @@ workflows:
       - name: Set up code signing
         script: xcode-project use-profiles
       - name: Install dependencies
-        script: npm ci
+        script: npm install
       - name: Build web app
         script: npm run build
       - name: Sync Capacitor iOS
