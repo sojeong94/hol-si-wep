@@ -12,6 +12,7 @@ import { CalendarPage } from '@/pages/Calendar'
 import { Pills } from '@/pages/Pills'
 import { MyPage } from '@/pages/MyPage'
 import { Admin } from '@/pages/Admin'
+import Privacy from '@/pages/Privacy'
 import { AlarmRingingModal } from '@/components/ui/AlarmRingingModal'
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary'
 
@@ -123,6 +124,7 @@ function App() {
               <Route path="/pills" element={<Pills />} />
               <Route path="/mypage" element={<MyPage />} />
               <Route path="/admin" element={<Admin />} />
+              <Route path="/privacy" element={<Privacy />} />
               <Route
                 path="*"
                 element={
