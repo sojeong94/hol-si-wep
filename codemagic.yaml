@@ -6,12 +6,21 @@ workflows:
     environment:
       groups:
         - ios_credentials
-      ios_signing:
-        distribution_type: app_store
-        bundle_identifier: com.holsi.app
       node: v20.18.0
       xcode: latest
     scripts:
+      - name: Set up keychain
+        script: keychain initialize
+      - name: Fetch signing files
+        script: |
+          app-store-connect fetch-signing-files "com.holsi.app" \
+            --type IOS_APP_STORE \
+            --create \
+            --certificate-key @env:CERTIFICATE_PRIVATE_KEY
+      - name: Add certificates to keychain
+        script: keychain add-certificates
+      - name: Set up code signing
+        script: xcode-project use-profiles
       - name: Install dependencies
         script: npm ci
       - name: Build web app
