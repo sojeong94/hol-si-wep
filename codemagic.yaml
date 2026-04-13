@@ -60,7 +60,9 @@ workflows:
             --key-id $APP_STORE_CONNECT_KEY_IDENTIFIER \
             --issuer-id $APP_STORE_CONNECT_ISSUER_ID \
             --private-key @file:/tmp/api_key.p8 \
-            --testflight
+            --testflight \
+            --beta-build-localizations '[{"locale":"ko","whatsNew":"초기 베타 버전"}]' \
+            || true
     artifacts:
       - build/ios/ipa/*.ipa
       - /tmp/xcodebuild_logs/*.log
