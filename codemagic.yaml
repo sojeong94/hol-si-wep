@@ -6,7 +6,7 @@ workflows:
     environment:
       groups:
         - ios_credentials
-      node: v20.18.0
+      node: v22.15.0
       xcode: latest
     scripts:
       - name: Decode keys from base64
