@@ -7,6 +7,7 @@ import cron from 'node-cron'
 import fs from 'fs'
 import path from 'path'
 import { fileURLToPath } from 'url'
+import authRouter from './auth.js'
 
 dotenv.config()
 
@@ -30,6 +31,9 @@ app.use(cors({
 }))
 
 app.use(express.json({ limit: '2mb' })) // OCR 이미지 고려하여 2mb (클라에서 1024px 압축 후 ~300KB)
+
+// ─── Auth 라우터 ──────────────────────────────────────────────────────────────
+app.use('/api/auth', authRouter)
 
 // ─── 간단한 in-memory rate limiter (Claude 비용 보호용) ────────────────────
 type RateEntry = { count: number; resetAt: number }
