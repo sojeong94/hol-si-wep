@@ -47,12 +47,16 @@ workflows:
             --project "$CM_BUILD_DIR/ios/App/App.xcodeproj" \
             --scheme "App" \
             --config Release
+      - name: Upload to TestFlight
+        script: |
+          IPA=$(find "$CM_BUILD_DIR/build/ios/ipa" -name "*.ipa" | head -1)
+          echo "Uploading: $IPA"
+          app-store-connect publish \
+            --path "$IPA" \
+            --key-id $APP_STORE_CONNECT_KEY_IDENTIFIER \
+            --issuer-id $APP_STORE_CONNECT_ISSUER_ID \
+            --private-key @file:/tmp/api_key.p8 \
+            --testflight
     artifacts:
       - build/ios/ipa/*.ipa
       - /tmp/xcodebuild_logs/*.log
-    publishing:
-      app_store_connect:
-        api_key: "@file:/tmp/api_key.p8"
-        key_id: $APP_STORE_CONNECT_KEY_IDENTIFIER
-        issuer_id: $APP_STORE_CONNECT_ISSUER_ID
-        submit_to_testflight: true
