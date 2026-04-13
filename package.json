@@ -12,10 +12,15 @@
     "preview": "vite preview",
     "automate": "tsx server/automation/run.ts",
     "db:push": "prisma db push",
-    "db:studio": "prisma studio"
+    "db:studio": "prisma studio",
+    "ios:sync": "npm run build && npx cap sync ios",
+    "ios:open": "npx cap open ios"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.82.0",
+    "@capacitor/cli": "^8.3.0",
+    "@capacitor/core": "^8.3.0",
+    "@capacitor/ios": "^8.3.0",
     "@ffmpeg-installer/ffmpeg": "^1.1.0",
     "@google-cloud/text-to-speech": "^6.4.0",
     "@prisma/client": "5.22.0",

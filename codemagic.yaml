@@ -1,0 +1,45 @@
+workflows:
+  ios-app-store:
+    name: iOS App Store Build
+    max_build_duration: 60
+    instance_type: mac_mini_m2
+    environment:
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: com.holsi.app
+      vars:
+        APP_STORE_CONNECT_ISSUER_ID: Encrypted(...)   # Codemagic 대시보드에서 설정
+        APP_STORE_CONNECT_KEY_IDENTIFIER: Encrypted(...)
+        APP_STORE_CONNECT_PRIVATE_KEY: Encrypted(...)
+        CERTIFICATE_PRIVATE_KEY: Encrypted(...)
+      node: v20.18.0
+      xcode: latest
+      cocoapods: default
+    scripts:
+      - name: Install dependencies
+        script: npm ci
+      - name: Build web app
+        script: npm run build
+      - name: Sync Capacitor
+        script: npx cap sync ios
+      - name: Set version number
+        script: |
+          LATEST_BUILD=$(app-store-connect get-latest-build-number "6450699936")
+          NEXT_BUILD=$((LATEST_BUILD + 1))
+          agvtool new-version -all $NEXT_BUILD
+        working_directory: ios/App
+      - name: Build iOS app
+        script: |
+          xcode-project build-ipa \
+            --workspace "$CM_BUILD_DIR/ios/App/App.xcworkspace" \
+            --scheme "App" \
+            --config Release
+    artifacts:
+      - build/ios/ipa/*.ipa
+      - /tmp/xcodebuild_logs/*.log
+    publishing:
+      app_store_connect:
+        api_key: $APP_STORE_CONNECT_PRIVATE_KEY
+        key_id: $APP_STORE_CONNECT_KEY_IDENTIFIER
+        issuer_id: $APP_STORE_CONNECT_ISSUER_ID
+        submit_to_testflight: true

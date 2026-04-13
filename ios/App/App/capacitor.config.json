@@ -1,0 +1,16 @@
+{
+	"appId": "com.holsi.app",
+	"appName": "Holsi",
+	"webDir": "dist",
+	"server": {
+		"url": "https://hol-si.com",
+		"cleartext": false
+	},
+	"ios": {
+		"contentInset": "automatic",
+		"backgroundColor": "#000000",
+		"preferredContentMode": "mobile",
+		"scrollEnabled": false
+	},
+	"packageClassList": []
+}
