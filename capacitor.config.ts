@@ -13,7 +13,7 @@ const config: CapacitorConfig = {
     contentInset: 'automatic',
     backgroundColor: '#000000',
     preferredContentMode: 'mobile',
-    scrollEnabled: false,
+    scrollEnabled: true,
   },
 }
 
