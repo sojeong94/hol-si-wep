@@ -35,7 +35,7 @@ workflows:
           echo "CM_KEY_PASSWORD set: $([ -n "$CM_KEY_PASSWORD" ] && echo YES || echo NO)"
       - name: Sign AAB
         script: |
-          echo $CM_KEYSTORE | base64 --decode > /tmp/holsi.keystore
+          echo "$CM_KEYSTORE" | base64 -D > /tmp/holsi.keystore
           jarsigner \
             -keystore /tmp/holsi.keystore \
             -storepass $CM_KEYSTORE_PASSWORD \
