@@ -9,6 +9,7 @@ import { syncPillsToServer } from '@/lib/pushService'
 
 import { Home } from '@/pages/Home'
 import { CalendarPage } from '@/pages/Calendar'
+import { Community } from '@/pages/Community'
 import { Pills } from '@/pages/Pills'
 import { MyPage } from '@/pages/MyPage'
 import { Admin } from '@/pages/Admin'
@@ -139,6 +140,7 @@ function App() {
             <Routes>
               <Route path="/" element={<Home />} />
               <Route path="/calendar" element={<CalendarPage />} />
+              <Route path="/community" element={<Community />} />
               <Route path="/pills" element={<Pills />} />
               <Route path="/mypage" element={<MyPage />} />
               <Route path="/admin" element={<Admin />} />

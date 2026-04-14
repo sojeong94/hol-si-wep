@@ -489,6 +489,114 @@ app.post('/api/ocr', ocrLimiter, async (req, res) => {
   }
 })
 
+// ─── 커뮤니티 게시판 ─────────────────────────────────────────────────────────
+interface CommunityPost {
+  id: string
+  author: string
+  category: string
+  content: string
+  likedBy: string[]
+  createdAt: string
+}
+
+const POSTS_FILE = process.env.POSTS_FILE_PATH ?? path.join(__dirname, 'community_posts.json')
+const MAX_POSTS = 1000
+
+function loadPosts(): CommunityPost[] {
+  try { return JSON.parse(fs.readFileSync(POSTS_FILE, 'utf8')) } catch { return [] }
+}
+
+function savePosts(posts: CommunityPost[]) {
+  const tmp = `${POSTS_FILE}.tmp`
+  fs.writeFileSync(tmp, JSON.stringify(posts, null, 2), 'utf8')
+  fs.renameSync(tmp, POSTS_FILE)
+}
+
+const ANONYMOUS_NAMES = ['달빛언니', '봄향기', '새벽별', '구름언니', '민들레', '초코언니', '라벤더', '수선화', '하늘이', '복숭아']
+
+function makeAuthor(deviceId: string): string {
+  const idx = parseInt(deviceId.slice(-2), 36) % ANONYMOUS_NAMES.length
+  const suffix = deviceId.slice(-4).toUpperCase()
+  return `${ANONYMOUS_NAMES[idx]}#${suffix}`
+}
+
+const communityLimiter = rateLimit(10, 60_000)
+
+// 게시글 목록 조회
+app.get('/api/community/posts', (req, res) => {
+  const { deviceId, category } = req.query as { deviceId?: string; category?: string }
+  if (!deviceId || typeof deviceId !== 'string' || deviceId.length > 100) {
+    return res.status(400).json({ error: 'deviceId 누락' })
+  }
+  let posts = loadPosts()
+  if (category && category !== '전체') {
+    posts = posts.filter(p => p.category === category)
+  }
+  // 최신순
+  posts = posts.slice().sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+  const result = posts.map(p => ({
+    id: p.id,
+    author: p.author,
+    category: p.category,
+    content: p.content,
+    likes: p.likedBy.length,
+    liked: p.likedBy.includes(deviceId),
+    createdAt: p.createdAt,
+  }))
+  res.json({ posts: result })
+})
+
+// 게시글 작성
+app.post('/api/community/posts', communityLimiter, (req, res) => {
+  const { deviceId, category, content } = req.body ?? {}
+  if (!isNonEmptyString(deviceId, 100)) return res.status(400).json({ error: 'deviceId 누락' })
+  if (!isNonEmptyString(category, 20)) return res.status(400).json({ error: 'category 누락' })
+  if (!isNonEmptyString(content, 200)) return res.status(400).json({ error: 'content 누락 또는 너무 김' })
+
+  const validCategories = ['생리통', 'PMS', '임신준비', '영양제', '일상']
+  if (!validCategories.includes(category)) return res.status(400).json({ error: 'category 오류' })
+
+  const posts = loadPosts()
+  if (posts.length >= MAX_POSTS) {
+    // 오래된 게시글 삭제 (FIFO)
+    posts.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
+    posts.splice(0, posts.length - MAX_POSTS + 1)
+  }
+
+  const newPost: CommunityPost = {
+    id: Math.random().toString(36).substring(2) + Date.now().toString(36),
+    author: makeAuthor(deviceId),
+    category,
+    content: content.trim(),
+    likedBy: [],
+    createdAt: new Date().toISOString(),
+  }
+  posts.push(newPost)
+  savePosts(posts)
+  res.json({ success: true, id: newPost.id })
+})
+
+// 좋아요 토글
+app.post('/api/community/posts/:id/like', (req, res) => {
+  const { id } = req.params
+  const { deviceId } = req.body ?? {}
+  if (!isNonEmptyString(deviceId, 100)) return res.status(400).json({ error: 'deviceId 누락' })
+
+  const posts = loadPosts()
+  const post = posts.find(p => p.id === id)
+  if (!post) return res.status(404).json({ error: '게시글 없음' })
+
+  const idx = post.likedBy.indexOf(deviceId)
+  if (idx >= 0) {
+    post.likedBy.splice(idx, 1)
+  } else {
+    if (post.likedBy.length >= 10_000) return res.status(400).json({ error: '처리 불가' })
+    post.likedBy.push(deviceId)
+  }
+  savePosts(posts)
+  res.json({ likes: post.likedBy.length, liked: idx < 0 })
+})
+
 // ─── 프로덕션: 빌드된 프론트엔드 서빙 ────────────────────────────────────────
 const distPath = path.join(__dirname, '../dist')
 if (fs.existsSync(distPath)) {

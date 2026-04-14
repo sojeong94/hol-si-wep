@@ -1,4 +1,4 @@
-import { Home, Calendar as CalendarIcon, Pill, User } from 'lucide-react'
+import { Home, Calendar as CalendarIcon, Pill, User, MessageSquare } from 'lucide-react'
 import { Link, useLocation } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { cn } from '@/lib/utils'
@@ -10,6 +10,7 @@ export function BottomNav() {
   const navItems = [
     { path: '/', label: t('nav_home'), icon: Home },
     { path: '/calendar', label: t('nav_calendar'), icon: CalendarIcon },
+    { path: '/community', label: '커뮤니티', icon: MessageSquare },
     { path: '/pills', label: t('nav_pills'), icon: Pill },
     { path: '/mypage', label: t('nav_mypage'), icon: User },
   ]
