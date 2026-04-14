@@ -5,6 +5,7 @@ workflows:
     instance_type: mac_mini_m2
     environment:
       node: v22.15.0
+      java: 21
     scripts:
       - name: Install dependencies
         script: |
