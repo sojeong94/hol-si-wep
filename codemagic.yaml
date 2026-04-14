@@ -4,8 +4,6 @@ workflows:
     max_build_duration: 60
     instance_type: mac_mini_m2
     environment:
-      groups:
-        - android_credentials
       node: v22.15.0
     scripts:
       - name: Install dependencies
