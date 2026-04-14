@@ -54,7 +54,7 @@ export function CalendarPage() {
   const [memoInput, setMemoInput] = useState('')
   const [memoEditing, setMemoEditing] = useState(false)
 
-  const { records, addRecord, endRecord, removeRecord, updateSymptom } = useRecordStore()
+  const { records, addRecord, removeRecord, updateSymptom } = useRecordStore()
   const {
     defaultCycle,
     defaultPeriodDays,
@@ -480,28 +480,6 @@ export function CalendarPage() {
               </button>
             )}
 
-            {/* 종료일 설정 / 변경 */}
-            {selectedDateStr > currentRecord.startDate && (
-              currentRecord.endDate === selectedDateStr ? (
-                <button
-                  onClick={() => endRecord(currentRecord.id, null)}
-                  className="w-full h-14 bg-pink-600 border border-pink-500 shadow-md rounded-[var(--radius-xl)] flex items-center justify-center gap-2 hover:opacity-90 transition-all active:scale-[0.98]"
-                >
-                  <span className="w-3 h-3 rounded-full border-2 border-white/80"></span>
-                  <span className="font-bold text-white text-lg">{t('calendar_cancel_end')}</span>
-                </button>
-              ) : (
-                <button
-                  onClick={() => { endRecord(currentRecord.id, selectedDateStr); track('record_ended') }}
-                  className="w-full h-14 bg-zinc-800 border border-zinc-700 shadow-sm rounded-[var(--radius-xl)] flex items-center justify-center gap-2 hover:bg-zinc-700 transition-all text-zinc-300 active:scale-[0.98]"
-                >
-                  <span className="w-3 h-3 rounded-full bg-pink-700 shadow-sm"></span>
-                  <span className="font-bold text-white text-lg">
-                    {currentRecord.endDate ? '종료일 변경' : t('calendar_end_button')}
-                  </span>
-                </button>
-              )
-            )}
 
             {/* 기록 요약 카드 */}
             <Card className="bg-zinc-900 border border-zinc-800 py-3 px-4 shadow-inner">
@@ -515,11 +493,9 @@ export function CalendarPage() {
                   t('calendar_date_fmt')
                 )}
               </p>
-              {!currentRecord.endDate && (
-                <p className="text-xs text-zinc-500 text-center mt-1">
-                  설정 기간 자동 적용 · 끝난 날 탭하면 수정할 수 있어요
-                </p>
-              )}
+              <p className="text-xs text-zinc-500 text-center mt-1">
+                마이페이지에서 생리 기간 설정 가능
+              </p>
             </Card>
 
             {/* ── 증상 기록 카드 ── */}
