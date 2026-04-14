@@ -106,14 +106,20 @@ function App() {
   return (
     <ErrorBoundary>
       <BrowserRouter>
-        {/* 글래스모피즘 분위기의 동적 메시 배경 */}
-        <div className="min-h-screen w-full relative overflow-x-hidden bg-gradient-to-br from-orange-50/50 via-rose-50/50 to-orange-100/50">
+        {/* 글래스모피즘 분위기의 동적 메시 배경 — fixed로 전체 화면 차지 */}
+        <div className="fixed inset-0 w-full overflow-hidden bg-gradient-to-br from-orange-50/50 via-rose-50/50 to-orange-100/50">
           <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-pink-300/20 rounded-full blur-[100px] pointer-events-none"></div>
           <div className="absolute bottom-[-10%] right-[-10%] w-[60%] h-[50%] bg-orange-300/20 rounded-full blur-[120px] pointer-events-none"></div>
 
+          {/* iOS safe area + CSS scroll 컨테이너 */}
           <div
-            className="max-w-md mx-auto relative min-h-screen"
-            style={{ paddingBottom: 'calc(4rem + env(safe-area-inset-bottom))' }}
+            className="max-w-md mx-auto h-full relative"
+            style={{
+              paddingTop: 'env(safe-area-inset-top)',
+              paddingBottom: 'calc(4rem + env(safe-area-inset-bottom))',
+              overflowY: 'auto',
+              WebkitOverflowScrolling: 'touch',
+            }}
           >
             <BottomNav />
             <AlarmRingingModal />
