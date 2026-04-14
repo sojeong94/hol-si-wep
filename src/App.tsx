@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, useSearchParams, useNavigate } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, useSearchParams, useNavigate, useLocation } from 'react-router-dom'
 import { useEffect } from 'react'
 import { format } from 'date-fns'
 import { usePillStore } from '@/store/usePillStore'
@@ -15,6 +15,16 @@ import { Admin } from '@/pages/Admin'
 import Privacy from '@/pages/Privacy'
 import { AlarmRingingModal } from '@/components/ui/AlarmRingingModal'
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary'
+
+// 탭 전환 시 스크롤 상단으로 초기화
+function ScrollReset() {
+  const { pathname } = useLocation()
+  useEffect(() => {
+    const el = document.getElementById('scroll-container')
+    if (el) el.scrollTop = 0
+  }, [pathname])
+  return null
+}
 
 // OAuth 콜백 처리: /mypage?token=xxx
 function AuthCallback() {
@@ -113,6 +123,7 @@ function App() {
 
           {/* iOS safe area + CSS scroll 컨테이너 */}
           <div
+            id="scroll-container"
             className="max-w-md mx-auto h-full relative"
             style={{
               paddingTop: 'env(safe-area-inset-top)',
@@ -124,6 +135,7 @@ function App() {
             <BottomNav />
             <AlarmRingingModal />
             <AuthCallback />
+            <ScrollReset />
             <Routes>
               <Route path="/" element={<Home />} />
               <Route path="/calendar" element={<CalendarPage />} />
