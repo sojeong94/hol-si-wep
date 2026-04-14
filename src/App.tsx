@@ -107,7 +107,7 @@ function App() {
     <ErrorBoundary>
       <BrowserRouter>
         {/* 글래스모피즘 분위기의 동적 메시 배경 */}
-        <div className="min-h-screen w-full relative overflow-hidden bg-gradient-to-br from-orange-50/50 via-rose-50/50 to-orange-100/50">
+        <div className="min-h-screen w-full relative overflow-x-hidden bg-gradient-to-br from-orange-50/50 via-rose-50/50 to-orange-100/50">
           <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-pink-300/20 rounded-full blur-[100px] pointer-events-none"></div>
           <div className="absolute bottom-[-10%] right-[-10%] w-[60%] h-[50%] bg-orange-300/20 rounded-full blur-[120px] pointer-events-none"></div>
 
