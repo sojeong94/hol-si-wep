@@ -18,7 +18,7 @@ workflows:
       - name: Set version code
         script: |
           BUILD_NUMBER=${BUILD_NUMBER:-1}
-          sed -i "s/versionCode .*/versionCode $BUILD_NUMBER/" android/app/build.gradle
+          sed -i '' "s/versionCode .*/versionCode $BUILD_NUMBER/" android/app/build.gradle
       - name: Build release AAB
         script: |
           cd android
