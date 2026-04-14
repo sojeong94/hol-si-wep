@@ -384,25 +384,28 @@ export function Home() {
       {/* 영양제 상담 */}
       <section>
         <h3 className="text-lg font-extrabold mb-3 flex items-center gap-2 text-zinc-50 tracking-wide drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">{t('home_consultation_section')}</h3>
-        <Card
-          className="p-5 bg-zinc-900 border border-zinc-800 shadow-xl rounded-[2rem] cursor-pointer active:scale-[0.98] transition-all"
-          onClick={() => { setIsAdvisorOpen(true); setAdvisorAnswer(''); setAdvisorQuestion('') }}
-        >
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-[var(--color-primary)]/20 border border-[var(--color-primary)]/30 rounded-2xl flex items-center justify-center shrink-0">
-              <MessageCircle size={22} className="text-[var(--color-primary)]" />
+        <Card className="p-5 bg-zinc-900 border border-zinc-800 shadow-xl rounded-[2rem]">
+          <div className="flex items-center gap-3">
+            <div className="w-11 h-11 bg-[var(--color-primary)]/20 border border-[var(--color-primary)]/30 rounded-2xl flex items-center justify-center shrink-0">
+              <MessageCircle size={20} className="text-[var(--color-primary)]" />
             </div>
-            <div className="flex-1">
+            <div className="flex-1 min-w-0">
               <p className="font-bold text-zinc-100 text-sm mb-0.5">{t('home_consultation_title')}</p>
-              <p className="text-xs text-zinc-500">{t('home_consultation_desc')}</p>
+              <p className="text-xs text-zinc-500 truncate">{t('home_consultation_desc')}</p>
             </div>
+            <button
+              onClick={() => { setIsAdvisorOpen(true); setAdvisorAnswer(''); setAdvisorQuestion('') }}
+              className="shrink-0 px-4 py-2 bg-[var(--color-primary)] text-white text-xs font-bold rounded-xl shadow-[0_0_10px_rgba(255,42,122,0.3)] active:scale-95 transition-all"
+            >
+              상담하기
+            </button>
           </div>
-          <div className="flex flex-wrap gap-2 mt-4">
+          <div className="flex gap-2 overflow-x-auto scrollbar-hide mt-3 pb-0.5 -mx-1 px-1">
             {['지금 먹으면 좋은 영양제 뭐야?', '같이 먹으면 안 되는 조합 있어?', '생리통에 좋은 영양제 알려줘'].map(q => (
               <button
                 key={q}
-                onClick={e => { e.stopPropagation(); setAdvisorQuestion(q); setIsAdvisorOpen(true) }}
-                className="text-xs bg-zinc-800 border border-zinc-700 text-zinc-300 px-3 py-1.5 rounded-full hover:border-pink-500/50 transition-colors"
+                onClick={() => { setAdvisorQuestion(q); setIsAdvisorOpen(true) }}
+                className="text-xs bg-zinc-800 border border-zinc-700 text-zinc-300 px-3 py-1.5 rounded-full hover:border-pink-500/50 transition-colors whitespace-nowrap flex-shrink-0"
               >
                 {q}
               </button>

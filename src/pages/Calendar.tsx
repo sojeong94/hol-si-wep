@@ -5,7 +5,6 @@ import { useRecordStore } from '@/store/useRecordStore'
 import { useSettingStore } from '@/store/useSettingStore'
 import {
   getAverageCycle,
-  getAveragePeriodDays,
   getOvulationDate,
   getOvulationPeriod,
   parseLocalDate,
@@ -51,20 +50,21 @@ export function CalendarPage() {
   const [parsedRecords, setParsedRecords] = useState<{ start: string; end: string | null }[]>([])
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false)
   const [showGuideModal, setShowGuideModal] = useState(false)
-  const [memoInput, setMemoInput] = useState('')
-  const [memoEditing, setMemoEditing] = useState(false)
+  const [localFlow, setLocalFlow] = useState<'light' | 'normal' | 'heavy' | undefined>(undefined)
+  const [localPain, setLocalPain] = useState<number | undefined>(undefined)
+  const [localMemo, setLocalMemo] = useState('')
+  const [symptomSaved, setSymptomSaved] = useState(false)
 
-  const { records, addRecord, removeRecord, updateSymptom } = useRecordStore()
+  const { records, addRecord, removeRecord, updateDailySymptom } = useRecordStore()
   const {
     defaultCycle,
-    defaultPeriodDays,
     isManualCycle,
     manualCycleDays,
     manualPeriodDays,
   } = useSettingStore()
 
   const avgCycle  = isManualCycle ? manualCycleDays  : getAverageCycle(records, defaultCycle)
-  const avgPeriod = isManualCycle ? manualPeriodDays : getAveragePeriodDays(records, defaultPeriodDays)
+  const avgPeriod = manualPeriodDays  // 항상 마이페이지 설정값 사용
 
   const monthStart = startOfMonth(currentMonth)
   const monthEnd   = endOfMonth(monthStart)
@@ -211,26 +211,28 @@ export function CalendarPage() {
     trendText = `첫 주기 간격 ${curDiff}일이 기록됐어요`
   }
 
-  // 3) 증상 패턴 (3회 이상 데이터 있을 때만)
-  const recordsWithPain = sortedRecords.filter((r) => r.pain !== undefined && r.pain !== null)
+  // 3) 증상 패턴 — dailySymptoms 우선, 없으면 기존 record 레벨 호환
+  const allSymptoms = sortedRecords.flatMap((r) => {
+    const daily = r.dailySymptoms ? Object.values(r.dailySymptoms) : []
+    if (daily.length > 0) return daily
+    // 기존 데이터 호환
+    if (r.flow || r.pain !== undefined) return [{ flow: r.flow, pain: r.pain }]
+    return []
+  })
+  const symptomsWithPain = allSymptoms.filter((s) => s.pain !== undefined && s.pain !== null)
   const avgPainLevel =
-    recordsWithPain.length >= 3
-      ? Math.round(
-          recordsWithPain.reduce((s, r) => s + (r.pain ?? 0), 0) /
-            recordsWithPain.length
-        )
+    symptomsWithPain.length >= 3
+      ? Math.round(symptomsWithPain.reduce((s, d) => s + (d.pain ?? 0), 0) / symptomsWithPain.length)
       : null
 
   const flowCounts = { light: 0, normal: 0, heavy: 0 }
-  sortedRecords.forEach((r) => {
-    if (r.flow) flowCounts[r.flow]++
-  })
+  allSymptoms.forEach((s) => { if (s.flow) flowCounts[s.flow]++ })
   const totalFlowRecords = flowCounts.light + flowCounts.normal + flowCounts.heavy
   const dominantFlowEntry = Object.entries(flowCounts).sort((a, b) => b[1] - a[1])[0]
   const dominantFlowLabel =
     dominantFlowEntry[0] === 'light' ? '적음' :
     dominantFlowEntry[0] === 'normal' ? '보통' : '많음'
-  const hasSymptomData = totalFlowRecords >= 3 || recordsWithPain.length >= 3
+  const hasSymptomData = totalFlowRecords >= 3 || symptomsWithPain.length >= 3
 
   // ─── OCR 핸들러 (기존 로직 그대로) ──────────────────────────
   const handleOCRResult = (text: string) => {
@@ -312,37 +314,31 @@ export function CalendarPage() {
     alert(t('calendar_ocr_saved_success'))
   }
 
-  // ─── 증상 저장 핸들러 ─────────────────────────────────────────
-  const handleFlowSelect = (flow: 'light' | 'normal' | 'heavy') => {
+  // ─── 일별 증상 핸들러 ─────────────────────────────────────────
+  const handleSaveSymptoms = () => {
     if (!currentRecord) return
-    updateSymptom(currentRecord.id, { flow })
-  }
-
-  const handlePainSelect = (pain: number) => {
-    if (!currentRecord) return
-    updateSymptom(currentRecord.id, { pain })
-  }
-
-  const handleMemoBlur = () => {
-    if (!currentRecord) return
-    updateSymptom(currentRecord.id, { memo: memoInput.trim() })
-    setMemoEditing(false)
-  }
-
-  // 선택 날짜 바뀔 때 메모 입력창 동기화
-  const syncMemo = (record: typeof currentRecord) => {
-    setMemoInput(record?.memo ?? '')
-    setMemoEditing(false)
+    updateDailySymptom(currentRecord.id, selectedDateStr, {
+      flow: localFlow,
+      pain: localPain,
+      memo: localMemo.trim() || undefined,
+    })
+    setSymptomSaved(true)
+    setTimeout(() => setSymptomSaved(false), 2000)
   }
 
   const handleDayClick = (day: Date) => {
     setSelectedDate(day)
+    const dateStr = format(day, 'yyyy-MM-dd')
     const rec = records.find((r) => {
       const s = parseLocalDate(r.startDate)
       const e = r.endDate ? parseLocalDate(r.endDate) : addDays(s, avgPeriod - 1)
       return isSameDay(day, s) || isWithinInterval(day, { start: s, end: e })
     })
-    syncMemo(rec)
+    const daily = rec?.dailySymptoms?.[dateStr]
+    setLocalFlow(daily?.flow)
+    setLocalPain(daily?.pain)
+    setLocalMemo(daily?.memo ?? '')
+    setSymptomSaved(false)
   }
 
   // ─── 렌더 ─────────────────────────────────────────────────────
@@ -500,7 +496,9 @@ export function CalendarPage() {
 
             {/* ── 증상 기록 카드 ── */}
             <Card className="bg-zinc-900 border border-zinc-800 p-4 space-y-4">
-              <p className="text-xs font-extrabold text-zinc-400 tracking-wide">이번 생리 기록</p>
+              <p className="text-xs font-extrabold text-zinc-400 tracking-wide">
+                {format(selectedDate, 'M월 d일')} 기록
+              </p>
 
               {/* 유량 */}
               <div>
@@ -509,9 +507,9 @@ export function CalendarPage() {
                   {FLOW_OPTIONS.map((opt) => (
                     <button
                       key={opt.value}
-                      onClick={() => handleFlowSelect(opt.value)}
+                      onClick={() => setLocalFlow(localFlow === opt.value ? undefined : opt.value)}
                       className={`flex-1 py-2 rounded-xl text-sm font-bold border transition-all ${
-                        currentRecord.flow === opt.value
+                        localFlow === opt.value
                           ? 'bg-[var(--color-primary)] border-[var(--color-primary)] text-white shadow-[0_0_10px_rgba(255,42,122,0.4)]'
                           : 'bg-zinc-800 border-zinc-700 text-zinc-400 hover:text-white'
                       }`}
@@ -527,8 +525,8 @@ export function CalendarPage() {
                 <div className="flex justify-between items-center mb-2">
                   <p className="text-xs font-bold text-zinc-500">통증</p>
                   <p className="text-xs text-zinc-500">
-                    {currentRecord.pain !== undefined
-                      ? currentRecord.pain === 0 ? '없음' : `${currentRecord.pain}/5`
+                    {localPain !== undefined
+                      ? localPain === 0 ? '없음' : `${localPain}/5`
                       : '탭해서 기록'}
                   </p>
                 </div>
@@ -536,9 +534,9 @@ export function CalendarPage() {
                   {[0, 1, 2, 3, 4, 5].map((level) => (
                     <button
                       key={level}
-                      onClick={() => handlePainSelect(level)}
+                      onClick={() => setLocalPain(localPain === level ? undefined : level)}
                       className={`flex-1 h-8 rounded-lg border text-xs font-bold transition-all ${
-                        currentRecord.pain === level
+                        localPain === level
                           ? 'bg-[var(--color-primary)] border-[var(--color-primary)] text-white'
                           : 'bg-zinc-800 border-zinc-700 text-zinc-500 hover:text-white'
                       }`}
@@ -552,31 +550,27 @@ export function CalendarPage() {
               {/* 메모 */}
               <div>
                 <p className="text-xs font-bold text-zinc-500 mb-2">메모</p>
-                {memoEditing ? (
-                  <textarea
-                    autoFocus
-                    value={memoInput}
-                    onChange={(e) => setMemoInput(e.target.value)}
-                    onBlur={handleMemoBlur}
-                    placeholder="이번 생리에 대해 자유롭게 기록해요"
-                    rows={2}
-                    className="w-full bg-zinc-800 border border-zinc-600 rounded-xl px-3 py-2 text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:border-[var(--color-primary)] resize-none transition-all"
-                  />
-                ) : (
-                  <button
-                    onClick={() => {
-                      setMemoInput(currentRecord.memo ?? '')
-                      setMemoEditing(true)
-                    }}
-                    className="w-full text-left bg-zinc-800/60 border border-zinc-700 rounded-xl px-3 py-2.5 text-sm transition-all hover:border-zinc-500"
-                  >
-                    {currentRecord.memo
-                      ? <span className="text-zinc-300">{currentRecord.memo}</span>
-                      : <span className="text-zinc-600">이번 생리에 대해 자유롭게 기록해요</span>
-                    }
-                  </button>
-                )}
+                <textarea
+                  value={localMemo}
+                  onChange={(e) => setLocalMemo(e.target.value)}
+                  placeholder="오늘 컨디션을 자유롭게 기록해요"
+                  rows={2}
+                  style={{ fontSize: '16px' }}
+                  className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-white placeholder:text-zinc-600 focus:outline-none focus:border-[var(--color-primary)] resize-none transition-all"
+                />
               </div>
+
+              {/* 저장 버튼 */}
+              <button
+                onClick={handleSaveSymptoms}
+                className={`w-full py-2.5 rounded-xl text-sm font-bold transition-all active:scale-95 ${
+                  symptomSaved
+                    ? 'bg-zinc-700 text-zinc-300'
+                    : 'bg-[var(--color-primary)] text-white shadow-[0_0_10px_rgba(255,42,122,0.3)]'
+                }`}
+              >
+                {symptomSaved ? '저장됐어요 ✓' : '저장하기'}
+              </button>
             </Card>
           </div>
         )}
@@ -642,7 +636,7 @@ export function CalendarPage() {
               </div>
               <div className="space-y-1">
                 <p className="text-xs font-extrabold text-zinc-400 tracking-wide">
-                  증상 패턴 ({Math.max(totalFlowRecords, recordsWithPain.length)}회 기준)
+                  증상 패턴 ({Math.max(totalFlowRecords, symptomsWithPain.length)}회 기준)
                 </p>
                 {avgPainLevel !== null && (
                   <div className="flex items-center gap-2">

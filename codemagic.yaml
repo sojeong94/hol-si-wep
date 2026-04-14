@@ -38,11 +38,11 @@ workflows:
           echo "$CM_KEYSTORE" | base64 -D > /tmp/holsi.keystore
           jarsigner \
             -keystore /tmp/holsi.keystore \
-            -storepass $CM_KEYSTORE_PASSWORD \
-            -keypass $CM_KEY_PASSWORD \
+            -storepass "$CM_KEYSTORE_PASSWORD" \
+            -keypass "$CM_KEY_PASSWORD" \
             -signedjar android/app/build/outputs/bundle/release/app-release-signed.aab \
             android/app/build/outputs/bundle/release/app-release.aab \
-            $CM_KEY_ALIAS
+            "$CM_KEY_ALIAS"
     artifacts:
       - android/app/build/outputs/bundle/release/*.aab
 
@@ -108,7 +108,7 @@ workflows:
             --issuer-id $APP_STORE_CONNECT_ISSUER_ID \
             --private-key @file:/tmp/api_key.p8 \
             --testflight \
-            --beta-build-localizations '[{"locale":"ko","whatsNew":"초기 베타 버전"}]' \
+            --beta-build-localizations '[{"locale":"ko","whats_new":"초기 베타 버전"}]' \
             || true
     artifacts:
       - build/ios/ipa/*.ipa
