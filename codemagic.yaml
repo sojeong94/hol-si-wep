@@ -34,11 +34,6 @@ workflows:
             $CM_KEY_ALIAS
     artifacts:
       - android/app/build/outputs/bundle/release/*.aab
-    publishing:
-      google_play:
-        credentials: $GCLOUD_SERVICE_ACCOUNT_CREDENTIALS
-        track: production
-        submit_as_draft: true
 
   ios-app-store:
     name: iOS App Store Build
