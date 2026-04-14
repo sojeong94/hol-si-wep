@@ -30,7 +30,26 @@
       "Bash(curl -s \"https://api.github.com/repos/johunsang/makeke-releases/releases/tags/v1.1.53\")",
       "Bash(python -c \"import json,sys; d=json.load\\(sys.stdin\\); [print\\(a['name'], a['browser_download_url']\\) for a in d.get\\('assets',[]\\)]\")",
       "WebFetch(domain:makeke.io)",
-      "WebFetch(domain:makeke.kr)"
+      "WebFetch(domain:makeke.kr)",
+      "Bash(ffmpeg -version)",
+      "Bash(where.exe ffmpeg:*)",
+      "Read(//c/Users/**)",
+      "WebFetch(domain:doc-04-40-sheets.googleusercontent.com)",
+      "WebFetch(domain:www.hol-si.com)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(npm list:*)",
+      "Bash(mkdir -p C:/user1/2.hol-si-web-ver/prisma)",
+      "Bash(mkdir -p C:/user1/2.hol-si-web-ver/src/i18n/locales)",
+      "Bash(mkdir -p C:/user1/2.hol-si-web-ver/src/store)",
+      "Bash(npx prisma:*)",
+      "Bash(npx vite:*)",
+      "Bash(git check-ignore:*)",
+      "Bash(openssl rsa:*)",
+      "Bash(mkdir -p appstore-screenshots/ipad)",
+      "Bash(npx tsx -e ':*)",
+      "Bash(DEVICE=ipad npx tsx server/automation/appstore-screenshots.ts)"
     ]
   }
 }

@@ -1,4 +1,47 @@
 workflows:
+  android-google-play:
+    name: Android Google Play Build
+    max_build_duration: 60
+    instance_type: linux_x2
+    environment:
+      groups:
+        - android_credentials
+      node: v22.15.0
+    scripts:
+      - name: Install dependencies
+        script: |
+          npm install --include=optional
+      - name: Build web app
+        script: npm run build
+      - name: Sync Capacitor Android
+        script: npx cap sync android
+      - name: Set version code
+        script: |
+          BUILD_NUMBER=${BUILD_NUMBER:-1}
+          sed -i "s/versionCode .*/versionCode $BUILD_NUMBER/" android/app/build.gradle
+      - name: Build release AAB
+        script: |
+          cd android
+          chmod +x gradlew
+          ./gradlew bundleRelease
+      - name: Sign AAB
+        script: |
+          echo $CM_KEYSTORE | base64 --decode > /tmp/holsi.keystore
+          jarsigner \
+            -keystore /tmp/holsi.keystore \
+            -storepass $CM_KEYSTORE_PASSWORD \
+            -keypass $CM_KEY_PASSWORD \
+            -signedjar android/app/build/outputs/bundle/release/app-release-signed.aab \
+            android/app/build/outputs/bundle/release/app-release.aab \
+            $CM_KEY_ALIAS
+    artifacts:
+      - android/app/build/outputs/bundle/release/*.aab
+    publishing:
+      google_play:
+        credentials: $GCLOUD_SERVICE_ACCOUNT_CREDENTIALS
+        track: production
+        submit_as_draft: true
+
   ios-app-store:
     name: iOS App Store Build
     max_build_duration: 60
