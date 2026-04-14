@@ -27,6 +27,12 @@ workflows:
           cd android
           chmod +x gradlew
           ./gradlew bundleRelease
+      - name: Debug env vars
+        script: |
+          echo "CM_KEYSTORE length: ${#CM_KEYSTORE}"
+          echo "CM_KEY_ALIAS: $CM_KEY_ALIAS"
+          echo "CM_KEYSTORE_PASSWORD set: $([ -n "$CM_KEYSTORE_PASSWORD" ] && echo YES || echo NO)"
+          echo "CM_KEY_PASSWORD set: $([ -n "$CM_KEY_PASSWORD" ] && echo YES || echo NO)"
       - name: Sign AAB
         script: |
           echo $CM_KEYSTORE | base64 --decode > /tmp/holsi.keystore
