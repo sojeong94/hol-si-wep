@@ -1,5 +1,6 @@
 import { Router, Request, Response } from 'express'
 import jwt from 'jsonwebtoken'
+import { createPublicKey } from 'crypto'
 import { google } from 'googleapis'
 import { upsertUser, getUserById, syncUserData, getUserData, getAllUsers } from './db.js'
 
@@ -129,6 +130,58 @@ router.get('/kakao/callback', async (req: Request, res: Response) => {
   } catch (err) {
     console.error('[Kakao OAuth]', err)
     res.redirect(`${FRONTEND_URL}/mypage?auth_error=kakao_failed`)
+  }
+})
+
+// ─── Apple Sign In ────────────────────────────────────────────────────────────
+
+async function verifyAppleToken(identityToken: string) {
+  const decoded = jwt.decode(identityToken, { complete: true })
+  if (!decoded || typeof decoded.header === 'string') throw new Error('Invalid token')
+
+  const kid = (decoded.header as any).kid
+  const res = await fetch('https://appleid.apple.com/auth/keys')
+  const { keys } = await res.json() as { keys: any[] }
+  const jwk = keys.find((k: any) => k.kid === kid)
+  if (!jwk) throw new Error('Signing key not found')
+
+  const publicKey = createPublicKey({ key: jwk, format: 'jwk' })
+  const pem = publicKey.export({ type: 'spki', format: 'pem' }) as string
+
+  return jwt.verify(identityToken, pem, {
+    algorithms: ['RS256'],
+    issuer: 'https://appleid.apple.com',
+    audience: 'com.holsi.app',
+  }) as { sub: string; email?: string }
+}
+
+router.post('/apple', async (req: Request, res: Response) => {
+  const { identityToken, givenName, familyName, email } = req.body as {
+    identityToken: string
+    givenName?: string
+    familyName?: string
+    email?: string
+  }
+
+  if (!identityToken) return res.status(400).json({ error: 'no token' })
+
+  try {
+    const payload = await verifyAppleToken(identityToken)
+    const name = [givenName, familyName].filter(Boolean).join(' ') || undefined
+
+    const user = await upsertUser({
+      provider: 'apple',
+      providerId: payload.sub,
+      email: email ?? payload.email,
+      name,
+      avatar: undefined,
+    })
+
+    const token = signToken(user.id)
+    res.json({ token })
+  } catch (err) {
+    console.error('[Apple Auth]', err)
+    res.status(401).json({ error: 'apple_auth_failed' })
   }
 })
 

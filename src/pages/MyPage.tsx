@@ -9,6 +9,8 @@ import { Modal } from '@/components/ui/Modal'
 import { Bell, Download, Upload, Info, UserRound, Pencil, Users, MessageSquare, Globe, LogOut } from 'lucide-react'
 import { subscribePush, unsubscribePush } from '@/lib/pushService'
 import { usePillStore } from '@/store/usePillStore'
+import { Capacitor } from '@capacitor/core'
+import { SignInWithApple } from '@capacitor-community/apple-sign-in'
 
 export function MyPage() {
   const { t, i18n } = useTranslation()
@@ -22,7 +24,7 @@ export function MyPage() {
   } = useSettingStore()
   const { records } = useRecordStore()
   const { pills } = usePillStore()
-  const { user, logout } = useAuthStore()
+  const { user, logout, setAuth } = useAuthStore()
 
   const handlePushToggle = async (enable: boolean) => {
     if (enable) {
@@ -110,6 +112,33 @@ export function MyPage() {
     window.location.href = `/api/auth/${provider}`
   }
 
+  const handleAppleLogin = async () => {
+    try {
+      const result = await SignInWithApple.authorize({
+        clientId: 'com.holsi.app',
+        redirectURI: 'https://hol-si.com',
+        scopes: 'name email',
+        nonce: Math.random().toString(36).substring(2),
+      })
+      const { identityToken, givenName, familyName, email } = result.response
+      const res = await fetch('/api/auth/apple', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ identityToken, givenName, familyName, email }),
+      })
+      const data = await res.json()
+      if (data.token) {
+        const userRes = await fetch('/api/auth/me', {
+          headers: { Authorization: `Bearer ${data.token}` },
+        })
+        const user = await userRes.json()
+        setAuth(data.token, user)
+      }
+    } catch (err) {
+      console.error('Apple login failed', err)
+    }
+  }
+
   const handleLogout = () => {
     logout()
   }
@@ -172,21 +201,32 @@ export function MyPage() {
                  </button>
                </div>
              ) : (
-               <div className="flex gap-2">
-                 <button
-                   onClick={() => handleOAuthLogin('kakao')}
-                   className="flex-1 py-3 flex justify-center items-center gap-2 bg-[#FEE500] border border-yellow-400 rounded-xl hover:brightness-95 transition-all"
-                 >
-                   <span className="w-4 h-4 rounded-full bg-zinc-900 block shrink-0"></span>
-                   <span className="text-sm font-bold text-zinc-900">{t('mypage_kakao_login')}</span>
-                 </button>
-                 <button
-                   onClick={() => handleOAuthLogin('google')}
-                   className="flex-1 py-3 flex justify-center items-center gap-2 bg-white border border-zinc-200 rounded-xl hover:brightness-95 transition-all"
-                 >
-                   <span className="w-4 h-4 rounded-full bg-zinc-800 block shrink-0"></span>
-                   <span className="text-sm font-bold text-zinc-800">{t('mypage_google_login')}</span>
-                 </button>
+               <div className="flex flex-col gap-2">
+                 {Capacitor.isNativePlatform() && (
+                   <button
+                     onClick={handleAppleLogin}
+                     className="w-full py-3 flex justify-center items-center gap-2 bg-white border border-zinc-200 rounded-xl hover:brightness-95 transition-all"
+                   >
+                     <svg width="16" height="16" viewBox="0 0 16 16" fill="black"><path d="M11.182 0C11.67 0 12.5.5 12.5.5s-1.182.818-1.182 2.182c0 1.5 1.318 2.136 1.318 2.136S11.5 6 9.818 6c-.68 0-1.318-.5-2.136-.5-.818 0-1.636.5-2.182.5C3.682 6 2 4.364 2 2.182 2 .818 3.182 0 4.5 0c.818 0 1.5.5 2.182.5.682 0 1.5-.5 2.318-.5H11.182zm-4 9c-2.182 0-4 1.818-4 4s1.818 3 4 3 4-1.818 4-4-1.818-3-4-3z"/></svg>
+                     <span className="text-sm font-bold text-zinc-900">Apple로 로그인</span>
+                   </button>
+                 )}
+                 <div className="flex gap-2">
+                   <button
+                     onClick={() => handleOAuthLogin('kakao')}
+                     className="flex-1 py-3 flex justify-center items-center gap-2 bg-[#FEE500] border border-yellow-400 rounded-xl hover:brightness-95 transition-all"
+                   >
+                     <span className="w-4 h-4 rounded-full bg-zinc-900 block shrink-0"></span>
+                     <span className="text-sm font-bold text-zinc-900">{t('mypage_kakao_login')}</span>
+                   </button>
+                   <button
+                     onClick={() => handleOAuthLogin('google')}
+                     className="flex-1 py-3 flex justify-center items-center gap-2 bg-white border border-zinc-200 rounded-xl hover:brightness-95 transition-all"
+                   >
+                     <span className="w-4 h-4 rounded-full bg-zinc-800 block shrink-0"></span>
+                     <span className="text-sm font-bold text-zinc-800">{t('mypage_google_login')}</span>
+                   </button>
+                 </div>
                </div>
              )}
            </div>
