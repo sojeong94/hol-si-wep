@@ -10,7 +10,7 @@ import { Bell, Download, Upload, Info, UserRound, Pencil, Users, MessageSquare, 
 import { subscribePush, unsubscribePush } from '@/lib/pushService'
 import { usePillStore } from '@/store/usePillStore'
 import { Capacitor } from '@capacitor/core'
-import { SignInWithApple } from '@capacitor-community/apple-sign-in'
+import AppleSignIn from '@/plugins/AppleSignIn'
 
 export function MyPage() {
   const { t, i18n } = useTranslation()
@@ -114,12 +114,7 @@ export function MyPage() {
 
   const handleAppleLogin = async () => {
     try {
-      const result = await SignInWithApple.authorize({
-        clientId: 'com.holsi.app',
-        redirectURI: 'https://hol-si.com',
-        scopes: 'name email',
-        nonce: Math.random().toString(36).substring(2),
-      })
+      const result = await AppleSignIn.authorize()
       const { identityToken, givenName, familyName, email } = result.response
       const res = await fetch('/api/auth/apple', {
         method: 'POST',
