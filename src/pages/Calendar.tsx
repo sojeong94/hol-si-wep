@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { track } from '@/lib/analytics'
 import { useRecordStore } from '@/store/useRecordStore'
 import { useSettingStore } from '@/store/useSettingStore'
+import { useSubscriptionStore } from '@/store/useSubscriptionStore'
 import {
   getAverageCycle,
   getOvulationDate,
@@ -44,6 +45,7 @@ const FLOW_OPTIONS = [
 
 export function CalendarPage() {
   const { t } = useTranslation()
+  const { isPremium, setShowPaywall } = useSubscriptionStore()
   const [currentMonth, setCurrentMonth] = useState(new Date())
   const [selectedDate, setSelectedDate] = useState(new Date())
   const [isOCRModalOpen, setIsOCRModalOpen] = useState(false)
@@ -579,10 +581,10 @@ export function CalendarPage() {
       {/* 과거 기록 가져오기 */}
       <section className="mt-2 mb-2">
         <button
-          onClick={() => setIsOCRModalOpen(true)}
+          onClick={() => { isPremium ? setIsOCRModalOpen(true) : setShowPaywall(true) }}
           className="w-full h-12 bg-[#18181A] border border-zinc-800 text-pink-400 font-bold rounded-[var(--radius-xl)] flex items-center justify-center gap-2 hover:bg-zinc-800 active:scale-95 transition-all text-sm"
         >
-          <Camera size={18} /> {t('calendar_import_past')}
+          <Camera size={18} /> {t('calendar_import_past')} {!isPremium && <span className="ml-1 text-[10px] bg-[#ff2a7a]/20 text-[#ff2a7a] px-1.5 py-0.5 rounded-full font-black">PRO</span>}
         </button>
       </section>
 

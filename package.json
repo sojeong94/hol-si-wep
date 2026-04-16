@@ -25,6 +25,7 @@
     "@ffmpeg-installer/ffmpeg": "^1.1.0",
     "@google-cloud/text-to-speech": "^6.4.0",
     "@prisma/client": "5.22.0",
+    "@revenuecat/purchases-capacitor": "^13.0.0",
     "clsx": "^2.1.1",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.6",

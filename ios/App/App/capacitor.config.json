@@ -4,7 +4,13 @@
 	"webDir": "dist",
 	"server": {
 		"url": "https://hol-si.com",
-		"cleartext": false
+		"cleartext": false,
+		"allowNavigation": [
+			"accounts.google.com",
+			"*.google.com",
+			"kauth.kakao.com",
+			"kapi.kakao.com"
+		]
 	},
 	"ios": {
 		"contentInset": "never",
@@ -12,5 +18,7 @@
 		"preferredContentMode": "mobile",
 		"scrollEnabled": false
 	},
-	"packageClassList": []
+	"packageClassList": [
+		"PurchasesPlugin"
+	]
 }

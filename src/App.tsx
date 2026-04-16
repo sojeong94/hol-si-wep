@@ -4,8 +4,10 @@ import { format } from 'date-fns'
 import { usePillStore } from '@/store/usePillStore'
 import { useSettingStore } from '@/store/useSettingStore'
 import { useAuthStore } from '@/store/useAuthStore'
+import { useSubscriptionStore } from '@/store/useSubscriptionStore'
 import { BottomNav } from '@/components/layout/BottomNav'
 import { syncPillsToServer } from '@/lib/pushService'
+import { SubscriptionModal } from '@/components/ui/SubscriptionModal'
 
 import { Home } from '@/pages/Home'
 import { CalendarPage } from '@/pages/Calendar'
@@ -52,6 +54,12 @@ function AuthCallback() {
 function App() {
   const { pills, setTriggerAlarm } = usePillStore()
   const { pushEnabled } = useSettingStore()
+  const { initialize, showPaywall, setShowPaywall } = useSubscriptionStore()
+
+  // RevenueCat 초기화
+  useEffect(() => {
+    initialize()
+  }, [])
 
   // 앱 실행 모드 추적 (GA4)
   useEffect(() => {
@@ -135,6 +143,7 @@ function App() {
           >
             <BottomNav />
             <AlarmRingingModal />
+            <SubscriptionModal isOpen={showPaywall} onClose={() => setShowPaywall(false)} />
             <AuthCallback />
             <ScrollReset />
             <Routes>

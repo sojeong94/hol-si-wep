@@ -2,13 +2,14 @@ import { useTranslation } from 'react-i18next'
 import { useRecordStore } from '@/store/useRecordStore'
 import { usePillStore } from '@/store/usePillStore'
 import { useSettingStore } from '@/store/useSettingStore'
+import { useSubscriptionStore } from '@/store/useSubscriptionStore'
 import { getAverageCycle, getNextPeriodDate, parseLocalDate } from '@/utils/cycleCalculators'
 import { differenceInDays, format } from 'date-fns'
 import { Card } from '@/components/ui/Card'
 import { Modal } from '@/components/ui/Modal'
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Share, Wind, RefreshCw, Info, MessageCircle, Send, Loader2 } from 'lucide-react'
+import { Share, Wind, RefreshCw, Info, MessageCircle, Send, Loader2, Crown } from 'lucide-react'
 import { track } from '@/lib/analytics'
 import { RecommendCards, type Recommendation } from '@/components/ui/RecommendCards'
 
@@ -18,6 +19,20 @@ export function Home() {
   const { records } = useRecordStore()
   const { pills, togglePill } = usePillStore()
   const { defaultCycle, isManualCycle, manualCycleDays, userName, setUserName } = useSettingStore()
+  const { isPremium, setShowPaywall } = useSubscriptionStore()
+
+  const openAdvisor = () => {
+    if (!isPremium) { setShowPaywall(true); return }
+    setIsAdvisorOpen(true)
+    setAdvisorAnswer('')
+    setAdvisorQuestion('')
+  }
+
+  const openAdvisorWithQuestion = (q: string) => {
+    if (!isPremium) { setShowPaywall(true); return }
+    setAdvisorQuestion(q)
+    setIsAdvisorOpen(true)
+  }
 
   // 모달 상태
   const [showWelcomeModal, setShowWelcomeModal] = useState(!userName)
@@ -216,49 +231,6 @@ export function Home() {
     }, 1200)
   }
 
-  const headerRef = useRef<HTMLElement>(null)
-  const trashRef = useRef<HTMLElement>(null)
-  const hasSeenTrash = useRef<boolean | 'done'>(false)
-  const [showToast, setShowToast] = useState(false)
-  const [showGuide, setShowGuide] = useState(false)
-
-  const dismissBanner = () => {
-    localStorage.setItem('holsi-pwa-dismissed-v4', 'true')
-    setShowGuide(false)
-    setShowToast(false)
-  }
-
-  useEffect(() => {
-    const isDismissed = localStorage.getItem('holsi-pwa-dismissed-v4') === 'true'
-    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || ('standalone' in navigator && (navigator as any).standalone)
-
-    if (isDismissed || isStandalone || hasSeenTrash.current === 'done') return
-
-    const handleScroll = () => {
-      if (hasSeenTrash.current === 'done') return
-
-      if (trashRef.current) {
-        const trashRect = trashRef.current.getBoundingClientRect()
-        if (trashRect.top < window.innerHeight - 50) {
-          hasSeenTrash.current = true
-        }
-      }
-
-      if (hasSeenTrash.current === true && headerRef.current) {
-        const headerRect = headerRef.current.getBoundingClientRect()
-        if (headerRect.bottom > 0) {
-          setShowToast(true)
-          hasSeenTrash.current = 'done'
-        }
-      }
-    }
-
-    handleScroll()
-    window.addEventListener('scroll', handleScroll, { passive: true })
-    return () => {
-      window.removeEventListener('scroll', handleScroll)
-    }
-  }, [])
 
   return (
     <div className="p-5 pb-8 space-y-6 animate-in fade-in duration-500 bg-[var(--color-secondary)] min-h-screen">
@@ -325,7 +297,7 @@ export function Home() {
         </div>
       </Modal>
 
-      <header className="pt-2" ref={headerRef}>
+      <header className="pt-2">
         <h1 className="text-2xl font-black text-white flex items-center gap-2 tracking-tight drop-shadow-[0_0_10px_rgba(255,255,255,0.2)]">
           오늘의 {userName ? `${userName}홀시` : '홀시'}
           <button onClick={() => setShowAboutModal(true)} className="p-1 text-zinc-500 hover:text-pink-400 transition-colors active:scale-95">
@@ -394,9 +366,10 @@ export function Home() {
               <p className="text-xs text-zinc-500 truncate">{t('home_consultation_desc')}</p>
             </div>
             <button
-              onClick={() => { setIsAdvisorOpen(true); setAdvisorAnswer(''); setAdvisorQuestion('') }}
-              className="shrink-0 px-4 py-2 bg-[var(--color-primary)] text-white text-xs font-bold rounded-xl shadow-[0_0_10px_rgba(255,42,122,0.3)] active:scale-95 transition-all"
+              onClick={openAdvisor}
+              className="shrink-0 px-4 py-2 bg-[var(--color-primary)] text-white text-xs font-bold rounded-xl shadow-[0_0_10px_rgba(255,42,122,0.3)] active:scale-95 transition-all flex items-center gap-1"
             >
+              {!isPremium && <Crown size={12} />}
               상담하기
             </button>
           </div>
@@ -404,7 +377,7 @@ export function Home() {
             {['지금 먹으면 좋은 영양제 뭐야?', '같이 먹으면 안 되는 조합 있어?', '생리통에 좋은 영양제 알려줘'].map(q => (
               <button
                 key={q}
-                onClick={() => { setAdvisorQuestion(q); setIsAdvisorOpen(true) }}
+                onClick={() => openAdvisorWithQuestion(q)}
                 className="text-xs bg-zinc-800 border border-zinc-700 text-zinc-300 px-3 py-1.5 rounded-full hover:border-pink-500/50 transition-colors whitespace-nowrap flex-shrink-0"
               >
                 {q}
@@ -506,7 +479,7 @@ export function Home() {
       {/* <AdBanner slot="5445746484" className="my-2" /> */}
 
       {/* 감정 쓰레기통 */}
-      <section ref={trashRef}>
+      <section>
         <h3 className="text-lg font-extrabold mb-3 flex items-center gap-1.5 text-zinc-50 tracking-wide drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">{t('home_trash_section')}</h3>
         <Card className="p-4 bg-zinc-900 border border-zinc-800 shadow-inner relative overflow-hidden transition-all duration-700 min-h-[160px] flex flex-col justify-center">
           {isBurned ? (
@@ -536,51 +509,6 @@ export function Home() {
         </Card>
       </section>
 
-      {/* PWA Install 팝업 */}
-      <div
-        className={`fixed inset-0 z-[60] flex items-center justify-center p-6 bg-black/60 backdrop-blur-md transition-all duration-700 ease-out ${showToast && !showGuide ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
-        onClick={() => setShowGuide(true)}
-      >
-        <Card className={`w-full max-w-[320px] p-6 text-center shadow-2xl transition-all duration-700 delay-100 ${showToast && !showGuide ? 'scale-100 translate-y-0' : 'scale-95 translate-y-10'} bg-zinc-900 border border-zinc-800 !rounded-[2rem]`}>
-          <div className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-5 animate-bounce relative">
-            <div className="absolute inset-0 bg-[var(--color-primary)] blur-lg opacity-40 rounded-full"></div>
-            <img src="/favicon.svg" alt="홀시 아이콘" className="w-16 h-16 relative z-10 animate-pulse" />
-          </div>
-          <h3 className="text-2xl font-black text-white mb-2">나를 꺼내줄래?</h3>
-          <p className="text-zinc-400 font-medium text-sm mb-6 leading-relaxed px-2">
-            이대로 브라우저에 남겨둔다면<br />
-            제일 중요한 너의 시간을 놓칠지도 몰라.
-          </p>
-          <button className="w-full bg-[var(--color-primary)] text-white font-bold py-3.5 rounded-xl shadow-lg shadow-pink-600/20 active:scale-95 transition-transform">
-            홈 화면으로 꺼내주기
-          </button>
-        </Card>
-      </div>
-
-      {/* 홈 화면 추가 가이드 모달 */}
-      {showGuide && (
-        <div className="fixed inset-0 z-[100] flex items-end justify-center sm:items-center p-4 bg-black/80 backdrop-blur-sm transition-opacity animate-in fade-in" onClick={dismissBanner}>
-          <Card className="w-full max-w-sm p-6 bg-zinc-900 border border-zinc-800 animate-in slide-in-from-bottom-8 sm:zoom-in-95 !rounded-3xl" onClick={e => e.stopPropagation()}>
-            <h3 className="text-xl font-bold mb-4 text-white text-center">App 설치 가이드</h3>
-            <div className="space-y-4 text-sm font-medium text-zinc-300">
-              <div className="bg-[#18181A] p-4 rounded-2xl border border-zinc-800">
-                <p className="font-bold text-pink-400 mb-1">iPhone (Safari)</p>
-                <p className="text-zinc-400">화면 하단의 [공유] 버튼을 누르고,<br />목록에서 [홈 화면에 추가]를 눌러주세요.</p>
-              </div>
-              <div className="bg-[#18181A] p-4 rounded-2xl border border-zinc-800">
-                <p className="font-bold text-pink-400 mb-1">Android (Chrome)</p>
-                <p className="text-zinc-400">화면 우측 상단의 [메뉴(⋮)] 버튼을 누르고,<br />[홈 화면에 추가]를 눌러주세요.</p>
-              </div>
-            </div>
-            <button
-              onClick={dismissBanner}
-              className="w-full mt-6 bg-[var(--color-primary)] text-white font-bold py-3.5 rounded-xl active:scale-95 transition-transform shadow-lg shadow-black/40"
-            >
-              알겠어요! 지금 추가할게요
-            </button>
-          </Card>
-        </div>
-      )}
     </div>
   )
 }

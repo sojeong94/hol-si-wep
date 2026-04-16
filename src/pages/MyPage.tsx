@@ -3,10 +3,12 @@ import { useTranslation } from 'react-i18next'
 import { useSettingStore } from '@/store/useSettingStore'
 import { useRecordStore } from '@/store/useRecordStore'
 import { useAuthStore } from '@/store/useAuthStore'
+import { useSubscriptionStore } from '@/store/useSubscriptionStore'
 import { getAverageCycle, getAveragePeriodDays } from '@/utils/cycleCalculators'
 import { Card } from '@/components/ui/Card'
 import { Modal } from '@/components/ui/Modal'
-import { Bell, Download, Upload, Info, UserRound, Pencil, Users, MessageSquare, Globe, LogOut } from 'lucide-react'
+import { SubscriptionModal } from '@/components/ui/SubscriptionModal'
+import { Bell, Download, Upload, Info, UserRound, Pencil, Users, MessageSquare, Globe, LogOut, Crown, Sparkles } from 'lucide-react'
 import { subscribePush, unsubscribePush } from '@/lib/pushService'
 import { usePillStore } from '@/store/usePillStore'
 import { Capacitor } from '@capacitor/core'
@@ -25,6 +27,8 @@ export function MyPage() {
   const { records } = useRecordStore()
   const { pills } = usePillStore()
   const { user, logout, setAuth } = useAuthStore()
+  const { isPremium, checkStatus } = useSubscriptionStore()
+  const [showSubscriptionModal, setShowSubscriptionModal] = useState(false)
 
   const handlePushToggle = async (enable: boolean) => {
     if (enable) {
@@ -153,6 +157,52 @@ export function MyPage() {
         </div>
         <h1 className="text-2xl font-black tracking-tight drop-shadow-[0_0_10px_rgba(255,255,255,0.2)]">{t('mypage_title')}</h1>
       </header>
+
+      {/* 구독 상태 카드 */}
+      <section>
+        {isPremium ? (
+          <Card className="p-4 bg-gradient-to-r from-[#ff2a7a]/20 to-rose-500/10 border border-[#ff2a7a]/30">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-[#ff2a7a]/20 flex items-center justify-center">
+                  <Crown size={20} className="text-[#ff2a7a]" />
+                </div>
+                <div>
+                  <p className="text-white font-black text-sm">프리미엄 구독 중</p>
+                  <p className="text-zinc-400 text-xs font-medium mt-0.5">모든 기능 무제한 이용 가능</p>
+                </div>
+              </div>
+              <button
+                onClick={() => checkStatus()}
+                className="text-xs text-zinc-500 px-3 py-1.5 bg-zinc-800 rounded-xl border border-zinc-700"
+              >
+                갱신
+              </button>
+            </div>
+          </Card>
+        ) : (
+          <Card
+            className="p-4 cursor-pointer active:scale-[0.99] transition-all bg-zinc-900 border border-zinc-700 overflow-hidden relative"
+            onClick={() => setShowSubscriptionModal(true)}
+          >
+            <div className="absolute inset-0 bg-gradient-to-r from-[#ff2a7a]/5 to-transparent pointer-events-none" />
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-[#ff2a7a]/10 border border-[#ff2a7a]/20 flex items-center justify-center">
+                  <Sparkles size={20} className="text-[#ff2a7a]" />
+                </div>
+                <div>
+                  <p className="text-white font-black text-sm">프리미엄 시작하기</p>
+                  <p className="text-zinc-400 text-xs font-medium mt-0.5">14일 무료 · ₩4,900/월</p>
+                </div>
+              </div>
+              <div className="shrink-0 px-3 py-1.5 bg-[#ff2a7a] rounded-xl">
+                <span className="text-white text-xs font-black">업그레이드</span>
+              </div>
+            </div>
+          </Card>
+        )}
+      </section>
 
       {/* 내 정보 (닉네임 & 소셜 연동) */}
       <section>
@@ -415,6 +465,8 @@ export function MyPage() {
           <span className="text-sm text-zinc-600 font-bold font-mono tracking-widest">v2.0.0</span>
         </Card>
       </section>
+
+      <SubscriptionModal isOpen={showSubscriptionModal} onClose={() => setShowSubscriptionModal(false)} />
 
       <Modal isOpen={isNameModalOpen} onClose={() => setIsNameModalOpen(false)} title={t('mypage_nickname_modal_title')}>
         <div className="space-y-4">
