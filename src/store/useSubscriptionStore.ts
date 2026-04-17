@@ -3,7 +3,7 @@ import { Capacitor } from '@capacitor/core'
 import type { PurchasesPackage } from '@revenuecat/purchases-capacitor'
 
 const RC_API_KEY = 'test_DwFyRdVueCGMreGJGinGSWgpLzp'
-const ENTITLEMENT_ID = 'selah app'
+const ENTITLEMENT_ID = 'premium'
 
 function isActive(customerInfo: any): boolean {
   return !!customerInfo?.entitlements?.active?.[ENTITLEMENT_ID]
