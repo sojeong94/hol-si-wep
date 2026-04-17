@@ -3,7 +3,7 @@ import { useRecordStore } from '@/store/useRecordStore'
 import { usePillStore } from '@/store/usePillStore'
 import { useSettingStore } from '@/store/useSettingStore'
 import { useSubscriptionStore } from '@/store/useSubscriptionStore'
-import { getAverageCycle, getNextPeriodDate, parseLocalDate } from '@/utils/cycleCalculators'
+import { getAverageCycle, getAveragePeriodDays, getNextPeriodDate, parseLocalDate } from '@/utils/cycleCalculators'
 import { differenceInDays, format } from 'date-fns'
 import { Card } from '@/components/ui/Card'
 import { Modal } from '@/components/ui/Modal'
@@ -18,7 +18,7 @@ export function Home() {
   const navigate = useNavigate()
   const { records } = useRecordStore()
   const { pills, togglePill } = usePillStore()
-  const { defaultCycle, isManualCycle, manualCycleDays, userName, setUserName } = useSettingStore()
+  const { defaultCycle, defaultPeriodDays, isManualCycle, manualCycleDays, manualPeriodDays, userName, setUserName } = useSettingStore()
   const { isPremium, setShowPaywall } = useSubscriptionStore()
 
   const openAdvisor = () => {
@@ -50,15 +50,40 @@ export function Home() {
 
   // 예상 주기 계산
   const avgCycle = isManualCycle ? manualCycleDays : getAverageCycle(records, defaultCycle)
+  const avgPeriodDays = isManualCycle ? manualPeriodDays : getAveragePeriodDays(records, defaultPeriodDays)
   let nextDateStr = ''
   let dDay = null
+  let isInPeriod = false
+  let periodDay = 0
 
   if (records.length > 0) {
     const sortedRecords = [...records].sort((a, b) => parseLocalDate(a.startDate).getTime() - parseLocalDate(b.startDate).getTime())
     const lastRecord = sortedRecords[sortedRecords.length - 1]
+    const today = new Date()
+    const lastStartDate = parseLocalDate(lastRecord.startDate)
+    const lastEndDate = lastRecord.endDate ? parseLocalDate(lastRecord.endDate) : null
+    const daysSinceStart = differenceInDays(today, lastStartDate)
+
+    // 현재 생리 중 여부 판단
+    if (daysSinceStart >= 0) {
+      if (lastEndDate) {
+        // 끝난 날 기록이 있으면 그 날까지만 생리 중
+        if (differenceInDays(lastEndDate, today) >= 0) {
+          isInPeriod = true
+          periodDay = daysSinceStart + 1
+        }
+      } else {
+        // 끝난 날 기록이 없으면 평균 생리 기간 동안 생리 중으로 판단
+        if (daysSinceStart < avgPeriodDays) {
+          isInPeriod = true
+          periodDay = daysSinceStart + 1
+        }
+      }
+    }
+
     const nextDate = getNextPeriodDate(lastRecord.startDate, avgCycle)
     nextDateStr = format(nextDate, 'MM.dd')
-    dDay = differenceInDays(nextDate, new Date())
+    dDay = differenceInDays(nextDate, today)
   }
 
   let dDayContent = {
@@ -69,7 +94,15 @@ export function Home() {
     advice: userName ? `${userName}, 달력에 터진 날 기록해줘.\n데이터가 쌓여야 내가 챙겨줄 수 있잖아.` : '달력에 터진 날을 기록하면 주기를 예측해드려요.'
   }
 
-  if (dDay !== null) {
+  if (isInPeriod) {
+    dDayContent = {
+      title: `생리 ${periodDay}일차`,
+      subtitle: `호르몬 재정비 중이에요`,
+      tag: '생리 중',
+      gradient: 'bg-gradient-to-br from-[#ff2a7a]/90 via-rose-500/80 to-pink-600/80 backdrop-blur-xl border border-[#ff2a7a]/60 text-white shadow-[0_0_24px_rgba(255,42,122,0.4)]',
+      advice: `${periodDay}일째야. 지금은 무조건 나한테 잘 해줘.\n철분이랑 마그네슘 챙겨, 지금 네 몸이 다 써버리고 있거든.`
+    }
+  } else if (dDay !== null) {
     if (dDay > 7) {
       dDayContent = {
         title: `D-${dDay}`,
