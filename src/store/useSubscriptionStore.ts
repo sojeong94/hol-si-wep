@@ -2,9 +2,6 @@ import { create } from 'zustand'
 import { Capacitor } from '@capacitor/core'
 import type { PurchasesPackage } from '@revenuecat/purchases-capacitor'
 
-const RC_API_KEY = Capacitor.getPlatform() === 'ios'
-  ? 'appl_pMKnJpSZOUZkljTJsICdYqFJgTu'
-  : 'test_DwFyRdVueCGMreGJGinGSWgpLzp'
 const ENTITLEMENT_ID = 'premium'
 
 function isActive(customerInfo: any): boolean {
@@ -39,7 +36,10 @@ export const useSubscriptionStore = create<SubscriptionStore>((set, get) => ({
     if (get().initialized) return
     try {
       const { Purchases } = await import('@revenuecat/purchases-capacitor')
-      await Purchases.configure({ apiKey: RC_API_KEY })
+      const apiKey = Capacitor.getPlatform() === 'ios'
+        ? 'appl_pMKnJpSZOUZkljTJsICdYqFJgTu'
+        : 'test_DwFyRdVueCGMreGJGinGSWgpLzp'
+      await Purchases.configure({ apiKey })
       const { customerInfo } = await Purchases.getCustomerInfo()
       set({ initialized: true, isPremium: isActive(customerInfo) })
       Purchases.addCustomerInfoUpdateListener((customerInfo: any) => {
