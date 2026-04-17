@@ -1,52 +1,95 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
   <defs>
-    <linearGradient id="bg-grad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#09090b" />
-      <stop offset="100%" stop-color="#18181b" />
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#12040d" />
+      <stop offset="100%" stop-color="#1e0a18" />
     </linearGradient>
-    <linearGradient id="pink-glow" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#FF2A7A" />
-      <stop offset="100%" stop-color="#D9004C" />
-    </linearGradient>
-    <filter id="glass-blur" x="-20%" y="-20%" width="140%" height="140%">
-      <feGaussianBlur stdDeviation="40" />
+    <radialGradient id="face" cx="48%" cy="42%" r="58%">
+      <stop offset="0%" stop-color="#ff7aac" />
+      <stop offset="100%" stop-color="#e81f68" />
+    </radialGradient>
+    <radialGradient id="glow-r" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#FF2A7A" stop-opacity="0.35" />
+      <stop offset="100%" stop-color="#FF2A7A" stop-opacity="0" />
+    </radialGradient>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="22" />
+    </filter>
+    <filter id="tiny-blur">
+      <feGaussianBlur stdDeviation="1.5" />
     </filter>
   </defs>
-  
-  <!-- Base Dark Background -->
-  <rect width="512" height="512" rx="120" fill="url(#bg-grad)" />
-  
-  <!-- Pink Glow Behind Glass -->
-  <circle cx="380" cy="150" r="160" fill="#FF2A7A" opacity="0.6" filter="url(#glass-blur)" />
-  <circle cx="120" cy="400" r="130" fill="#990033" opacity="0.5" filter="url(#glass-blur)" />
 
-  <!-- Glass Layer over glows -->
-  <rect width="512" height="512" rx="120" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.15" stroke-width="4" />
-  
-  <!-- Dandelion Art -->
-  <g transform="translate(256, 320)" stroke="#ffffff" stroke-linecap="round" stroke-linejoin="round">
-    <!-- Stem/Seed -->
-    <path d="M 0 0 Q -10 60 15 110" stroke-width="24" fill="none" opacity="0.8" />
-    <circle cx="0" cy="0" r="16" fill="url(#pink-glow)" stroke="none" />
-    
-    <!-- Parachute stems -->
-    <path d="M 0 0 L -120 -150" stroke-width="20" opacity="0.6" />
-    <path d="M 0 0 L -40 -200" stroke-width="20" opacity="0.6" />
-    <path d="M 0 0 L 40 -200" stroke-width="20" opacity="0.6" />
-    <path d="M 0 0 L 120 -150" stroke-width="20" opacity="0.6" />
+  <!-- Background -->
+  <rect width="512" height="512" rx="110" fill="url(#bg)" />
 
-    <!-- Fluff nodes -->
-    <circle cx="-120" cy="-150" r="28" fill="#FF2A7A" stroke="none" />
-    <circle cx="-40" cy="-200" r="28" fill="#FF2A7A" stroke="none" />
-    <circle cx="40" cy="-200" r="28" fill="#FF2A7A" stroke="none" />
-    <circle cx="120" cy="-150" r="28" fill="#FF2A7A" stroke="none" />
-    
-    <!-- Cross fluffs (the bristles) -->
-    <g stroke="white" stroke-opacity="0.95">
-      <path d="M -150 -140 L -90 -160 M -135 -170 L -105 -130" stroke-width="16" />
-      <path d="M -65 -190 L -15 -210 M -55 -215 L -25 -185" stroke-width="16" />
-      <path d="M 15 -210 L 65 -190 M 25 -185 L 55 -215" stroke-width="16" />
-      <path d="M 90 -160 L 150 -140 M 105 -130 L 135 -170" stroke-width="16" />
-    </g>
+  <!-- Pink ambient glow -->
+  <circle cx="256" cy="248" r="230" fill="url(#glow-r)" filter="url(#soft)" />
+
+  <!-- Face circle -->
+  <circle cx="256" cy="242" r="168" fill="url(#face)" />
+
+  <!-- Subtle face shadow for depth -->
+  <circle cx="256" cy="242" r="168" fill="#000" opacity="0.06" />
+
+  <!-- Blush cheeks -->
+  <ellipse cx="158" cy="292" rx="44" ry="26" fill="#fff" opacity="0.22" />
+  <ellipse cx="354" cy="292" rx="44" ry="26" fill="#fff" opacity="0.22" />
+
+  <!-- Left eye (tsundere — slightly narrowed) -->
+  <ellipse cx="198" cy="228" rx="26" ry="24" fill="#12040d" />
+  <ellipse cx="198" cy="228" rx="24" ry="22" fill="#1c0614" />
+  <circle cx="207" cy="220" r="9" fill="#fff" />
+  <circle cx="210" cy="217" r="4" fill="#fff" opacity="0.6" />
+
+  <!-- Right eye (normal, a touch wider) -->
+  <ellipse cx="314" cy="228" rx="27" ry="25" fill="#12040d" />
+  <ellipse cx="314" cy="228" rx="25" ry="23" fill="#1c0614" />
+  <circle cx="323" cy="220" r="9" fill="#fff" />
+  <circle cx="326" cy="217" r="4" fill="#fff" opacity="0.6" />
+
+  <!-- Left eyebrow — tsundere raised & angled inward -->
+  <path d="M 162 186 Q 196 166 230 180" stroke="#12040d" stroke-width="14" fill="none" stroke-linecap="round" />
+
+  <!-- Right eyebrow — gentle arch -->
+  <path d="M 286 178 Q 314 168 342 177" stroke="#12040d" stroke-width="13" fill="none" stroke-linecap="round" />
+
+  <!-- Tsundere mouth — slight asymmetric smirk, higher on right -->
+  <path d="M 214 302 Q 256 336 302 304" stroke="#12040d" stroke-width="12" fill="none" stroke-linecap="round" />
+  <!-- Tiny corner emphasis on the smirk side -->
+  <path d="M 299 305 Q 306 296 304 289" stroke="#12040d" stroke-width="9" fill="none" stroke-linecap="round" opacity="0.5" />
+
+  <!-- Floating dandelion seeds (brand motif) -->
+  <!-- Seed A — top right area -->
+  <g opacity="0.72">
+    <circle cx="378" cy="118" r="10" fill="#fff" />
+    <line x1="378" y1="118" x2="393" y2="92" stroke="#fff" stroke-width="5.5" stroke-linecap="round" />
+    <line x1="384" y1="104" x2="373" y2="88" stroke="#fff" stroke-width="4" stroke-linecap="round" />
+    <line x1="392" y1="96" x2="379" y2="84" stroke="#fff" stroke-width="3.5" stroke-linecap="round" />
   </g>
+
+  <!-- Seed B — upper left -->
+  <g opacity="0.55">
+    <circle cx="140" cy="126" r="8" fill="#fff" />
+    <line x1="140" y1="126" x2="125" y2="101" stroke="#fff" stroke-width="5" stroke-linecap="round" />
+    <line x1="133" y1="112" x2="122" y2="98" stroke="#fff" stroke-width="3.5" stroke-linecap="round" />
+    <line x1="140" y1="106" x2="128" y2="93" stroke="#fff" stroke-width="3" stroke-linecap="round" />
+  </g>
+
+  <!-- Seed C — far right mid -->
+  <g opacity="0.42">
+    <circle cx="436" cy="210" r="7" fill="#fff" />
+    <line x1="436" y1="210" x2="450" y2="188" stroke="#fff" stroke-width="4.5" stroke-linecap="round" />
+    <line x1="444" y1="198" x2="452" y2="185" stroke="#fff" stroke-width="3" stroke-linecap="round" />
+  </g>
+
+  <!-- Seed D — top center drifting right -->
+  <g opacity="0.38">
+    <circle cx="310" cy="72" r="6" fill="#fff" />
+    <line x1="310" y1="72" x2="322" y2="52" stroke="#fff" stroke-width="4" stroke-linecap="round" />
+    <line x1="317" y1="61" x2="325" y2="49" stroke="#fff" stroke-width="2.8" stroke-linecap="round" />
+  </g>
+
+  <!-- Bottom subtle glass rim -->
+  <rect width="512" height="512" rx="110" fill="none" stroke="#ffffff" stroke-opacity="0.08" stroke-width="3" />
 </svg>

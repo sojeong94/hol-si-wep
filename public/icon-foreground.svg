@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Foreground only (transparent background) for Android adaptive icon -->
+  <!-- Content is centered with ~15% padding on each side for safe zone -->
+  <defs>
+    <radialGradient id="face-fg" cx="48%" cy="42%" r="58%">
+      <stop offset="0%" stop-color="#ff7aac" />
+      <stop offset="100%" stop-color="#e81f68" />
+    </radialGradient>
+  </defs>
+
+  <!-- Pink ambient glow -->
+  <circle cx="256" cy="248" r="180" fill="#FF2A7A" opacity="0.18" />
+
+  <!-- Face circle -->
+  <circle cx="256" cy="242" r="155" fill="url(#face-fg)" />
+
+  <!-- Blush cheeks -->
+  <ellipse cx="162" cy="290" rx="40" ry="24" fill="#fff" opacity="0.22" />
+  <ellipse cx="350" cy="290" rx="40" ry="24" fill="#fff" opacity="0.22" />
+
+  <!-- Left eye (tsundere) -->
+  <ellipse cx="200" cy="228" rx="25" ry="23" fill="#12040d" />
+  <circle cx="209" cy="220" r="8" fill="#fff" />
+  <circle cx="212" cy="217" r="3.5" fill="#fff" opacity="0.6" />
+
+  <!-- Right eye -->
+  <ellipse cx="312" cy="228" rx="26" ry="24" fill="#12040d" />
+  <circle cx="321" cy="220" r="8" fill="#fff" />
+  <circle cx="324" cy="217" r="3.5" fill="#fff" opacity="0.6" />
+
+  <!-- Left eyebrow — tsundere raised -->
+  <path d="M 165 187 Q 198 168 232 182" stroke="#12040d" stroke-width="13" fill="none" stroke-linecap="round" />
+
+  <!-- Right eyebrow — gentle arch -->
+  <path d="M 284 181 Q 312 170 340 179" stroke="#12040d" stroke-width="12" fill="none" stroke-linecap="round" />
+
+  <!-- Tsundere smirk -->
+  <path d="M 215 302 Q 256 334 300 304" stroke="#12040d" stroke-width="11" fill="none" stroke-linecap="round" />
+  <path d="M 297 305 Q 304 296 302 289" stroke="#12040d" stroke-width="9" fill="none" stroke-linecap="round" opacity="0.5" />
+
+  <!-- Floating seeds -->
+  <g opacity="0.72">
+    <circle cx="390" cy="110" r="10" fill="#fff" />
+    <line x1="390" y1="110" x2="405" y2="84" stroke="#fff" stroke-width="5.5" stroke-linecap="round" />
+    <line x1="396" y1="96" x2="385" y2="80" stroke="#fff" stroke-width="4" stroke-linecap="round" />
+    <line x1="404" y1="88" x2="391" y2="76" stroke="#fff" stroke-width="3.5" stroke-linecap="round" />
+  </g>
+  <g opacity="0.52">
+    <circle cx="132" cy="118" r="8" fill="#fff" />
+    <line x1="132" y1="118" x2="117" y2="93" stroke="#fff" stroke-width="5" stroke-linecap="round" />
+    <line x1="125" y1="104" x2="114" y2="90" stroke="#fff" stroke-width="3.5" stroke-linecap="round" />
+  </g>
+  <g opacity="0.38">
+    <circle cx="432" cy="208" r="7" fill="#fff" />
+    <line x1="432" y1="208" x2="446" y2="186" stroke="#fff" stroke-width="4.5" stroke-linecap="round" />
+  </g>
+</svg>
