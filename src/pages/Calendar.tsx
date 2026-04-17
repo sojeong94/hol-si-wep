@@ -57,7 +57,7 @@ export function CalendarPage() {
   const [localMemo, setLocalMemo] = useState('')
   const [symptomSaved, setSymptomSaved] = useState(false)
 
-  const { records, addRecord, removeRecord, updateDailySymptom } = useRecordStore()
+  const { records, addRecord, removeRecord, updateDailySymptom, endRecord } = useRecordStore()
   const {
     defaultCycle,
     isManualCycle,
@@ -175,6 +175,16 @@ export function CalendarPage() {
       isWithinInterval(selectedDate, { start, end })
     )
   })
+
+  // 선택 날짜가 기존 기록의 종료일 바로 다음날인지 확인 (연장 버튼용)
+  const previousRecord = !currentRecord
+    ? records.find((r) => {
+        const end = r.endDate
+          ? parseLocalDate(r.endDate)
+          : addDays(parseLocalDate(r.startDate), avgPeriod - 1)
+        return isSameDay(addDays(end, 1), selectedDate)
+      })
+    : undefined
 
   // ─── 인사이트 계산 ────────────────────────────────────────────
 
@@ -453,18 +463,34 @@ export function CalendarPage() {
         </h3>
 
         {!currentRecord ? (
-          /* 기록 없음 → 시작 버튼 */
-          <button
-            onClick={() => {
-              const autoEnd = format(addDays(parseLocalDate(selectedDateStr), avgPeriod - 1), 'yyyy-MM-dd')
-              addRecord(selectedDateStr, autoEnd)
-              track('record_added', { total: records.length + 1 })
-            }}
-            className="w-full h-14 bg-zinc-900 border border-zinc-800 shadow-sm rounded-[var(--radius-xl)] flex items-center justify-center gap-2 hover:bg-zinc-800 transition-colors active:scale-[0.98]"
-          >
-            <span className="w-3 h-3 rounded-full bg-[var(--color-primary)] shadow-[0_0_8px_rgba(255,42,122,0.8)]"></span>
-            <span className="font-bold text-white text-lg">{t('calendar_start_button')}</span>
-          </button>
+          <div className="space-y-3">
+            {/* 연장 버튼 — 전날이 생리 기간인 경우 */}
+            {previousRecord && (
+              <button
+                onClick={() => {
+                  endRecord(previousRecord.id, selectedDateStr)
+                  track('record_extended', { date: selectedDateStr })
+                }}
+                className="w-full h-14 bg-zinc-900 border border-[var(--color-primary)]/50 shadow-[0_0_12px_rgba(255,42,122,0.15)] rounded-[var(--radius-xl)] flex items-center justify-center gap-2 hover:bg-zinc-800 transition-all active:scale-[0.98]"
+              >
+                <span className="w-3 h-3 rounded-full bg-[var(--color-primary)]/70 shadow-[0_0_8px_rgba(255,42,122,0.6)]"></span>
+                <span className="font-bold text-pink-300 text-base">아직 생리 중이에요 · 하루 연장</span>
+              </button>
+            )}
+
+            {/* 시작 버튼 */}
+            <button
+              onClick={() => {
+                const autoEnd = format(addDays(parseLocalDate(selectedDateStr), avgPeriod - 1), 'yyyy-MM-dd')
+                addRecord(selectedDateStr, autoEnd)
+                track('record_added', { total: records.length + 1 })
+              }}
+              className="w-full h-14 bg-zinc-900 border border-zinc-800 shadow-sm rounded-[var(--radius-xl)] flex items-center justify-center gap-2 hover:bg-zinc-800 transition-colors active:scale-[0.98]"
+            >
+              <span className="w-3 h-3 rounded-full bg-[var(--color-primary)] shadow-[0_0_8px_rgba(255,42,122,0.8)]"></span>
+              <span className="font-bold text-white text-lg">{t('calendar_start_button')}</span>
+            </button>
+          </div>
         ) : (
           <div className="space-y-3">
             {/* 시작일 취소 */}
