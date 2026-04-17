@@ -63,10 +63,10 @@ export function Home() {
 
   let dDayContent = {
     title: '예측 불가',
-    subtitle: '주기를 예측할 수 없어요',
+    subtitle: '주기 데이터를 기록해주세요.',
     tag: null as string | null,
     gradient: 'bg-gradient-to-br from-[#ff2a7a]/20 to-[#ff2a7a]/5 backdrop-blur-xl border-[#ff2a7a]/30 text-white shadow-xl shadow-[#ff2a7a]/10',
-    advice: userName ? `${userName}님, 아직 주기를 예측할 데이터가 부족해요.` : '터진 날을 기록하면 주기를 예측해드려요.'
+    advice: userName ? `${userName}, 달력에 터진 날 기록해줘.\n데이터가 쌓여야 내가 챙겨줄 수 있잖아.` : '달력에 터진 날을 기록하면 주기를 예측해드려요.'
   }
 
   if (dDay !== null) {
@@ -76,7 +76,7 @@ export function Home() {
         subtitle: `에너지가 가장 좋을 때`,
         tag: null,
         gradient: 'bg-gradient-to-br from-pink-400/70 to-rose-300/50 backdrop-blur-xl border border-pink-400/50 text-white shadow-lg shadow-pink-500/10',
-        advice: `터짐주의 D-${dDay}\n텐션 폭발! 무조건 맛있는 음식을 먹자구요.`
+        advice: `뭐야, 아직 ${dDay}일이나 남았잖아.\n지금 텐션 최고일 때 맛있는 거 먹어둬.`
       }
     } else if (dDay > 3) {
       dDayContent = {
@@ -84,7 +84,7 @@ export function Home() {
         subtitle: `슬슬 발동 될 수 있어요`,
         tag: '예열 중',
         gradient: 'bg-gradient-to-tr from-pink-500/70 to-rose-400/50 backdrop-blur-xl border border-pink-500/50 text-white shadow-lg shadow-pink-500/10',
-        advice: `터짐주의 D-${dDay}\n당 떨어지기 전 달달한 디저트 조공 바람!`
+        advice: `슬슬 예민해질 때야. 그냥 달달한 거 먹어.\n내가 시켜서 먹는 거 아니야, 그냥 챙겨주는 거야.`
       }
     } else if (dDay > 0) {
       dDayContent = {
@@ -92,7 +92,7 @@ export function Home() {
         subtitle: `파우치 잘 챙겨요`,
         tag: '주기 임박',
         gradient: 'bg-gradient-to-tr from-[#ff2a7a]/80 to-pink-500/60 backdrop-blur-xl border border-[#ff2a7a]/50 text-white shadow-lg shadow-[#ff2a7a]/15',
-        advice: `터짐주의 D-${dDay} \n매우 민감함. 생존을 위해 마라탕 긴급 수혈 요망.`
+        advice: `D-${dDay}. 건드리지 마. 나도 알아.\n마라탕 정도는 허락할게. 딱 오늘만.`
       }
     } else if (dDay === 0) {
       dDayContent = {
@@ -100,7 +100,7 @@ export function Home() {
         subtitle: `호르몬 재정비 중`,
         tag: '터짐주의',
         gradient: 'bg-gradient-to-br from-[#ff2a7a]/90 via-rose-500/80 to-[#ff2a7a]/90 backdrop-blur-xl border border-[#ff2a7a]/60 text-white shadow-[0_0_20px_rgba(255,42,122,0.4)] animate-pulse',
-        advice: `대망의 D-DAY 입니다.\n건드리면 뭅니다. 따뜻한 전기장판과 간식을 세팅 부탁해요.`
+        advice: `오늘이야. 건드리지 마.\n전기장판이랑 간식 챙겨줘. 부탁이 아니야, 명령이야.`
       }
     } else {
       dDayContent = {
@@ -108,7 +108,7 @@ export function Home() {
         subtitle: `새로운 호르몬으로 에너지를 채워가는 중`,
         tag: null,
         gradient: 'bg-gradient-to-tr from-indigo-500/60 to-purple-400/40 backdrop-blur-xl border border-indigo-500/40 text-white shadow-lg shadow-indigo-500/10',
-        advice: `회복 중인 D+${Math.abs(dDay)}\n대자연과 싸우며 앓는 중. 맛있는 배달 음식 하나 어때요?`
+        advice: `D+${Math.abs(dDay)}, 이제 살 것 같지?\n알아서 회복하겠지만... 배달 음식 하나 시켜. 그냥 시켜.`
       }
     }
   }
@@ -370,7 +370,7 @@ export function Home() {
               className="shrink-0 px-4 py-2 bg-[var(--color-primary)] text-white text-xs font-bold rounded-xl shadow-[0_0_10px_rgba(255,42,122,0.3)] active:scale-95 transition-all flex items-center gap-1"
             >
               {!isPremium && <Crown size={12} />}
-              상담하기
+              {isPremium ? '상담하기' : '무료 상담'}
             </button>
           </div>
           <div className="flex gap-2 overflow-x-auto scrollbar-hide mt-3 pb-0.5 -mx-1 px-1">
