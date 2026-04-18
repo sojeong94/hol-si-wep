@@ -3,6 +3,7 @@ import { useRecordStore } from '@/store/useRecordStore'
 import { usePillStore } from '@/store/usePillStore'
 import { useSettingStore } from '@/store/useSettingStore'
 import { useSubscriptionStore } from '@/store/useSubscriptionStore'
+import { useUsageLimitStore } from '@/store/useUsageLimitStore'
 import { getAverageCycle, getAveragePeriodDays, getNextPeriodDate, parseLocalDate } from '@/utils/cycleCalculators'
 import { differenceInDays, format } from 'date-fns'
 import { Card } from '@/components/ui/Card'
@@ -20,16 +21,17 @@ export function Home() {
   const { pills, togglePill } = usePillStore()
   const { defaultCycle, defaultPeriodDays, isManualCycle, manualCycleDays, manualPeriodDays, userName, setUserName } = useSettingStore()
   const { isPremium, setShowPaywall } = useSubscriptionStore()
+  const { remainingAI, incrementAI } = useUsageLimitStore()
 
   const openAdvisor = () => {
-    if (!isPremium) { setShowPaywall(true); return }
+    if (!isPremium && remainingAI() <= 0) { setShowPaywall(true); return }
     setIsAdvisorOpen(true)
     setAdvisorAnswer('')
     setAdvisorQuestion('')
   }
 
   const openAdvisorWithQuestion = (q: string) => {
-    if (!isPremium) { setShowPaywall(true); return }
+    if (!isPremium && remainingAI() <= 0) { setShowPaywall(true); return }
     setAdvisorQuestion(q)
     setIsAdvisorOpen(true)
   }
@@ -220,6 +222,7 @@ export function Home() {
     setAdvisorAnswer('')
     setAdvisorRecommendations([])
     track('advisor_question', { phase: dDay !== null ? String(dDay) : 'unknown' })
+    if (!isPremium) incrementAI()
     try {
       const res = await fetch('/api/pill-advisor', {
         method: 'POST',
@@ -403,7 +406,11 @@ export function Home() {
               className="shrink-0 px-4 py-2 bg-[var(--color-primary)] text-white text-xs font-bold rounded-xl shadow-[0_0_10px_rgba(255,42,122,0.3)] active:scale-95 transition-all flex items-center gap-1"
             >
               {!isPremium && <Crown size={12} />}
-              {isPremium ? '상담하기' : '무료 상담'}
+              {isPremium
+                ? '상담하기'
+                : remainingAI() > 0
+                  ? `무료 ${remainingAI()}회 남음`
+                  : '프리미엄'}
             </button>
           </div>
           <div className="flex gap-2 overflow-x-auto scrollbar-hide mt-3 pb-0.5 -mx-1 px-1">

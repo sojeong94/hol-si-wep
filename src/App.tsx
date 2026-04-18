@@ -29,16 +29,29 @@ function ScrollReset() {
   return null
 }
 
-// OAuth 콜백 처리: /mypage?token=xxx
+// OAuth 콜백 처리: /mypage?token=xxx  또는  /mypage?auth_error=xxx
 function AuthCallback() {
   const [params] = useSearchParams()
   const navigate = useNavigate()
   const { setAuth } = useAuthStore()
 
   useEffect(() => {
+    const authError = params.get('auth_error')
+    if (authError) {
+      const messages: Record<string, string> = {
+        google_not_configured: '구글 로그인이 설정되지 않았어요.',
+        kakao_not_configured: '카카오 로그인이 설정되지 않았어요.',
+        google_failed: '구글 로그인에 실패했어요. 다시 시도해주세요.',
+        kakao_failed: '카카오 로그인에 실패했어요. 다시 시도해주세요.',
+        no_code: '로그인이 취소되었어요.',
+      }
+      alert(messages[authError] ?? '로그인 중 오류가 발생했어요.')
+      navigate('/mypage', { replace: true })
+      return
+    }
+
     const token = params.get('token')
     if (!token) return
-    // 토큰으로 사용자 정보 조회
     fetch('/api/auth/me', { headers: { Authorization: `Bearer ${token}` } })
       .then(r => r.json())
       .then(user => {

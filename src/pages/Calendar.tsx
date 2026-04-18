@@ -4,6 +4,7 @@ import { track } from '@/lib/analytics'
 import { useRecordStore } from '@/store/useRecordStore'
 import { useSettingStore } from '@/store/useSettingStore'
 import { useSubscriptionStore } from '@/store/useSubscriptionStore'
+import { useUsageLimitStore } from '@/store/useUsageLimitStore'
 import {
   getAverageCycle,
   getOvulationDate,
@@ -46,6 +47,7 @@ const FLOW_OPTIONS = [
 export function CalendarPage() {
   const { t } = useTranslation()
   const { isPremium, setShowPaywall } = useSubscriptionStore()
+  const { remainingOCR, incrementOCR } = useUsageLimitStore()
   const [currentMonth, setCurrentMonth] = useState(new Date())
   const [selectedDate, setSelectedDate] = useState(new Date())
   const [isOCRModalOpen, setIsOCRModalOpen] = useState(false)
@@ -322,6 +324,7 @@ export function CalendarPage() {
       })
       return { records: newStRecords }
     })
+    if (!isPremium) incrementOCR()
     setIsConfirmModalOpen(false)
     alert(t('calendar_ocr_saved_success'))
   }
@@ -607,10 +610,18 @@ export function CalendarPage() {
       {/* 과거 기록 가져오기 */}
       <section className="mt-2 mb-2">
         <button
-          onClick={() => { isPremium ? setIsOCRModalOpen(true) : setShowPaywall(true) }}
+          onClick={() => {
+            if (isPremium || remainingOCR() > 0) setIsOCRModalOpen(true)
+            else setShowPaywall(true)
+          }}
           className="w-full h-12 bg-[#18181A] border border-zinc-800 text-pink-400 font-bold rounded-[var(--radius-xl)] flex items-center justify-center gap-2 hover:bg-zinc-800 active:scale-95 transition-all text-sm"
         >
-          <Camera size={18} /> {t('calendar_import_past')} {!isPremium && <span className="ml-1 text-[10px] bg-[#ff2a7a]/20 text-[#ff2a7a] px-1.5 py-0.5 rounded-full font-black">PRO</span>}
+          <Camera size={18} /> {t('calendar_import_past')}
+          {!isPremium && (
+            <span className="ml-1 text-[10px] bg-[#ff2a7a]/20 text-[#ff2a7a] px-1.5 py-0.5 rounded-full font-black">
+              {remainingOCR() > 0 ? `무료 ${remainingOCR()}회` : 'PRO'}
+            </span>
+          )}
         </button>
       </section>
 
