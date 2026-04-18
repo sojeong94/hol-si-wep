@@ -12,6 +12,7 @@ import { Bell, Download, Upload, Info, UserRound, Pencil, Users, MessageSquare, 
 import { subscribePush, unsubscribePush } from '@/lib/pushService'
 import { usePillStore } from '@/store/usePillStore'
 import { Capacitor } from '@capacitor/core'
+import { Browser } from '@capacitor/browser'
 import AppleSignIn from '@/plugins/AppleSignIn'
 
 export function MyPage() {
@@ -112,10 +113,10 @@ export function MyPage() {
     }
   }
 
-  const handleOAuthLogin = (provider: 'google' | 'kakao') => {
+  const handleOAuthLogin = async (provider: 'google' | 'kakao') => {
     if (Capacitor.isNativePlatform()) {
-      // 네이티브: 전체 외부 URL로 요청 → Capacitor가 allowNavigation 미등록 도메인을 시스템 브라우저로 열도록 유도
-      window.location.href = `https://hol-si.com/api/auth/${provider}?platform=native`
+      // Chrome Custom Tabs로 열기 — WebView 아니라 구글 정책 통과
+      await Browser.open({ url: `https://hol-si.com/api/auth/${provider}?platform=native` })
     } else {
       window.location.href = `/api/auth/${provider}`
     }

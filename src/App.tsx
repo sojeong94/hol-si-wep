@@ -1,6 +1,9 @@
 import { BrowserRouter, Routes, Route, useSearchParams, useNavigate, useLocation } from 'react-router-dom'
 import { useEffect } from 'react'
 import { format } from 'date-fns'
+import { Capacitor } from '@capacitor/core'
+import { App as CapApp } from '@capacitor/app'
+import { Browser } from '@capacitor/browser'
 import { usePillStore } from '@/store/usePillStore'
 import { useSettingStore } from '@/store/useSettingStore'
 import { useAuthStore } from '@/store/useAuthStore'
@@ -72,6 +75,45 @@ function App() {
   // RevenueCat 초기화
   useEffect(() => {
     initialize()
+  }, [])
+
+  // 네이티브: holsi://auth?token=xxx 딥링크 처리 (OAuth 콜백)
+  useEffect(() => {
+    if (!Capacitor.isNativePlatform()) return
+    const { setAuth } = useAuthStore.getState()
+
+    const handleUrl = async (event: { url: string }) => {
+      const url = new URL(event.url)
+      const authError = url.searchParams.get('auth_error')
+      if (authError) {
+        const messages: Record<string, string> = {
+          google_failed: '구글 로그인에 실패했어요. 다시 시도해주세요.',
+          kakao_failed: '카카오 로그인에 실패했어요. 다시 시도해주세요.',
+          no_code: '로그인이 취소되었어요.',
+        }
+        await Browser.close()
+        alert(messages[authError] ?? '로그인 중 오류가 발생했어요.')
+        return
+      }
+
+      const token = url.searchParams.get('token')
+      if (!token) return
+
+      try {
+        const r = await fetch('https://hol-si.com/api/auth/me', {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+        const user = await r.json()
+        setAuth(token, user)
+      } catch {
+        // me API 실패 시 로그인 상태 저장 안 함 — 다시 시도 안내
+        alert('로그인 처리 중 오류가 발생했어요. 다시 시도해주세요.')
+      }
+      await Browser.close()
+    }
+
+    CapApp.addListener('appUrlOpen', handleUrl)
+    return () => { CapApp.removeAllListeners() }
   }, [])
 
   // 앱 실행 모드 추적 (GA4)
