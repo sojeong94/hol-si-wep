@@ -42,17 +42,22 @@ router.get('/google', (_req: Request, res: Response) => {
   if (!process.env.GOOGLE_CLIENT_ID) {
     return res.redirect(`${FRONTEND_URL}/mypage?auth_error=google_not_configured`)
   }
+  const platform = _req.query.platform as string
   const url = googleClient.generateAuthUrl({
     access_type: 'offline',
     scope: ['profile', 'email'],
     prompt: 'select_account',
+    state: platform === 'native' ? 'native' : 'web',
   })
   res.redirect(url)
 })
 
 router.get('/google/callback', async (req: Request, res: Response) => {
   const code = req.query.code as string
-  if (!code) return res.redirect(`${FRONTEND_URL}/mypage?auth_error=no_code`)
+  const isNative = req.query.state === 'native'
+  const errorBase = isNative ? 'holsi://auth' : `${FRONTEND_URL}/mypage`
+
+  if (!code) return res.redirect(`${errorBase}?auth_error=no_code`)
 
   try {
     const { tokens } = await googleClient.getToken(code)
@@ -70,10 +75,11 @@ router.get('/google/callback', async (req: Request, res: Response) => {
     })
 
     const token = signToken(user.id)
-    res.redirect(`${FRONTEND_URL}/mypage?token=${token}`)
+    const successBase = isNative ? 'holsi://auth' : `${FRONTEND_URL}/mypage`
+    res.redirect(`${successBase}?token=${token}`)
   } catch (err) {
     console.error('[Google OAuth]', err)
-    res.redirect(`${FRONTEND_URL}/mypage?auth_error=google_failed`)
+    res.redirect(`${errorBase}?auth_error=google_failed`)
   }
 })
 
@@ -86,16 +92,20 @@ router.get('/kakao', (_req: Request, res: Response) => {
   if (!process.env.KAKAO_REST_API_KEY) {
     return res.redirect(`${FRONTEND_URL}/mypage?auth_error=kakao_not_configured`)
   }
-  const url = `https://kauth.kakao.com/oauth/authorize?client_id=${process.env.KAKAO_REST_API_KEY}&redirect_uri=${encodeURIComponent(KAKAO_REDIRECT_URI)}&response_type=code`
+  const platform = _req.query.platform as string
+  const state = platform === 'native' ? 'native' : 'web'
+  const url = `https://kauth.kakao.com/oauth/authorize?client_id=${process.env.KAKAO_REST_API_KEY}&redirect_uri=${encodeURIComponent(KAKAO_REDIRECT_URI)}&response_type=code&state=${state}`
   res.redirect(url)
 })
 
 router.get('/kakao/callback', async (req: Request, res: Response) => {
   const code = req.query.code as string
-  if (!code) return res.redirect(`${FRONTEND_URL}/mypage?auth_error=no_code`)
+  const isNative = req.query.state === 'native'
+  const errorBase = isNative ? 'holsi://auth' : `${FRONTEND_URL}/mypage`
+
+  if (!code) return res.redirect(`${errorBase}?auth_error=no_code`)
 
   try {
-    // 1. exchange code for token
     const tokenRes = await fetch('https://kauth.kakao.com/oauth/token', {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -108,7 +118,6 @@ router.get('/kakao/callback', async (req: Request, res: Response) => {
     })
     const tokenData = await tokenRes.json() as { access_token: string }
 
-    // 2. get user info
     const userRes = await fetch('https://kapi.kakao.com/v2/user/me', {
       headers: { Authorization: `Bearer ${tokenData.access_token}` },
     })
@@ -126,10 +135,11 @@ router.get('/kakao/callback', async (req: Request, res: Response) => {
     })
 
     const token = signToken(user.id)
-    res.redirect(`${FRONTEND_URL}/mypage?token=${token}`)
+    const successBase = isNative ? 'holsi://auth' : `${FRONTEND_URL}/mypage`
+    res.redirect(`${successBase}?token=${token}`)
   } catch (err) {
     console.error('[Kakao OAuth]', err)
-    res.redirect(`${FRONTEND_URL}/mypage?auth_error=kakao_failed`)
+    res.redirect(`${errorBase}?auth_error=kakao_failed`)
   }
 })
 

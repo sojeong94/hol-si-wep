@@ -12,6 +12,7 @@ import { Bell, Download, Upload, Info, UserRound, Pencil, Users, MessageSquare, 
 import { subscribePush, unsubscribePush } from '@/lib/pushService'
 import { usePillStore } from '@/store/usePillStore'
 import { Capacitor } from '@capacitor/core'
+import { Browser } from '@capacitor/browser'
 import AppleSignIn from '@/plugins/AppleSignIn'
 
 export function MyPage() {
@@ -112,8 +113,12 @@ export function MyPage() {
     }
   }
 
-  const handleOAuthLogin = (provider: 'google' | 'kakao') => {
-    window.location.href = `/api/auth/${provider}`
+  const handleOAuthLogin = async (provider: 'google' | 'kakao') => {
+    if (Capacitor.isNativePlatform()) {
+      await Browser.open({ url: `https://hol-si.com/api/auth/${provider}?platform=native` })
+    } else {
+      window.location.href = `/api/auth/${provider}`
+    }
   }
 
   const handleAppleLogin = async () => {
