@@ -19,6 +19,7 @@ export default defineConfig({
       },
       workbox: {
         importScripts: ['/push-handler.js'],
+        navigateFallbackDenylist: [/^\/api\//],
       },
       manifest: {
         name: 'Holsi (홀몬시스터즈)',
