@@ -8,12 +8,6 @@ const config: CapacitorConfig = {
   server: {
     url: 'https://hol-si.com',
     cleartext: false,
-    allowNavigation: [
-      'accounts.google.com',
-      '*.google.com',
-      'kauth.kakao.com',
-      'kapi.kakao.com',
-    ],
   },
   ios: {
     contentInset: 'never',
