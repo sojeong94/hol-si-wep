@@ -141,8 +141,8 @@ export function Home() {
     } else {
       // 예정일이 지났지만 아직 생리 기록 없음 → 기록 유도
       dDayContent = {
-        title: `예정일 +${Math.abs(dDay)}일`,
-        subtitle: `터진 날을 기록해주세요`,
+        title: `아직도 안 터졌나요?`,
+        subtitle: `예정일 +${Math.abs(dDay)}일째`,
         tag: '기록 필요',
         gradient: 'bg-gradient-to-br from-[#ff2a7a] to-rose-700 text-white shadow-[0_0_20px_rgba(255,42,122,0.3)]',
         advice: `예정일이 ${Math.abs(dDay)}일 지났어. 터진 날 기록해줘야 다음도 챙겨줄 수 있잖아.`
