@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { Plus, Heart, Clock, MessageCircle, ArrowLeft, Send } from 'lucide-react'
+import { Plus, Heart, Clock, MessageCircle, ArrowLeft, Send, Flag, X } from 'lucide-react'
 import { Card } from '@/components/ui/Card'
 
 type Category = '전체' | '생리통' | 'PMS' | '임신준비' | '영양제' | '일상'
@@ -36,6 +36,21 @@ const CATEGORY_COLORS: Record<WriteCategory, string> = {
   '일상':   'bg-zinc-700 text-zinc-400',
 }
 
+const REPORT_REASONS = ['음란물·성적 콘텐츠', '욕설·비방·혐오', '스팸·광고', '개인정보 노출', '기타 부적절한 내용']
+
+function getBlockedAuthors(): Set<string> {
+  try {
+    const raw = localStorage.getItem('holsi-blocked-authors')
+    return new Set(raw ? JSON.parse(raw) : [])
+  } catch { return new Set() }
+}
+
+function blockAuthor(author: string) {
+  const blocked = getBlockedAuthors()
+  blocked.add(author)
+  localStorage.setItem('holsi-blocked-authors', JSON.stringify([...blocked]))
+}
+
 function getDeviceId(): string {
   let id = localStorage.getItem('holsi-device-id')
   if (!id) {
@@ -57,6 +72,7 @@ function timeAgo(dateStr: string): string {
 }
 
 export function Community() {
+  const [agreed, setAgreed] = useState(() => localStorage.getItem('holsi-community-agreed') === 'true')
   const [activeCategory, setActiveCategory] = useState<Category>('전체')
   const [posts, setPosts] = useState<Post[]>([])
   const [loading, setLoading] = useState(true)
@@ -64,6 +80,10 @@ export function Community() {
   const [writeCategory, setWriteCategory] = useState<WriteCategory>('일상')
   const [writeContent, setWriteContent] = useState('')
   const [submitting, setSubmitting] = useState(false)
+  const [blockedAuthors, setBlockedAuthors] = useState<Set<string>>(getBlockedAuthors)
+
+  // 신고 모달
+  const [reportTarget, setReportTarget] = useState<{ type: 'post' | 'comment'; id: string; author: string } | null>(null)
 
   // 댓글 상세
   const [selectedPost, setSelectedPost] = useState<Post | null>(null)
@@ -176,6 +196,30 @@ export function Community() {
     }
   }
 
+  const handleReport = async (reason: string) => {
+    if (!reportTarget) return
+    const url = reportTarget.type === 'post'
+      ? `/api/community/posts/${reportTarget.id}/report`
+      : `/api/community/comments/${reportTarget.id}/report`
+    try {
+      await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ deviceId, reason }),
+      })
+    } catch {}
+    setReportTarget(null)
+    alert('신고가 접수되었어요. 24시간 내에 검토할게요.')
+  }
+
+  const handleBlock = (author: string) => {
+    blockAuthor(author)
+    setBlockedAuthors(getBlockedAuthors())
+    setReportTarget(null)
+    if (selectedPost?.author === author) setSelectedPost(null)
+    alert(`${author}님을 차단했어요. 이 사용자의 게시글이 표시되지 않아요.`)
+  }
+
   const handleSubmit = async () => {
     if (!writeContent.trim()) return
     setSubmitting(true)
@@ -194,6 +238,36 @@ export function Community() {
     } finally {
       setSubmitting(false)
     }
+  }
+
+  // EULA 미동의 시 약관 화면 표시
+  if (!agreed) {
+    return (
+      <div className="p-5 pb-8 flex flex-col min-h-screen bg-[var(--color-secondary)]">
+        <header className="pt-2 mb-6">
+          <h1 className="text-2xl font-black text-white tracking-tight">커뮤니티</h1>
+        </header>
+        <div className="flex-1 flex flex-col justify-center space-y-5">
+          <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5 space-y-4">
+            <h2 className="text-base font-black text-white">커뮤니티 이용 약관</h2>
+            <ul className="space-y-2 text-sm text-zinc-400 leading-relaxed">
+              <li>• 익명 커뮤니티로 운영되며, 모든 게시글은 공개됩니다.</li>
+              <li>• 욕설, 음란물, 비방, 혐오 표현 등 부적절한 콘텐츠는 즉시 삭제되며 이용이 제한됩니다.</li>
+              <li>• 타인의 개인정보를 게시하거나 불법적인 내용을 작성하는 행위는 금지됩니다.</li>
+              <li>• 신고된 콘텐츠는 24시간 이내 검토 후 조치됩니다.</li>
+              <li>• 부적절한 사용자는 서비스 이용이 영구 차단될 수 있습니다.</li>
+            </ul>
+            <p className="text-xs text-zinc-600">위 약관에 동의해야 커뮤니티를 이용할 수 있어요.</p>
+          </div>
+          <button
+            onClick={() => { localStorage.setItem('holsi-community-agreed', 'true'); setAgreed(true) }}
+            className="w-full py-4 bg-[var(--color-primary)] text-white font-black rounded-2xl shadow-[0_0_15px_rgba(255,42,122,0.4)] active:scale-95 transition-all"
+          >
+            동의하고 커뮤니티 입장하기
+          </button>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -235,7 +309,7 @@ export function Community() {
         </div>
       ) : (
         <div className="space-y-3">
-          {posts.map(post => (
+          {posts.filter(p => !blockedAuthors.has(p.author)).map(post => (
             <Card
               key={post.id}
               className="p-4 bg-zinc-900 border border-zinc-800 space-y-3 cursor-pointer active:scale-[0.97] active:opacity-80 transition-all"
@@ -250,10 +324,18 @@ export function Community() {
                     {post.category}
                   </span>
                 </div>
-                <span className="text-[10px] text-zinc-600 flex items-center gap-1">
-                  <Clock size={10} />
-                  {timeAgo(post.createdAt)}
-                </span>
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] text-zinc-600 flex items-center gap-1">
+                    <Clock size={10} />
+                    {timeAgo(post.createdAt)}
+                  </span>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); setReportTarget({ type: 'post', id: post.id, author: post.author }) }}
+                    className="text-zinc-700 hover:text-zinc-500 active:scale-90 transition-all p-1"
+                  >
+                    <Flag size={12} />
+                  </button>
+                </div>
               </div>
               <p className="text-sm text-zinc-300 leading-relaxed whitespace-pre-wrap line-clamp-3">{post.content}</p>
               <div className="flex items-center gap-4">
@@ -337,6 +419,36 @@ export function Community() {
         </div>
       )}
 
+      {/* 신고 모달 */}
+      {reportTarget && (
+        <div className="fixed inset-0 z-[60] flex items-end bg-black/60" onClick={() => setReportTarget(null)}>
+          <div className="w-full max-w-md mx-auto bg-zinc-900 border-t border-zinc-700 rounded-t-3xl p-5 space-y-3" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-1">
+              <h3 className="font-black text-white text-base">신고 사유 선택</h3>
+              <button onClick={() => setReportTarget(null)} className="text-zinc-500 active:scale-90 transition-all">
+                <X size={20} />
+              </button>
+            </div>
+            {REPORT_REASONS.map(reason => (
+              <button
+                key={reason}
+                onClick={() => handleReport(reason)}
+                className="w-full text-left px-4 py-3 bg-zinc-800 rounded-xl text-sm text-zinc-300 font-medium active:bg-zinc-700 transition-all"
+              >
+                {reason}
+              </button>
+            ))}
+            <div className="h-px bg-zinc-800 my-1" />
+            <button
+              onClick={() => handleBlock(reportTarget.author)}
+              className="w-full text-left px-4 py-3 bg-red-950/40 border border-red-900/40 rounded-xl text-sm text-red-400 font-bold active:bg-red-950/70 transition-all"
+            >
+              이 사용자 차단하기
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* 게시글 상세 + 댓글 오버레이 */}
       {selectedPost && (
         <div className="fixed inset-0 z-50 bg-[#0A0A0A] flex flex-col animate-in slide-in-from-bottom duration-300">
@@ -412,15 +524,23 @@ export function Community() {
                           <span className="text-[10px] text-zinc-600">{timeAgo(comment.createdAt)}</span>
                         </div>
                         <p className="text-sm text-zinc-300 leading-relaxed whitespace-pre-wrap">{comment.content}</p>
-                        <button
-                          onClick={() => handleCommentLike(comment.id)}
-                          className={`flex items-center gap-1.5 text-xs font-bold mt-2 transition-all active:scale-95 ${
-                            comment.liked ? 'text-[var(--color-primary)]' : 'text-zinc-600'
-                          }`}
-                        >
-                          <Heart size={12} fill={comment.liked ? 'currentColor' : 'none'} />
-                          {comment.likes > 0 && comment.likes}
-                        </button>
+                        <div className="flex items-center gap-3 mt-2">
+                          <button
+                            onClick={() => handleCommentLike(comment.id)}
+                            className={`flex items-center gap-1.5 text-xs font-bold transition-all active:scale-95 ${
+                              comment.liked ? 'text-[var(--color-primary)]' : 'text-zinc-600'
+                            }`}
+                          >
+                            <Heart size={12} fill={comment.liked ? 'currentColor' : 'none'} />
+                            {comment.likes > 0 && comment.likes}
+                          </button>
+                          <button
+                            onClick={() => setReportTarget({ type: 'comment', id: comment.id, author: comment.author })}
+                            className="text-zinc-700 hover:text-zinc-500 active:scale-90 transition-all"
+                          >
+                            <Flag size={11} />
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </div>

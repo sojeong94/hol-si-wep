@@ -47,7 +47,8 @@ export function OCRScannerModal({
 }: OCRScannerModalProps) {
   const [isScanning, setIsScanning] = useState(false)
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
-  const fileInputRef = useRef<HTMLInputElement>(null)
+  const galleryInputRef = useRef<HTMLInputElement>(null)
+  const cameraInputRef = useRef<HTMLInputElement>(null)
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -127,7 +128,8 @@ export function OCRScannerModal({
       onClose()
     } finally {
       setIsScanning(false)
-      if (fileInputRef.current) fileInputRef.current.value = ''
+      if (galleryInputRef.current) galleryInputRef.current.value = ''
+      if (cameraInputRef.current) cameraInputRef.current.value = ''
     }
   }
 
@@ -150,6 +152,24 @@ export function OCRScannerModal({
           </div>
         )}
 
+        {/* 갤러리 전용 input */}
+        <input
+          type="file"
+          accept="image/*"
+          className="hidden"
+          ref={galleryInputRef}
+          onChange={handleFileChange}
+        />
+        {/* 카메라 전용 input — capture 속성을 정적으로 선언하여 동적 조작 크래시 방지 */}
+        <input
+          type="file"
+          accept="image/*"
+          capture="environment"
+          className="hidden"
+          ref={cameraInputRef}
+          onChange={handleFileChange}
+        />
+
         {isScanning ? (
           <div className="flex flex-col items-center justify-center p-8 w-full bg-zinc-900 rounded-2xl border border-zinc-800">
             <Loader2 className="w-10 h-10 text-pink-500 animate-spin mb-3" />
@@ -158,29 +178,15 @@ export function OCRScannerModal({
           </div>
         ) : (
           <div className="flex gap-4 w-full">
-            <input
-              type="file"
-              accept="image/*"
-              className="hidden"
-              ref={fileInputRef}
-              onChange={handleFileChange}
-            />
             <button
-              onClick={() => { setErrorMsg(null); fileInputRef.current?.click() }}
+              onClick={() => { setErrorMsg(null); galleryInputRef.current?.click() }}
               className="flex-1 flex flex-col items-center justify-center p-6 bg-zinc-900 border-2 border-dashed border-zinc-700 rounded-xl hover:border-pink-500/50 hover:bg-zinc-800 transition-colors active:scale-95 group"
             >
               <ImageIcon className="w-8 h-8 text-zinc-400 mb-2 group-hover:text-pink-400 transition-colors" />
               <span className="font-bold text-zinc-300 text-sm">갤러리에서 선택</span>
             </button>
             <button
-              onClick={() => {
-                setErrorMsg(null)
-                if (fileInputRef.current) {
-                  fileInputRef.current.setAttribute('capture', 'environment')
-                  fileInputRef.current.click()
-                  setTimeout(() => fileInputRef.current?.removeAttribute('capture'), 100)
-                }
-              }}
+              onClick={() => { setErrorMsg(null); cameraInputRef.current?.click() }}
               className="flex-1 flex flex-col items-center justify-center p-6 bg-zinc-900 border-2 border-dashed border-zinc-700 rounded-xl hover:border-pink-500/50 hover:bg-zinc-800 transition-colors active:scale-95 group"
             >
               <Camera className="w-8 h-8 text-zinc-400 mb-2 group-hover:text-pink-400 transition-colors" />

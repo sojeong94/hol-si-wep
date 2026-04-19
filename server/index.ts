@@ -713,6 +713,66 @@ app.post('/api/community/comments/:commentId/like', (req, res) => {
   res.json({ likes: comment.likedBy.length, liked: idx < 0 })
 })
 
+// ─── 커뮤니티 신고 ────────────────────────────────────────────────────────────
+interface CommunityReport {
+  id: string
+  targetType: 'post' | 'comment'
+  targetId: string
+  reason: string
+  reportedBy: string
+  createdAt: string
+}
+
+const REPORTS_FILE = process.env.REPORTS_FILE_PATH ?? path.join(__dirname, 'community_reports.json')
+
+function loadReports(): CommunityReport[] {
+  try { return JSON.parse(fs.readFileSync(REPORTS_FILE, 'utf8')) } catch { return [] }
+}
+
+function saveReports(reports: CommunityReport[]) {
+  const tmp = `${REPORTS_FILE}.tmp`
+  fs.writeFileSync(tmp, JSON.stringify(reports, null, 2), 'utf8')
+  fs.renameSync(tmp, REPORTS_FILE)
+}
+
+app.post('/api/community/posts/:id/report', communityLimiter, (req, res) => {
+  const { id } = req.params
+  const { deviceId, reason } = req.body ?? {}
+  if (!isNonEmptyString(deviceId, 100)) return res.status(400).json({ error: 'deviceId 누락' })
+  if (!isNonEmptyString(reason, 100)) return res.status(400).json({ error: 'reason 누락' })
+
+  const reports = loadReports()
+  reports.push({
+    id: Math.random().toString(36).substring(2) + Date.now().toString(36),
+    targetType: 'post',
+    targetId: id,
+    reason,
+    reportedBy: deviceId,
+    createdAt: new Date().toISOString(),
+  })
+  saveReports(reports)
+  res.json({ success: true })
+})
+
+app.post('/api/community/comments/:commentId/report', communityLimiter, (req, res) => {
+  const { commentId } = req.params
+  const { deviceId, reason } = req.body ?? {}
+  if (!isNonEmptyString(deviceId, 100)) return res.status(400).json({ error: 'deviceId 누락' })
+  if (!isNonEmptyString(reason, 100)) return res.status(400).json({ error: 'reason 누락' })
+
+  const reports = loadReports()
+  reports.push({
+    id: Math.random().toString(36).substring(2) + Date.now().toString(36),
+    targetType: 'comment',
+    targetId: commentId,
+    reason,
+    reportedBy: deviceId,
+    createdAt: new Date().toISOString(),
+  })
+  saveReports(reports)
+  res.json({ success: true })
+})
+
 // ─── 커뮤니티 큐레이션 시드 ───────────────────────────────────────────────────
 function seedCuratedPosts() {
   if (loadPosts().length > 0) return
