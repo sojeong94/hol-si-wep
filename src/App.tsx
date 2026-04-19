@@ -185,6 +185,12 @@ function App() {
           <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-pink-900/20 rounded-full blur-[100px] pointer-events-none"></div>
           <div className="absolute bottom-[-10%] right-[-10%] w-[60%] h-[50%] bg-rose-900/20 rounded-full blur-[120px] pointer-events-none"></div>
 
+          {/* 상태바 영역 (safe-area-inset-top) 색상 오버레이 */}
+          <div
+            className="fixed top-0 left-0 right-0 z-50 pointer-events-none"
+            style={{ height: 'env(safe-area-inset-top)', backgroundColor: '#1a0a0f' }}
+          />
+
           {/* iOS safe area + CSS scroll 컨테이너 */}
           <div
             id="scroll-container"
