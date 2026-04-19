@@ -1,5 +1,5 @@
-import { useState, useEffect, useCallback } from 'react'
-import { Plus, Heart, Clock } from 'lucide-react'
+import { useState, useEffect, useCallback, useRef } from 'react'
+import { Plus, Heart, Clock, MessageCircle, ArrowLeft, Send } from 'lucide-react'
 import { Card } from '@/components/ui/Card'
 
 type Category = '전체' | '생리통' | 'PMS' | '임신준비' | '영양제' | '일상'
@@ -9,6 +9,16 @@ interface Post {
   id: string
   author: string
   category: string
+  content: string
+  likes: number
+  liked: boolean
+  commentCount: number
+  createdAt: string
+}
+
+interface Comment {
+  id: string
+  author: string
   content: string
   likes: number
   liked: boolean
@@ -54,6 +64,15 @@ export function Community() {
   const [writeCategory, setWriteCategory] = useState<WriteCategory>('일상')
   const [writeContent, setWriteContent] = useState('')
   const [submitting, setSubmitting] = useState(false)
+
+  // 댓글 상세
+  const [selectedPost, setSelectedPost] = useState<Post | null>(null)
+  const [comments, setComments] = useState<Comment[]>([])
+  const [commentsLoading, setCommentsLoading] = useState(false)
+  const [commentInput, setCommentInput] = useState('')
+  const [commentSubmitting, setCommentSubmitting] = useState(false)
+  const commentInputRef = useRef<HTMLInputElement>(null)
+
   const deviceId = getDeviceId()
 
   const fetchPosts = useCallback(async () => {
@@ -73,7 +92,34 @@ export function Community() {
 
   useEffect(() => { fetchPosts() }, [fetchPosts])
 
-  const handleLike = async (postId: string) => {
+  const fetchComments = useCallback(async (postId: string) => {
+    setCommentsLoading(true)
+    try {
+      const res = await fetch(`/api/community/posts/${postId}/comments?deviceId=${deviceId}`)
+      const data = await res.json()
+      setComments(data.comments ?? [])
+    } catch {
+      setComments([])
+    } finally {
+      setCommentsLoading(false)
+    }
+  }, [deviceId])
+
+  const openPost = (post: Post) => {
+    setSelectedPost(post)
+    setComments([])
+    setCommentInput('')
+    fetchComments(post.id)
+  }
+
+  const closePost = () => {
+    setSelectedPost(null)
+    setComments([])
+    setCommentInput('')
+  }
+
+  const handleLike = async (postId: string, e?: React.MouseEvent) => {
+    e?.stopPropagation()
     try {
       const res = await fetch(`/api/community/posts/${postId}/like`, {
         method: 'POST',
@@ -84,7 +130,50 @@ export function Community() {
       setPosts(prev =>
         prev.map(p => p.id === postId ? { ...p, likes: data.likes, liked: data.liked } : p)
       )
+      if (selectedPost?.id === postId) {
+        setSelectedPost(prev => prev ? { ...prev, likes: data.likes, liked: data.liked } : prev)
+      }
     } catch {}
+  }
+
+  const handleCommentLike = async (commentId: string) => {
+    try {
+      const res = await fetch(`/api/community/comments/${commentId}/like`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ deviceId }),
+      })
+      const data = await res.json()
+      setComments(prev =>
+        prev.map(c => c.id === commentId ? { ...c, likes: data.likes, liked: data.liked } : c)
+      )
+    } catch {}
+  }
+
+  const handleCommentSubmit = async () => {
+    if (!commentInput.trim() || !selectedPost) return
+    setCommentSubmitting(true)
+    try {
+      const res = await fetch(`/api/community/posts/${selectedPost.id}/comments`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ deviceId, content: commentInput.trim() }),
+      })
+      if (!res.ok) throw new Error()
+      const data = await res.json()
+      setComments(prev => [...prev, data.comment])
+      setCommentInput('')
+      // 게시글 카드 댓글 수 업데이트
+      const newCount = comments.length + 1
+      setPosts(prev =>
+        prev.map(p => p.id === selectedPost.id ? { ...p, commentCount: newCount } : p)
+      )
+      setSelectedPost(prev => prev ? { ...prev, commentCount: newCount } : prev)
+    } catch {
+      alert('댓글 게시에 실패했어요.')
+    } finally {
+      setCommentSubmitting(false)
+    }
   }
 
   const handleSubmit = async () => {
@@ -147,7 +236,11 @@ export function Community() {
       ) : (
         <div className="space-y-3">
           {posts.map(post => (
-            <Card key={post.id} className="p-4 bg-zinc-900 border border-zinc-800 space-y-3">
+            <Card
+              key={post.id}
+              className="p-4 bg-zinc-900 border border-zinc-800 space-y-3 cursor-pointer active:scale-[0.97] active:opacity-80 transition-all"
+              onClick={() => openPost(post)}
+            >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <span className="text-xs font-bold text-zinc-300">{post.author}</span>
@@ -162,16 +255,22 @@ export function Community() {
                   {timeAgo(post.createdAt)}
                 </span>
               </div>
-              <p className="text-sm text-zinc-300 leading-relaxed whitespace-pre-wrap">{post.content}</p>
-              <button
-                onClick={() => handleLike(post.id)}
-                className={`flex items-center gap-1.5 text-xs font-bold transition-all active:scale-95 ${
-                  post.liked ? 'text-[var(--color-primary)]' : 'text-zinc-500 hover:text-zinc-300'
-                }`}
-              >
-                <Heart size={14} fill={post.liked ? 'currentColor' : 'none'} />
-                {post.likes}
-              </button>
+              <p className="text-sm text-zinc-300 leading-relaxed whitespace-pre-wrap line-clamp-3">{post.content}</p>
+              <div className="flex items-center gap-4">
+                <button
+                  onClick={(e) => handleLike(post.id, e)}
+                  className={`flex items-center gap-1.5 text-xs font-bold transition-all active:scale-95 ${
+                    post.liked ? 'text-[var(--color-primary)]' : 'text-zinc-500 hover:text-zinc-300'
+                  }`}
+                >
+                  <Heart size={14} fill={post.liked ? 'currentColor' : 'none'} />
+                  {post.likes}
+                </button>
+                <span className="flex items-center gap-1.5 text-xs text-zinc-500">
+                  <MessageCircle size={14} />
+                  {post.commentCount}
+                </span>
+              </div>
             </Card>
           ))}
         </div>
@@ -197,15 +296,10 @@ export function Community() {
           >
             <div className="flex items-center justify-between">
               <h3 className="font-black text-white text-lg">글쓰기</h3>
-              <button
-                onClick={() => setShowWriteModal(false)}
-                className="text-zinc-500 text-sm font-medium"
-              >
+              <button onClick={() => setShowWriteModal(false)} className="text-zinc-500 text-sm font-medium">
                 취소
               </button>
             </div>
-
-            {/* 카테고리 선택 */}
             <div className="flex gap-2 flex-wrap">
               {WRITE_CATEGORIES.map(cat => (
                 <button
@@ -221,8 +315,6 @@ export function Community() {
                 </button>
               ))}
             </div>
-
-            {/* 내용 입력 */}
             <textarea
               value={writeContent}
               onChange={e => setWriteContent(e.target.value.slice(0, 200))}
@@ -241,6 +333,123 @@ export function Community() {
                 {submitting ? '게시 중...' : '게시하기'}
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* 게시글 상세 + 댓글 오버레이 */}
+      {selectedPost && (
+        <div className="fixed inset-0 z-50 bg-[#0A0A0A] flex flex-col animate-in slide-in-from-bottom duration-300">
+          {/* 헤더 */}
+          <div className="flex items-center gap-3 px-5 py-4 border-b border-zinc-800 flex-shrink-0">
+            <button
+              onClick={closePost}
+              className="text-zinc-400 active:scale-90 transition-all"
+            >
+              <ArrowLeft size={22} />
+            </button>
+            <span className="text-white font-bold text-base">스레드</span>
+          </div>
+
+          {/* 스크롤 영역 */}
+          <div className="flex-1 overflow-y-auto pb-2">
+            {/* 원본 게시글 */}
+            <div className="px-5 py-4 border-b border-zinc-800/60">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-pink-500 to-purple-600 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
+                  {selectedPost.author.charAt(0)}
+                </div>
+                <div>
+                  <span className="text-xs font-bold text-zinc-200">{selectedPost.author}</span>
+                  <div className="flex items-center gap-1.5 mt-0.5">
+                    <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold ${
+                      CATEGORY_COLORS[selectedPost.category as WriteCategory] ?? 'bg-zinc-700 text-zinc-400'
+                    }`}>
+                      {selectedPost.category}
+                    </span>
+                    <span className="text-[10px] text-zinc-600">{timeAgo(selectedPost.createdAt)}</span>
+                  </div>
+                </div>
+              </div>
+              <p className="text-sm text-zinc-200 leading-relaxed whitespace-pre-wrap ml-10">{selectedPost.content}</p>
+              <div className="flex items-center gap-4 mt-3 ml-10">
+                <button
+                  onClick={() => handleLike(selectedPost.id)}
+                  className={`flex items-center gap-1.5 text-xs font-bold transition-all active:scale-95 ${
+                    selectedPost.liked ? 'text-[var(--color-primary)]' : 'text-zinc-500'
+                  }`}
+                >
+                  <Heart size={14} fill={selectedPost.liked ? 'currentColor' : 'none'} />
+                  {selectedPost.likes}
+                </button>
+                <span className="flex items-center gap-1.5 text-xs text-zinc-500">
+                  <MessageCircle size={14} />
+                  {selectedPost.commentCount}
+                </span>
+              </div>
+            </div>
+
+            {/* 댓글 목록 */}
+            {commentsLoading ? (
+              <div className="flex justify-center py-10">
+                <div className="w-5 h-5 border-2 border-[var(--color-primary)] border-t-transparent rounded-full animate-spin" />
+              </div>
+            ) : comments.length === 0 ? (
+              <div className="text-center py-10 text-zinc-600">
+                <p className="text-sm">첫 번째 댓글을 남겨보세요</p>
+              </div>
+            ) : (
+              <div className="divide-y divide-zinc-800/50">
+                {comments.map(comment => (
+                  <div key={comment.id} className="px-5 py-4">
+                    <div className="flex items-start gap-2.5">
+                      <div className="w-7 h-7 rounded-full bg-zinc-700 flex items-center justify-center text-zinc-300 text-xs font-bold flex-shrink-0 mt-0.5">
+                        {comment.author.charAt(0)}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="text-xs font-bold text-zinc-300">{comment.author}</span>
+                          <span className="text-[10px] text-zinc-600">{timeAgo(comment.createdAt)}</span>
+                        </div>
+                        <p className="text-sm text-zinc-300 leading-relaxed whitespace-pre-wrap">{comment.content}</p>
+                        <button
+                          onClick={() => handleCommentLike(comment.id)}
+                          className={`flex items-center gap-1.5 text-xs font-bold mt-2 transition-all active:scale-95 ${
+                            comment.liked ? 'text-[var(--color-primary)]' : 'text-zinc-600'
+                          }`}
+                        >
+                          <Heart size={12} fill={comment.liked ? 'currentColor' : 'none'} />
+                          {comment.likes > 0 && comment.likes}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* 댓글 입력창 */}
+          <div className="flex-shrink-0 border-t border-zinc-800 px-4 py-3 flex items-center gap-3 bg-zinc-950">
+            <div className="w-7 h-7 rounded-full bg-gradient-to-br from-pink-500/40 to-purple-600/40 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
+              나
+            </div>
+            <input
+              ref={commentInputRef}
+              type="text"
+              value={commentInput}
+              onChange={e => setCommentInput(e.target.value.slice(0, 200))}
+              placeholder="댓글 달기..."
+              className="flex-1 bg-zinc-800 border border-zinc-700 rounded-full px-4 py-2 text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:border-[var(--color-primary)] transition-all"
+              onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleCommentSubmit() }}}
+            />
+            <button
+              onClick={handleCommentSubmit}
+              disabled={!commentInput.trim() || commentSubmitting}
+              className="text-[var(--color-primary)] disabled:opacity-30 active:scale-90 transition-all"
+            >
+              <Send size={20} strokeWidth={2} />
+            </button>
           </div>
         </div>
       )}

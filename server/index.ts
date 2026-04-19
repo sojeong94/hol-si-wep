@@ -540,6 +540,11 @@ app.get('/api/community/posts', (req, res) => {
   }
   // 최신순
   posts = posts.slice().sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+  const allComments = loadComments()
+  const commentCountMap = new Map<string, number>()
+  for (const c of allComments) {
+    commentCountMap.set(c.postId, (commentCountMap.get(c.postId) ?? 0) + 1)
+  }
   const result = posts.map(p => ({
     id: p.id,
     author: p.author,
@@ -547,6 +552,7 @@ app.get('/api/community/posts', (req, res) => {
     content: p.content,
     likes: p.likedBy.length,
     liked: p.likedBy.includes(deviceId),
+    commentCount: commentCountMap.get(p.id) ?? 0,
     createdAt: p.createdAt,
   }))
   res.json({ posts: result })
@@ -602,6 +608,158 @@ app.post('/api/community/posts/:id/like', (req, res) => {
   savePosts(posts)
   res.json({ likes: post.likedBy.length, liked: idx < 0 })
 })
+
+// ─── 커뮤니티 댓글 ────────────────────────────────────────────────────────────
+interface CommunityComment {
+  id: string
+  postId: string
+  author: string
+  content: string
+  likedBy: string[]
+  createdAt: string
+}
+
+const COMMENTS_FILE = process.env.COMMENTS_FILE_PATH ?? path.join(__dirname, 'community_comments.json')
+const MAX_COMMENTS_PER_POST = 200
+
+function loadComments(): CommunityComment[] {
+  try { return JSON.parse(fs.readFileSync(COMMENTS_FILE, 'utf8')) } catch { return [] }
+}
+
+function saveComments(comments: CommunityComment[]) {
+  const tmp = `${COMMENTS_FILE}.tmp`
+  fs.writeFileSync(tmp, JSON.stringify(comments, null, 2), 'utf8')
+  fs.renameSync(tmp, COMMENTS_FILE)
+}
+
+// 댓글 목록 조회
+app.get('/api/community/posts/:id/comments', (req, res) => {
+  const { id } = req.params
+  const { deviceId } = req.query as { deviceId?: string }
+  if (!deviceId || typeof deviceId !== 'string' || deviceId.length > 100) {
+    return res.status(400).json({ error: 'deviceId 누락' })
+  }
+  const comments = loadComments()
+    .filter(c => c.postId === id)
+    .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
+    .map(c => ({
+      id: c.id,
+      author: c.author,
+      content: c.content,
+      likes: c.likedBy.length,
+      liked: c.likedBy.includes(deviceId),
+      createdAt: c.createdAt,
+    }))
+  res.json({ comments })
+})
+
+// 댓글 작성
+app.post('/api/community/posts/:id/comments', communityLimiter, (req, res) => {
+  const { id } = req.params
+  const { deviceId, content } = req.body ?? {}
+  if (!isNonEmptyString(deviceId, 100)) return res.status(400).json({ error: 'deviceId 누락' })
+  if (!isNonEmptyString(content, 200)) return res.status(400).json({ error: 'content 누락 또는 너무 김' })
+
+  const posts = loadPosts()
+  if (!posts.find(p => p.id === id)) return res.status(404).json({ error: '게시글 없음' })
+
+  const allComments = loadComments()
+  const postComments = allComments.filter(c => c.postId === id)
+  if (postComments.length >= MAX_COMMENTS_PER_POST) {
+    return res.status(400).json({ error: '댓글이 너무 많아요.' })
+  }
+
+  const newComment: CommunityComment = {
+    id: Math.random().toString(36).substring(2) + Date.now().toString(36),
+    postId: id,
+    author: makeAuthor(deviceId),
+    content: content.trim(),
+    likedBy: [],
+    createdAt: new Date().toISOString(),
+  }
+  allComments.push(newComment)
+  saveComments(allComments)
+  res.json({
+    success: true,
+    comment: {
+      id: newComment.id,
+      author: newComment.author,
+      content: newComment.content,
+      likes: 0,
+      liked: false,
+      createdAt: newComment.createdAt,
+    },
+  })
+})
+
+// 댓글 좋아요 토글
+app.post('/api/community/comments/:commentId/like', (req, res) => {
+  const { commentId } = req.params
+  const { deviceId } = req.body ?? {}
+  if (!isNonEmptyString(deviceId, 100)) return res.status(400).json({ error: 'deviceId 누락' })
+
+  const comments = loadComments()
+  const comment = comments.find(c => c.id === commentId)
+  if (!comment) return res.status(404).json({ error: '댓글 없음' })
+
+  const idx = comment.likedBy.indexOf(deviceId)
+  if (idx >= 0) {
+    comment.likedBy.splice(idx, 1)
+  } else {
+    if (comment.likedBy.length >= 10_000) return res.status(400).json({ error: '처리 불가' })
+    comment.likedBy.push(deviceId)
+  }
+  saveComments(comments)
+  res.json({ likes: comment.likedBy.length, liked: idx < 0 })
+})
+
+// ─── 커뮤니티 큐레이션 시드 ───────────────────────────────────────────────────
+function seedCuratedPosts() {
+  if (loadPosts().length > 0) return
+
+  const CURATED: Array<{ category: string; content: string; authorName: string }> = [
+    {
+      authorName: '달빛언니#HOLSI',
+      category: 'PMS',
+      content: 'PMS가 뭔지 몰라서 그냥 원래 예민한 사람인 줄 알았어요 😢\n\nPMS(월경전증후군)는 생리 7~14일 전부터 감정 기복, 붓기, 두통, 우울감이 나타나는 거예요. 당신 탓이 아니에요, 호르몬 때문이에요!',
+    },
+    {
+      authorName: '봄향기#HOLSI',
+      category: '생리통',
+      content: '생리통에 진짜 도움됐던 것들 공유해요 🩷\n\n1. 마그네슘 - 근육 이완 효과\n2. 생강차 - 혈액순환 도움\n3. 핫팩 - 복부에 붙이면 즉각 완화\n4. 오메가3 - 염증 억제\n\n진통제 먹기 싫을 때 이것들 먼저 시도해봐요!',
+    },
+    {
+      authorName: '라벤더#HOLSI',
+      category: '영양제',
+      content: '이노시톨 먹는 분 계세요? 효과 있었나요?\n\n생리불순이랑 PCOS에 좋다고 해서 3개월째 먹고 있는데, 주기가 확실히 규칙적해진 것 같아요. 같이 챙겨먹으면 좋은 영양제 있으면 알려주세요!',
+    },
+    {
+      authorName: '초코언니#HOLSI',
+      category: 'PMS',
+      content: '황체기에 이렇게 달달한 게 당기는 이유가 있었어요\n\n생리 전 황체호르몬이 올라가면 세로토닌이 떨어져요. 뇌가 세로토닌을 빨리 올리려고 단 음식을 찾게 되는 거예요. 참는 것보다 다크초콜릿처럼 건강한 걸로 대체하는 게 낫대요!',
+    },
+    {
+      authorName: '하늘이#HOLSI',
+      category: '일상',
+      content: '주기마다 나타나는 나만의 패턴이 있나요?\n\n저는 배란기에는 엄청 활발해지고 황체기 후반에는 집에만 있고 싶어져요. 이게 호르몬 때문이라는 걸 알고 나서부터 나 자신을 덜 자책하게 됐어요. 여러분 패턴은 어때요?',
+    },
+  ]
+
+  const now = new Date()
+  const seededPosts: CommunityPost[] = CURATED.map((c, i) => ({
+    id: `curated_${i}_${Date.now()}`,
+    author: c.authorName,
+    category: c.category,
+    content: c.content,
+    likedBy: [],
+    createdAt: new Date(now.getTime() - (CURATED.length - i) * 3 * 60 * 60 * 1000).toISOString(),
+  }))
+
+  savePosts(seededPosts)
+  console.log(`큐레이션 게시글 ${seededPosts.length}개 시드 완료`)
+}
+
+seedCuratedPosts()
 
 // ─── 프로덕션: 빌드된 프론트엔드 서빙 ────────────────────────────────────────
 const distPath = path.join(__dirname, '../dist')

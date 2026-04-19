@@ -5,7 +5,7 @@ import { usePillStore } from '@/store/usePillStore'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Modal } from '@/components/ui/Modal'
-import { Plus, MessageCircle, Send, Loader2 } from 'lucide-react'
+import { Plus, MessageCircle, Send, Loader2, CheckCircle2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { RecommendCards, type Recommendation } from '@/components/ui/RecommendCards'
 
@@ -91,6 +91,40 @@ export function Pills() {
           </button>
         </div>
       </header>
+
+      {/* 오늘의 체크 */}
+      {pills.length > 0 && !isEditMode && (
+        <section className="mb-2">
+          <h2 className="text-sm font-bold text-zinc-400 mb-3 tracking-wide uppercase">오늘 챙겼어요?</h2>
+          <div className="space-y-2">
+            {pills.map(pill => {
+              const isActive = pill.isActive !== false
+              return (
+                <Card
+                  key={pill.id}
+                  className={`flex items-center justify-between px-4 py-3 transition-all cursor-pointer active:scale-[0.96] active:opacity-75 ${
+                    isActive ? 'bg-zinc-900 border-zinc-700' : 'bg-zinc-900/40 border-zinc-800/50 opacity-50'
+                  }`}
+                  onClick={() => { togglePill(pill.id); track('pill_checked', { pill_name: pill.name }) }}
+                >
+                  <div className="flex items-center gap-3">
+                    <CheckCircle2
+                      size={20}
+                      className={`transition-colors ${isActive ? 'text-[var(--color-primary)]' : 'text-zinc-700'}`}
+                      fill={isActive ? 'currentColor' : 'none'}
+                    />
+                    <div>
+                      <p className={`text-sm font-bold ${isActive ? 'text-zinc-100' : 'text-zinc-600'}`}>{pill.name}</p>
+                      <p className="text-[11px] text-zinc-600 mt-0.5">{pill.time}</p>
+                    </div>
+                  </div>
+                </Card>
+              )
+            })}
+          </div>
+          <div className="h-px bg-zinc-800 mt-5 mb-1" />
+        </section>
+      )}
 
       {pills.length === 0 ? (
         <Card className="flex flex-col items-center justify-center p-12 text-center text-zinc-500 border-none shadow-none bg-transparent">

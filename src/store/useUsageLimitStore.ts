@@ -4,6 +4,7 @@ import { format } from 'date-fns'
 
 const FREE_AI_LIMIT = 3
 const FREE_OCR_LIMIT = 1
+const HONEYMOON_DAYS = 7
 
 interface MonthlyUsage {
   month: string   // YYYY-MM
@@ -13,6 +14,8 @@ interface MonthlyUsage {
 
 interface UsageLimitStore {
   usage: MonthlyUsage
+  firstOpenAt: string | null
+  isHoneymoon: () => boolean
   remainingAI: () => number
   remainingOCR: () => number
   incrementAI: () => void
@@ -35,8 +38,17 @@ export const useUsageLimitStore = create<UsageLimitStore>()(
   persist(
     (set, get) => ({
       usage: freshUsage(),
+      firstOpenAt: new Date().toISOString(),
+
+      isHoneymoon: () => {
+        const { firstOpenAt } = get()
+        if (!firstOpenAt) return false
+        const diff = Date.now() - new Date(firstOpenAt).getTime()
+        return diff < HONEYMOON_DAYS * 24 * 60 * 60 * 1000
+      },
 
       remainingAI: () => {
+        if (get().isHoneymoon()) return 999
         const u = ensureCurrentMonth(get().usage)
         return Math.max(0, FREE_AI_LIMIT - u.aiCount)
       },
@@ -48,6 +60,7 @@ export const useUsageLimitStore = create<UsageLimitStore>()(
 
       incrementAI: () =>
         set((state) => {
+          if (get().isHoneymoon()) return state
           const u = ensureCurrentMonth(state.usage)
           return { usage: { ...u, aiCount: u.aiCount + 1 } }
         }),

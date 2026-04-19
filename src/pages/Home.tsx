@@ -1,9 +1,9 @@
 import { useTranslation } from 'react-i18next'
 import { useRecordStore } from '@/store/useRecordStore'
-import { usePillStore } from '@/store/usePillStore'
 import { useSettingStore } from '@/store/useSettingStore'
 import { useSubscriptionStore } from '@/store/useSubscriptionStore'
 import { useUsageLimitStore } from '@/store/useUsageLimitStore'
+import { TermTooltip } from '@/components/ui/TermTooltip'
 import { getAverageCycle, getAveragePeriodDays, getNextPeriodDate, parseLocalDate } from '@/utils/cycleCalculators'
 import { differenceInDays, format } from 'date-fns'
 import { Card } from '@/components/ui/Card'
@@ -18,20 +18,19 @@ export function Home() {
   const { t } = useTranslation()
   const navigate = useNavigate()
   const { records } = useRecordStore()
-  const { pills, togglePill } = usePillStore()
   const { defaultCycle, defaultPeriodDays, isManualCycle, manualCycleDays, manualPeriodDays, userName, setUserName } = useSettingStore()
   const { isPremium, setShowPaywall } = useSubscriptionStore()
-  const { remainingAI, incrementAI } = useUsageLimitStore()
+  const { remainingAI, incrementAI, isHoneymoon } = useUsageLimitStore()
 
   const openAdvisor = () => {
-    if (!isPremium && remainingAI() <= 0) { setShowPaywall(true); return }
+    if (!isPremium && !isHoneymoon() && remainingAI() <= 0) { setShowPaywall(true); return }
     setIsAdvisorOpen(true)
     setAdvisorAnswer('')
     setAdvisorQuestion('')
   }
 
   const openAdvisorWithQuestion = (q: string) => {
-    if (!isPremium && remainingAI() <= 0) { setShowPaywall(true); return }
+    if (!isPremium && !isHoneymoon() && remainingAI() <= 0) { setShowPaywall(true); return }
     setAdvisorQuestion(q)
     setIsAdvisorOpen(true)
   }
@@ -274,7 +273,7 @@ export function Home() {
       <Modal isOpen={showWelcomeModal} onClose={() => { }} title="안녕? 난 홀시야. 🌸">
         <div className="space-y-4 text-center mt-2">
           <p className="text-zinc-300 font-medium text-sm leading-relaxed break-keep">
-            나는 네가 생리불순이나 PMS로 고생할 때 옆에서 잔소리도 하고, 영양제도 챙겨주는 <strong className="text-pink-400">호르몬 시스터(Hormone Sister)</strong>야.
+            나는 네가 <TermTooltip term="생리불순" />이나 <TermTooltip term="PMS" />로 고생할 때 옆에서 잔소리도 하고, 영양제도 챙겨주는 <strong className="text-pink-400">호르몬 시스터(Hormone Sister)</strong>야.
           </p>
           <p className="text-zinc-300 font-medium text-sm leading-relaxed break-keep">
             어렵고 딱딱한 기록은 버리고, 이제 나랑 같이 편안하게 호르몬 주기를 관리해보자!
@@ -405,12 +404,14 @@ export function Home() {
               onClick={openAdvisor}
               className="shrink-0 px-4 py-2 bg-[var(--color-primary)] text-white text-xs font-bold rounded-xl shadow-[0_0_10px_rgba(255,42,122,0.3)] active:scale-95 transition-all flex items-center gap-1"
             >
-              {!isPremium && <Crown size={12} />}
+              {!isPremium && !isHoneymoon() && <Crown size={12} />}
               {isPremium
                 ? '상담하기'
-                : remainingAI() > 0
-                  ? `무료 ${remainingAI()}회 남음`
-                  : '프리미엄'}
+                : isHoneymoon()
+                  ? '7일 무료 체험'
+                  : remainingAI() > 0
+                    ? `무료 ${remainingAI()}회 남음`
+                    : '프리미엄'}
             </button>
           </div>
           <div className="flex gap-2 overflow-x-auto scrollbar-hide mt-3 pb-0.5 -mx-1 px-1">
@@ -466,54 +467,6 @@ export function Home() {
           </div>
         </div>
       </Modal>
-
-      {/* 영양제 체크리스트 */}
-      <section>
-        <div className="flex items-center justify-between mb-3">
-          <h3 className="text-lg font-extrabold text-zinc-50 tracking-wide drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">{t('home_pills_section')}</h3>
-        </div>
-        {pills.length === 0 ? (
-          <Card className="flex flex-col items-center justify-center p-8 text-center border-dashed border-2 border-zinc-700 bg-zinc-900/50 backdrop-blur-sm group cursor-pointer transition-all hover:bg-zinc-800" onClick={() => navigate('/pills')}>
-            <p className="font-bold text-[var(--color-primary)] mb-1">{t('home_pills_empty_title')}</p>
-            <p className="text-xs text-zinc-500 font-medium">{t('home_pills_empty_desc')}</p>
-          </Card>
-        ) : (
-          <div className="space-y-3">
-            {pills.map(pill => {
-              const isActive = pill.isActive !== false
-              return (
-                <Card
-                  key={pill.id}
-                  className={`flex items-center justify-between p-4 transition-all ${isActive ? 'bg-[#18181A] border-zinc-700' : 'opacity-40 bg-black border-transparent'}`}
-                >
-                  <div className="flex items-center justify-between w-full">
-                    <div className="flex items-center gap-3">
-                      <div>
-                        <p className={`font-bold flex items-center gap-2 ${!isActive ? 'text-zinc-600' : 'text-zinc-100'}`}>
-                          {pill.name}
-                        </p>
-                        <p className="text-xs font-medium flex items-center gap-1 mt-0.5 text-zinc-500">
-                          <span className={`inline-block w-2 h-2 rounded-full ${!isActive ? 'bg-zinc-700' : 'bg-[var(--color-primary)]'}`} />
-                          {pill.time}
-                        </p>
-                      </div>
-                    </div>
-                    <label className="relative inline-flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
-                        className="sr-only peer"
-                        checked={isActive}
-                        onChange={() => { togglePill(pill.id); track('pill_checked', { pill_name: pill.name }) }}
-                      />
-                      <div className="w-14 h-8 bg-black/50 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-[24px] after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-7 after:w-7 after:transition-all peer-checked:bg-[var(--color-primary)] shadow-inner"></div>
-                    </label>
-                  </div>
-                </Card>
-              )
-            })}
-          </div>
-        )}
-      </section>
 
       {/* 광고 배너 */}
       {/* <AdBanner slot="5445746484" className="my-2" /> */}
