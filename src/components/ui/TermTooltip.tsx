@@ -35,12 +35,18 @@ export function TermTooltip({ term }: TermTooltipProps) {
 
   const [visible, setVisible] = useState(false)
   const [seen, setSeen] = useState(() => getSeenTerms().has(term))
+  const [pos, setPos] = useState({ top: 0, left: 0 })
+  const buttonRef = useRef<HTMLButtonElement>(null)
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const handleTap = (e: React.MouseEvent) => {
     e.stopPropagation()
     if (timerRef.current) clearTimeout(timerRef.current)
     if (!visible) {
+      const rect = buttonRef.current?.getBoundingClientRect()
+      if (rect) {
+        setPos({ top: rect.top - 6, left: rect.left + rect.width / 2 })
+      }
       setVisible(true)
       if (!seen) { markTermSeen(term); setSeen(true) }
       timerRef.current = setTimeout(() => setVisible(false), 2500)
@@ -54,13 +60,23 @@ export function TermTooltip({ term }: TermTooltipProps) {
   return (
     <span className="relative inline-block">
       <button
+        ref={buttonRef}
         onClick={handleTap}
         className={`transition-all leading-none active:scale-95 active:opacity-70 ${!seen ? 'border-b border-dashed border-pink-400/50' : ''}`}
       >
         {term}
       </button>
       {visible && (
-        <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-50 whitespace-nowrap bg-zinc-800/95 border border-zinc-700 text-zinc-300 text-[11px] px-3 py-1.5 rounded-lg shadow-xl pointer-events-none animate-in fade-in duration-150">
+        <span
+          style={{
+            position: 'fixed',
+            top: pos.top,
+            left: pos.left,
+            transform: 'translateX(-50%) translateY(-100%)',
+            zIndex: 9999,
+          }}
+          className="whitespace-nowrap bg-zinc-800/95 border border-zinc-700 text-zinc-300 text-[11px] px-3 py-1.5 rounded-lg shadow-xl pointer-events-none animate-in fade-in duration-150"
+        >
           {def}
           <span className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-zinc-700" />
         </span>

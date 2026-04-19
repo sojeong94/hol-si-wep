@@ -348,7 +348,7 @@ export function Community() {
             >
               <ArrowLeft size={22} />
             </button>
-            <span className="text-white font-bold text-base">스레드</span>
+            <span className="text-white font-bold text-base">댓글</span>
           </div>
 
           {/* 스크롤 영역 */}
