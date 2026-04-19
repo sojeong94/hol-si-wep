@@ -32,6 +32,16 @@ app.use(cors({
 
 app.use(express.json({ limit: '2mb' })) // OCR 이미지 고려하여 2mb (클라에서 1024px 압축 후 ~300KB)
 
+// ─── 보안 헤더 ────────────────────────────────────────────────────────────────
+app.use((_req, res, next) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff')
+  res.setHeader('X-Frame-Options', 'DENY')
+  res.setHeader('X-XSS-Protection', '1; mode=block')
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin')
+  res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=()')
+  next()
+})
+
 // ─── Auth 라우터 ──────────────────────────────────────────────────────────────
 app.use('/api/auth', authRouter)
 
@@ -735,11 +745,13 @@ function saveReports(reports: CommunityReport[]) {
   fs.renameSync(tmp, REPORTS_FILE)
 }
 
+const VALID_REPORT_REASONS = new Set(['음란물·성적 콘텐츠', '욕설·비방·혐오', '스팸·광고', '개인정보 노출', '기타 부적절한 내용'])
+
 app.post('/api/community/posts/:id/report', communityLimiter, (req, res) => {
   const { id } = req.params
   const { deviceId, reason } = req.body ?? {}
   if (!isNonEmptyString(deviceId, 100)) return res.status(400).json({ error: 'deviceId 누락' })
-  if (!isNonEmptyString(reason, 100)) return res.status(400).json({ error: 'reason 누락' })
+  if (!isNonEmptyString(reason, 100) || !VALID_REPORT_REASONS.has(reason)) return res.status(400).json({ error: 'reason 오류' })
 
   const reports = loadReports()
   reports.push({
@@ -758,7 +770,7 @@ app.post('/api/community/comments/:commentId/report', communityLimiter, (req, re
   const { commentId } = req.params
   const { deviceId, reason } = req.body ?? {}
   if (!isNonEmptyString(deviceId, 100)) return res.status(400).json({ error: 'deviceId 누락' })
-  if (!isNonEmptyString(reason, 100)) return res.status(400).json({ error: 'reason 누락' })
+  if (!isNonEmptyString(reason, 100) || !VALID_REPORT_REASONS.has(reason)) return res.status(400).json({ error: 'reason 오류' })
 
   const reports = loadReports()
   reports.push({

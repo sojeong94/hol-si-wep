@@ -1,14 +1,61 @@
 import { Router, Request, Response } from 'express'
 import jwt from 'jsonwebtoken'
-import { createPublicKey } from 'crypto'
+import { createPublicKey, randomBytes } from 'crypto'
 import { google } from 'googleapis'
 import { upsertUser, getUserById, syncUserData, getUserData, getAllUsers } from './db.js'
 
 const router = Router()
 
-const JWT_SECRET = process.env.JWT_SECRET || 'holsi-secret-change-in-production'
+// 필수 환경변수 — 미설정 시 서버 시작 거부 (약한 폴백값 사용 방지)
+if (!process.env.JWT_SECRET) throw new Error('JWT_SECRET environment variable is required')
+if (!process.env.ADMIN_SECRET) throw new Error('ADMIN_SECRET environment variable is required')
+
+const JWT_SECRET = process.env.JWT_SECRET
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173'
-const ADMIN_SECRET = process.env.ADMIN_SECRET || 'holsi-admin'
+const ADMIN_SECRET = process.env.ADMIN_SECRET
+
+// ─── OAuth CSRF 방어용 state 저장소 (in-memory, 10분 TTL) ──────────────────────
+const oauthStateStore = new Map<string, { platform: string; expiresAt: number }>()
+setInterval(() => {
+  const now = Date.now()
+  for (const [k, v] of oauthStateStore) if (v.expiresAt < now) oauthStateStore.delete(k)
+}, 60_000).unref?.()
+
+function generateOAuthState(platform: string): string {
+  const state = randomBytes(16).toString('hex')
+  oauthStateStore.set(state, { platform, expiresAt: Date.now() + 10 * 60_000 })
+  return state
+}
+
+function consumeOAuthState(state: string): string | null {
+  const entry = oauthStateStore.get(state)
+  if (!entry || entry.expiresAt < Date.now()) return null
+  oauthStateStore.delete(state)
+  return entry.platform
+}
+
+// ─── Auth 엔드포인트 전용 Rate Limiter ────────────────────────────────────────
+type RateEntry = { count: number; resetAt: number }
+const authRateMap = new Map<string, RateEntry>()
+setInterval(() => {
+  const now = Date.now()
+  for (const [k, v] of authRateMap) if (v.resetAt < now) authRateMap.delete(k)
+}, 60_000).unref?.()
+
+function authRateLimit(req: Request, res: Response, next: () => void) {
+  const key = req.ip ?? 'unknown'
+  const now = Date.now()
+  const entry = authRateMap.get(key)
+  if (!entry || entry.resetAt < now) {
+    authRateMap.set(key, { count: 1, resetAt: now + 15 * 60_000 })
+    return next()
+  }
+  if (entry.count >= 10) {
+    return res.status(429).json({ error: '너무 많은 로그인 시도입니다. 15분 후 다시 시도해주세요.' })
+  }
+  entry.count++
+  next()
+}
 
 // ─── JWT helpers ──────────────────────────────────────────────────────────────
 
@@ -43,18 +90,22 @@ router.get('/google', (_req: Request, res: Response) => {
     return res.redirect(`${FRONTEND_URL}/mypage?auth_error=google_not_configured`)
   }
   const platform = _req.query.platform as string
+  const state = generateOAuthState(platform === 'native' ? 'native' : 'web')
   const url = googleClient.generateAuthUrl({
     access_type: 'offline',
     scope: ['profile', 'email'],
     prompt: 'select_account',
-    state: platform === 'native' ? 'native' : 'web',
+    state,
   })
   res.redirect(url)
 })
 
 router.get('/google/callback', async (req: Request, res: Response) => {
   const code = req.query.code as string
-  const isNative = req.query.state === 'native'
+  const stateParam = req.query.state as string
+  const platform = consumeOAuthState(stateParam)
+  if (!platform) return res.redirect(`${FRONTEND_URL}/mypage?auth_error=invalid_state`)
+  const isNative = platform === 'native'
   const errorBase = isNative ? 'holsi://auth' : `${FRONTEND_URL}/mypage`
 
   if (!code) return res.redirect(`${errorBase}?auth_error=no_code`)
@@ -93,14 +144,17 @@ router.get('/kakao', (_req: Request, res: Response) => {
     return res.redirect(`${FRONTEND_URL}/mypage?auth_error=kakao_not_configured`)
   }
   const platform = _req.query.platform as string
-  const state = platform === 'native' ? 'native' : 'web'
-  const url = `https://kauth.kakao.com/oauth/authorize?client_id=${process.env.KAKAO_REST_API_KEY}&redirect_uri=${encodeURIComponent(KAKAO_REDIRECT_URI)}&response_type=code&state=${state}`
+  const state = generateOAuthState(platform === 'native' ? 'native' : 'web')
+  const url = `https://kauth.kakao.com/oauth/authorize?client_id=${process.env.KAKAO_REST_API_KEY}&redirect_uri=${encodeURIComponent(KAKAO_REDIRECT_URI)}&response_type=code&state=${encodeURIComponent(state)}`
   res.redirect(url)
 })
 
 router.get('/kakao/callback', async (req: Request, res: Response) => {
   const code = req.query.code as string
-  const isNative = req.query.state === 'native'
+  const stateParam = req.query.state as string
+  const platform = consumeOAuthState(stateParam)
+  if (!platform) return res.redirect(`${FRONTEND_URL}/mypage?auth_error=invalid_state`)
+  const isNative = platform === 'native'
   const errorBase = isNative ? 'holsi://auth' : `${FRONTEND_URL}/mypage`
 
   if (!code) return res.redirect(`${errorBase}?auth_error=no_code`)
@@ -165,7 +219,7 @@ async function verifyAppleToken(identityToken: string) {
   }) as { sub: string; email?: string }
 }
 
-router.post('/apple', async (req: Request, res: Response) => {
+router.post('/apple', authRateLimit, async (req: Request, res: Response) => {
   const { identityToken, givenName, familyName, email } = req.body as {
     identityToken: string
     givenName?: string
@@ -240,7 +294,7 @@ router.get('/restore', async (req: Request, res: Response) => {
 
 // ─── Admin API ────────────────────────────────────────────────────────────────
 
-router.get('/admin/users', async (req: Request, res: Response) => {
+router.get('/admin/users', authRateLimit, async (req: Request, res: Response) => {
   const secret = req.headers['x-admin-secret']
   if (secret !== ADMIN_SECRET) return res.status(403).json({ error: 'forbidden' })
 
