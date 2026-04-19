@@ -39,6 +39,19 @@ app.use((_req, res, next) => {
   res.setHeader('X-XSS-Protection', '1; mode=block')
   res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin')
   res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=()')
+  // CSP: XSS 2차 방어 — inline style/script 허용은 React 빌드 요구사항
+  res.setHeader(
+    'Content-Security-Policy',
+    [
+      "default-src 'self'",
+      "script-src 'self' 'unsafe-inline'",
+      "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+      "font-src 'self' https://fonts.gstatic.com",
+      "img-src 'self' data: https:",
+      "connect-src 'self' https:",
+      "frame-ancestors 'none'",
+    ].join('; ')
+  )
   next()
 })
 
@@ -373,7 +386,7 @@ recommendations 1~2개. 이미 복용 중인 영양제는 제외. 한국어로�
     }
   } catch (err: any) {
     console.error('holsi-advice error:', err?.message ?? err)
-    res.status(500).json({ error: '조언 생성에 실패했어요.', detail: err?.message })
+    res.status(500).json({ error: '조언 생성에 실패했어요.' })
   }
 })
 
@@ -501,7 +514,7 @@ app.post('/api/ocr', ocrLimiter, async (req, res) => {
     }
   } catch (err: any) {
     console.error('ocr error:', err?.message ?? err)
-    res.status(500).json({ error: 'OCR 처리에 실패했어요.', detail: err?.message })
+    res.status(500).json({ error: 'OCR 처리에 실패했어요.' })
   }
 })
 
@@ -845,6 +858,12 @@ if (fs.existsSync(distPath)) {
     res.sendFile(path.join(distPath, 'index.html'))
   })
 }
+
+// ─── 전역 에러 핸들러 (스택 트레이스 유출 차단) ─────────────────────────────
+app.use((err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
+  console.error('[UnhandledError]', err.message, err.stack)
+  res.status(500).json({ error: '서버 오류가 발생했어요. 잠시 후 다시 시도해주세요.' })
+})
 
 const PORT = process.env.PORT ?? 3001
 app.listen(PORT, () => {

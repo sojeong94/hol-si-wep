@@ -2,7 +2,30 @@ import { Router, Request, Response } from 'express'
 import jwt from 'jsonwebtoken'
 import { createPublicKey, randomBytes } from 'crypto'
 import { google } from 'googleapis'
+import fs from 'fs'
+import path from 'path'
+import { fileURLToPath } from 'url'
 import { upsertUser, getUserById, syncUserData, getUserData, getAllUsers } from './db.js'
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
+
+// ─── 감사 로그 ─────────────────────────────────────────────────────────────────
+const AUDIT_FILE = process.env.AUDIT_LOG_PATH ?? path.join(__dirname, 'audit.log')
+
+export function auditLog(action: string, userId: string, ip?: string, meta?: Record<string, unknown>) {
+  const entry = JSON.stringify({
+    ts: new Date().toISOString(),
+    action,
+    userId,
+    ip: ip ?? 'unknown',
+    ...meta,
+  })
+  try {
+    fs.appendFileSync(AUDIT_FILE, entry + '\n', 'utf8')
+  } catch (e) {
+    console.error('[AuditLog] write error:', e)
+  }
+}
 
 const router = Router()
 
@@ -126,6 +149,7 @@ router.get('/google/callback', async (req: Request, res: Response) => {
     })
 
     const token = signToken(user.id)
+    auditLog('login', user.id, req.ip, { provider: 'google' })
     const successBase = isNative ? 'holsi://auth' : `${FRONTEND_URL}/mypage`
     res.redirect(`${successBase}?token=${token}`)
   } catch (err) {
@@ -189,6 +213,7 @@ router.get('/kakao/callback', async (req: Request, res: Response) => {
     })
 
     const token = signToken(user.id)
+    auditLog('login', user.id, req.ip, { provider: 'kakao' })
     const successBase = isNative ? 'holsi://auth' : `${FRONTEND_URL}/mypage`
     res.redirect(`${successBase}?token=${token}`)
   } catch (err) {
@@ -242,6 +267,7 @@ router.post('/apple', authRateLimit, async (req: Request, res: Response) => {
     })
 
     const token = signToken(user.id)
+    auditLog('login', user.id, req.ip, { provider: 'apple' })
     res.json({ token })
   } catch (err) {
     console.error('[Apple Auth]', err)
@@ -264,6 +290,8 @@ router.get('/me', async (req: Request, res: Response) => {
   res.json({ id: user.id, email: user.email, name: user.name, avatar: user.avatar, provider: user.provider })
 })
 
+const SYNC_FIELD_MAX = 200_000 // 필드당 200KB 상한
+
 router.post('/sync', async (req: Request, res: Response) => {
   const token = getTokenFromRequest(req)
   if (!token) return res.status(401).json({ error: 'no token' })
@@ -277,7 +305,16 @@ router.post('/sync', async (req: Request, res: Response) => {
     settingsData?: string
   }
 
+  // 각 필드 크기 제한 — 대용량 문자열로 DB 스토리지 남용 방지
+  if (pillsData !== undefined && (typeof pillsData !== 'string' || pillsData.length > SYNC_FIELD_MAX))
+    return res.status(400).json({ error: 'pillsData 크기 초과' })
+  if (recordsData !== undefined && (typeof recordsData !== 'string' || recordsData.length > SYNC_FIELD_MAX))
+    return res.status(400).json({ error: 'recordsData 크기 초과' })
+  if (settingsData !== undefined && (typeof settingsData !== 'string' || settingsData.length > SYNC_FIELD_MAX))
+    return res.status(400).json({ error: 'settingsData 크기 초과' })
+
   await syncUserData(payload.userId, { pillsData, recordsData, settingsData })
+  auditLog('sync', payload.userId, req.ip)
   res.json({ ok: true })
 })
 
@@ -296,8 +333,11 @@ router.get('/restore', async (req: Request, res: Response) => {
 
 router.get('/admin/users', authRateLimit, async (req: Request, res: Response) => {
   const secret = req.headers['x-admin-secret']
-  if (secret !== ADMIN_SECRET) return res.status(403).json({ error: 'forbidden' })
-
+  if (secret !== ADMIN_SECRET) {
+    auditLog('admin_access_denied', 'unknown', req.ip)
+    return res.status(403).json({ error: 'forbidden' })
+  }
+  auditLog('admin_access', 'admin', req.ip)
   const users = await getAllUsers()
   res.json(users)
 })
