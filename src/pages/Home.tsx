@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next'
 import { useRecordStore } from '@/store/useRecordStore'
+import { usePillStore } from '@/store/usePillStore'
 import { useSettingStore } from '@/store/useSettingStore'
 import { useSubscriptionStore } from '@/store/useSubscriptionStore'
 import { useUsageLimitStore } from '@/store/useUsageLimitStore'
@@ -18,6 +19,7 @@ export function Home() {
   const { t } = useTranslation()
   const navigate = useNavigate()
   const { records } = useRecordStore()
+  const { pills } = usePillStore()
   const { defaultCycle, defaultPeriodDays, isManualCycle, manualCycleDays, manualPeriodDays, userName, setUserName } = useSettingStore()
   const { isPremium, setShowPaywall } = useSubscriptionStore()
   const { remainingAI, incrementAI, isHoneymoon } = useUsageLimitStore()
