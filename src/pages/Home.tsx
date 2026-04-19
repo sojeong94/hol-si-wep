@@ -93,7 +93,7 @@ export function Home() {
     title: '예측 불가',
     subtitle: '주기 데이터를 기록해주세요.',
     tag: null as string | null,
-    gradient: 'bg-gradient-to-br from-[#ff2a7a]/20 to-[#ff2a7a]/5 backdrop-blur-xl border-[#ff2a7a]/30 text-white shadow-xl shadow-[#ff2a7a]/10',
+    gradient: 'bg-gradient-to-br from-zinc-800 to-zinc-900 border border-zinc-700 text-white shadow-xl',
     advice: userName ? `${userName}, 달력에 터진 날 기록해줘.\n데이터가 쌓여야 내가 챙겨줄 수 있잖아.` : '달력에 터진 날을 기록하면 주기를 예측해드려요.'
   }
 
@@ -102,7 +102,7 @@ export function Home() {
       title: `생리 ${periodDay}일차`,
       subtitle: `호르몬 재정비 중이에요`,
       tag: '생리 중',
-      gradient: 'bg-gradient-to-br from-[#ff2a7a]/90 via-rose-500/80 to-pink-600/80 backdrop-blur-xl border border-[#ff2a7a]/60 text-white shadow-[0_0_24px_rgba(255,42,122,0.4)]',
+      gradient: 'bg-gradient-to-br from-[#ff2a7a] via-rose-500 to-pink-600 border border-[#ff2a7a]/60 text-white shadow-[0_0_24px_rgba(255,42,122,0.5)]',
       advice: `${periodDay}일째야. 지금은 무조건 나한테 잘 해줘.\n철분이랑 마그네슘 챙겨, 지금 네 몸이 다 써버리고 있거든.`
     }
   } else if (dDay !== null) {
@@ -111,7 +111,7 @@ export function Home() {
         title: `D-${dDay}`,
         subtitle: `에너지가 가장 좋을 때`,
         tag: null,
-        gradient: 'bg-gradient-to-br from-pink-400/70 to-rose-300/50 backdrop-blur-xl border border-pink-400/50 text-white shadow-lg shadow-pink-500/10',
+        gradient: 'bg-gradient-to-br from-pink-400 to-rose-500 border border-pink-400/40 text-white shadow-lg shadow-pink-500/20',
         advice: `뭐야, 아직 ${dDay}일이나 남았잖아.\n지금 텐션 최고일 때 맛있는 거 먹어둬.`
       }
     } else if (dDay > 3) {
@@ -119,7 +119,7 @@ export function Home() {
         title: `D-${dDay}`,
         subtitle: `슬슬 발동 될 수 있어요`,
         tag: '예열 중',
-        gradient: 'bg-gradient-to-tr from-pink-500/70 to-rose-400/50 backdrop-blur-xl border border-pink-500/50 text-white shadow-lg shadow-pink-500/10',
+        gradient: 'bg-gradient-to-tr from-pink-500 to-rose-400 border border-pink-500/40 text-white shadow-lg shadow-pink-500/20',
         advice: `슬슬 예민해질 때야. 그냥 달달한 거 먹어.\n내가 시켜서 먹는 거 아니야, 그냥 챙겨주는 거야.`
       }
     } else if (dDay > 0) {
@@ -127,7 +127,7 @@ export function Home() {
         title: `터짐주의 D-${dDay}`,
         subtitle: `파우치 잘 챙겨요`,
         tag: '주기 임박',
-        gradient: 'bg-gradient-to-tr from-[#ff2a7a]/80 to-pink-500/60 backdrop-blur-xl border border-[#ff2a7a]/50 text-white shadow-lg shadow-[#ff2a7a]/15',
+        gradient: 'bg-gradient-to-tr from-[#ff2a7a] to-pink-500 border border-[#ff2a7a]/50 text-white shadow-lg shadow-[#ff2a7a]/30',
         advice: `D-${dDay}. 건드리지 마. 나도 알아.\n마라탕 정도는 허락할게. 딱 오늘만.`
       }
     } else if (dDay === 0) {
@@ -135,16 +135,17 @@ export function Home() {
         title: 'D-DAY',
         subtitle: `호르몬 재정비 중`,
         tag: '터짐주의',
-        gradient: 'bg-gradient-to-br from-[#ff2a7a]/90 via-rose-500/80 to-[#ff2a7a]/90 backdrop-blur-xl border border-[#ff2a7a]/60 text-white shadow-[0_0_20px_rgba(255,42,122,0.4)] animate-pulse',
+        gradient: 'bg-gradient-to-br from-[#ff2a7a] via-rose-500 to-[#ff2a7a] border border-[#ff2a7a]/60 text-white shadow-[0_0_24px_rgba(255,42,122,0.5)] animate-pulse',
         advice: `오늘이야. 건드리지 마.\n전기장판이랑 간식 챙겨줘. 부탁이 아니야, 명령이야.`
       }
     } else {
+      // 예정일이 지났지만 아직 생리 기록 없음 → 기록 유도
       dDayContent = {
-        title: `D+${Math.abs(dDay)}`,
-        subtitle: `새로운 호르몬으로 에너지를 채워가는 중`,
-        tag: null,
-        gradient: 'bg-gradient-to-tr from-indigo-500/60 to-purple-400/40 backdrop-blur-xl border border-indigo-500/40 text-white shadow-lg shadow-indigo-500/10',
-        advice: `D+${Math.abs(dDay)}, 이제 살 것 같지?\n알아서 회복하겠지만... 배달 음식 하나 시켜. 그냥 시켜.`
+        title: `예정일 +${Math.abs(dDay)}일`,
+        subtitle: `터진 날을 기록해주세요`,
+        tag: '기록 필요',
+        gradient: 'bg-gradient-to-br from-[#ff2a7a] to-rose-700 text-white shadow-[0_0_20px_rgba(255,42,122,0.3)]',
+        advice: `예정일이 ${Math.abs(dDay)}일 지났어. 터진 날 기록해줘야 다음도 챙겨줄 수 있잖아.`
       }
     }
   }
@@ -344,18 +345,20 @@ export function Home() {
       </header>
 
       {/* 터짐주의 위젯 */}
-      <Card onClick={() => navigate('/calendar')} className={`relative overflow-hidden p-6 border transition-all duration-700 ease-out cursor-pointer active:scale-[0.98] ${dDayContent.gradient}`}>
+      <div
+        onClick={() => navigate('/calendar')}
+        className={`relative overflow-hidden p-6 rounded-[var(--radius-xl)] transition-all duration-700 ease-out cursor-pointer active:scale-[0.98] ${dDayContent.gradient}`}
+      >
         <div className="relative z-10">
-          <p className="opacity-90 font-medium mb-3 text-xs tracking-wider">{nextDateStr ? `${t('home_dday_next')} ${nextDateStr}` : t('home_dday_no_data')}</p>
+          <p className="opacity-80 font-medium mb-3 text-xs tracking-wider">{nextDateStr ? `${t('home_dday_next')} ${nextDateStr}` : t('home_dday_no_data')}</p>
           <div className="flex flex-col gap-1">
             <h2 className="text-[1.6rem] leading-snug sm:text-3xl font-black tracking-tight drop-shadow-md break-keep">
               <span className="block">{dDayContent.title}</span>
               <span className="opacity-90">{dDayContent.subtitle}</span>
             </h2>
-
           </div>
         </div>
-      </Card>
+      </div>
 
       {/* 홀시의 참견 - AI 맞춤 조언 */}
       <section>

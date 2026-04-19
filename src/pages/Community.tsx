@@ -331,7 +331,7 @@ export function Community() {
                   </span>
                   <button
                     onClick={(e) => { e.stopPropagation(); setReportTarget({ type: 'post', id: post.id, author: post.author }) }}
-                    className="text-zinc-700 hover:text-zinc-500 active:scale-90 transition-all p-1"
+                    className="text-zinc-400 hover:text-zinc-200 active:scale-90 transition-all p-1"
                   >
                     <Flag size={12} />
                   </button>
@@ -536,7 +536,7 @@ export function Community() {
                           </button>
                           <button
                             onClick={() => setReportTarget({ type: 'comment', id: comment.id, author: comment.author })}
-                            className="text-zinc-700 hover:text-zinc-500 active:scale-90 transition-all"
+                            className="text-zinc-400 hover:text-zinc-200 active:scale-90 transition-all"
                           >
                             <Flag size={11} />
                           </button>
