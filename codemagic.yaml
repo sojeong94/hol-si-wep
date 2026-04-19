@@ -14,8 +14,6 @@ workflows:
           npm install --include=optional
       - name: Build web app
         script: npm run build
-      - name: Add Capacitor Android platform
-        script: npx cap add android
       - name: Sync Capacitor Android
         script: npx cap sync android
       - name: Set version code
