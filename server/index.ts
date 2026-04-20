@@ -14,17 +14,22 @@ dotenv.config()
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 const app = express()
+app.disable('x-powered-by') // 서버 기술 스택 노출 방지
 
 // ─── CORS 화이트리스트 ─────────────────────────────────────────────────────
-// ALLOWED_ORIGINS 미설정 시: 개발용으로 전체 허용 (localhost 테스트 편의)
-// 배포 시 ALLOWED_ORIGINS="https://holsi.app,https://www.holsi.app" 형태로 지정할 것
+// 배포 시 ALLOWED_ORIGINS="https://hol-si.com,https://www.hol-si.com" 형태로 EC2 .env에 지정
+// 미설정 시: 개발 환경에서만 전체 허용 (프로덕션에서 미설정이면 서버 시작 거부)
 const allowedOrigins = (process.env.ALLOWED_ORIGINS ?? '')
   .split(',').map(s => s.trim()).filter(Boolean)
+
+if (process.env.NODE_ENV === 'production' && allowedOrigins.length === 0) {
+  throw new Error('ALLOWED_ORIGINS environment variable is required in production')
+}
 
 app.use(cors({
   origin: (origin, cb) => {
     if (!origin) return cb(null, true) // curl, 서버간 요청, 동일 출처
-    if (allowedOrigins.length === 0) return cb(null, true) // 화이트리스트 미설정 = 전체 허용 (dev)
+    if (allowedOrigins.length === 0) return cb(null, true) // 개발 환경: 전체 허용
     if (allowedOrigins.includes(origin)) return cb(null, true)
     cb(new Error(`CORS: ${origin} not allowed`))
   },
@@ -39,6 +44,10 @@ app.use((_req, res, next) => {
   res.setHeader('X-XSS-Protection', '1; mode=block')
   res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin')
   res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=()')
+  // HSTS: 1년간 HTTPS 강제, 서브도메인 포함 (프로덕션에서만 — nginx가 HTTPS 종단)
+  if (process.env.NODE_ENV === 'production') {
+    res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains')
+  }
   // CSP: XSS 2차 방어 — inline style/script 허용은 React 빌드 요구사항
   res.setHeader(
     'Content-Security-Policy',
