@@ -36,7 +36,10 @@ export const useSubscriptionStore = create<SubscriptionStore>((set, get) => ({
     if (get().initialized) return
     try {
       const { Purchases } = await import('@revenuecat/purchases-capacitor')
-      await Purchases.configure({ apiKey: 'appl_pMKnJpSZOUZkljTJsICdYqFJgTu' })
+      const apiKey = Capacitor.getPlatform() === 'android'
+        ? 'goog_morDeFSZNeFiJeJZTctOCBATrMi'
+        : 'appl_pMKnJpSZOUZkljTJsICdYqFJgTu'
+      await Purchases.configure({ apiKey })
       const { customerInfo } = await Purchases.getCustomerInfo()
       set({ initialized: true, isPremium: isActive(customerInfo) })
       Purchases.addCustomerInfoUpdateListener((customerInfo: any) => {
