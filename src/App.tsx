@@ -20,6 +20,7 @@ import { Pills } from '@/pages/Pills'
 import { MyPage } from '@/pages/MyPage'
 import { Admin } from '@/pages/Admin'
 import Privacy from '@/pages/Privacy'
+import { LandingPage } from '@/pages/LandingPage'
 import { AlarmRingingModal } from '@/components/ui/AlarmRingingModal'
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary'
 
@@ -182,6 +183,18 @@ function App() {
 
     return () => clearInterval(interval)
   }, [pills, pushEnabled])
+
+  // 브라우저 접속 시 랜딩 페이지
+  if (!Capacitor.isNativePlatform()) {
+    return (
+      <BrowserRouter>
+        <Routes>
+          <Route path="/privacy" element={<Privacy />} />
+          <Route path="*" element={<LandingPage />} />
+        </Routes>
+      </BrowserRouter>
+    )
+  }
 
   return (
     <ErrorBoundary>
