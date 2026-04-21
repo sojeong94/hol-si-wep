@@ -45,9 +45,6 @@
     <!-- Permissions -->
 
     <uses-permission android:name="android.permission.INTERNET" />
-    <!-- Android 13+ 알림 권한 (LOCAL_NOTIFICATIONS 필수) -->
+    <!-- Android 13+ 알림 권한 -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
-    <!-- 정확한 시간에 알람 발생 (Android 12+) -->
-    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
-    <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
 </manifest>
