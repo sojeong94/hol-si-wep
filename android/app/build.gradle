@@ -16,10 +16,12 @@ android {
     }
     signingConfigs {
         release {
-            storeFile file('../../holsi.keystore')
-            storePassword 'holsi1234'
-            keyAlias 'holsi'
-            keyPassword 'holsi1234'
+            // Codemagic: HOLSI_KEYSTORE_FILE 환경변수 우선, 로컬: 프로젝트 루트 keystore
+            def ksPath = System.getenv("HOLSI_KEYSTORE_FILE")
+            storeFile ksPath ? file(ksPath) : file('../../holsi.keystore')
+            storePassword System.getenv("CM_KEYSTORE_PASSWORD") ?: 'holsi1234'
+            keyAlias System.getenv("CM_KEY_ALIAS") ?: 'holsi'
+            keyPassword System.getenv("CM_KEY_PASSWORD") ?: 'holsi1234'
         }
     }
     buildTypes {

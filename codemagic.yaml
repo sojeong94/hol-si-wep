@@ -20,29 +20,18 @@ workflows:
         script: |
           BUILD_NUMBER=${BUILD_NUMBER:-1}
           sed -i '' "s/versionCode .*/versionCode $BUILD_NUMBER/" "$CM_BUILD_DIR/android/app/build.gradle"
-      - name: Build release AAB
+      - name: Decode keystore
         script: |
+          echo "$CM_KEYSTORE" | base64 -D > /tmp/holsi.keystore
+          echo "Keystore decoded: $(ls -lh /tmp/holsi.keystore)"
+      - name: Build & sign release AAB
+        script: |
+          export HOLSI_KEYSTORE_FILE=/tmp/holsi.keystore
           cd android
           chmod +x gradlew
           ./gradlew bundleRelease
-      - name: Debug env vars
-        script: |
-          echo "CM_KEYSTORE length: ${#CM_KEYSTORE}"
-          echo "CM_KEY_ALIAS: $CM_KEY_ALIAS"
-          echo "CM_KEYSTORE_PASSWORD set: $([ -n "$CM_KEYSTORE_PASSWORD" ] && echo YES || echo NO)"
-          echo "CM_KEY_PASSWORD set: $([ -n "$CM_KEY_PASSWORD" ] && echo YES || echo NO)"
-      - name: Sign AAB
-        script: |
-          echo "$CM_KEYSTORE" | base64 -D > /tmp/holsi.keystore
-          jarsigner \
-            -keystore /tmp/holsi.keystore \
-            -storepass "$CM_KEYSTORE_PASSWORD" \
-            -keypass "$CM_KEY_PASSWORD" \
-            -signedjar android/app/build/outputs/bundle/release/app-release-signed.aab \
-            android/app/build/outputs/bundle/release/app-release.aab \
-            "$CM_KEY_ALIAS"
     artifacts:
-      - android/app/build/outputs/bundle/release/*.aab
+      - android/app/build/outputs/bundle/release/app-release.aab
 
   ios-app-store:
     name: iOS App Store Build
