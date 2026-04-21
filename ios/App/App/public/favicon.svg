@@ -1,52 +1,249 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <defs>
-    <linearGradient id="bg-grad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#09090b" />
-      <stop offset="100%" stop-color="#18181b" />
-    </linearGradient>
-    <linearGradient id="pink-glow" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#FF2A7A" />
-      <stop offset="100%" stop-color="#D9004C" />
-    </linearGradient>
-    <filter id="glass-blur" x="-20%" y="-20%" width="140%" height="140%">
-      <feGaussianBlur stdDeviation="40" />
-    </filter>
-  </defs>
-  
-  <!-- Base Dark Background -->
-  <rect width="512" height="512" rx="120" fill="url(#bg-grad)" />
-  
-  <!-- Pink Glow Behind Glass -->
-  <circle cx="380" cy="150" r="160" fill="#FF2A7A" opacity="0.6" filter="url(#glass-blur)" />
-  <circle cx="120" cy="400" r="130" fill="#990033" opacity="0.5" filter="url(#glass-blur)" />
+<defs>
+  <radialGradient id="bg" cx="44%" cy="40%" r="70%">
+    <stop offset="0%" stop-color="#1c0510"/><stop offset="100%" stop-color="#080206"/>
+  </radialGradient>
+  <radialGradient id="bgGlow" cx="50%" cy="50%" r="50%">
+    <stop offset="0%" stop-color="#FF2A7A" stop-opacity="0.11"/>
+    <stop offset="100%" stop-color="#FF2A7A" stop-opacity="0"/>
+  </radialGradient>
+  <radialGradient id="sph" cx="37%" cy="26%" r="74%">
+    <stop offset="0%"   stop-color="#ffc8dc"/>
+    <stop offset="9%"   stop-color="#ff60a0"/>
+    <stop offset="28%"  stop-color="#FF2A7A"/>
+    <stop offset="56%"  stop-color="#d40062"/>
+    <stop offset="80%"  stop-color="#960044"/>
+    <stop offset="100%" stop-color="#480020"/>
+  </radialGradient>
+  <radialGradient id="bnc" cx="50%" cy="98%" r="52%">
+    <stop offset="0%" stop-color="#ff5090" stop-opacity="0.24"/>
+    <stop offset="100%" stop-color="#ff5090" stop-opacity="0"/>
+  </radialGradient>
+  <filter id="sb"><feGaussianBlur stdDeviation="11"/></filter>
+  <filter id="xb"><feGaussianBlur stdDeviation="4"/></filter>
+  <filter id="gb"><feGaussianBlur stdDeviation="34"/></filter>
 
-  <!-- Glass Layer over glows -->
-  <rect width="512" height="512" rx="120" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.15" stroke-width="4" />
-  
-  <!-- Dandelion Art -->
-  <g transform="translate(256, 320)" stroke="#ffffff" stroke-linecap="round" stroke-linejoin="round">
-    <!-- Stem/Seed -->
-    <path d="M 0 0 Q -10 60 15 110" stroke-width="24" fill="none" opacity="0.8" />
-    <circle cx="0" cy="0" r="16" fill="url(#pink-glow)" stroke="none" />
-    
-    <!-- Parachute stems -->
-    <path d="M 0 0 L -120 -150" stroke-width="20" opacity="0.6" />
-    <path d="M 0 0 L -40 -200" stroke-width="20" opacity="0.6" />
-    <path d="M 0 0 L 40 -200" stroke-width="20" opacity="0.6" />
-    <path d="M 0 0 L 120 -150" stroke-width="20" opacity="0.6" />
-
-    <!-- Fluff nodes -->
-    <circle cx="-120" cy="-150" r="28" fill="#FF2A7A" stroke="none" />
-    <circle cx="-40" cy="-200" r="28" fill="#FF2A7A" stroke="none" />
-    <circle cx="40" cy="-200" r="28" fill="#FF2A7A" stroke="none" />
-    <circle cx="120" cy="-150" r="28" fill="#FF2A7A" stroke="none" />
-    
-    <!-- Cross fluffs (the bristles) -->
-    <g stroke="white" stroke-opacity="0.95">
-      <path d="M -150 -140 L -90 -160 M -135 -170 L -105 -130" stroke-width="16" />
-      <path d="M -65 -190 L -15 -210 M -55 -215 L -25 -185" stroke-width="16" />
-      <path d="M 15 -210 L 65 -190 M 25 -185 L 55 -215" stroke-width="16" />
-      <path d="M 90 -160 L 150 -140 M 105 -130 L 135 -170" stroke-width="16" />
-    </g>
+  <!-- 홀씨 심볼 5종 -->
+  <g id="s0"><!-- r=5, 9가닥 -->
+    <line x1="0" y1="0" x2="3.5" y2="26" stroke="#d8c4ce" stroke-width="1.8" stroke-linecap="round" opacity="0.58"/>
+    <circle cx="0" cy="0" r="5" fill="#f4dcea"/>
+    <line x1="0" y1="0" x2="-19.5" y2="-3.4"  stroke="#e0ccd6" stroke-width="1.25" stroke-linecap="round" opacity="0.68"/>
+    <line x1="0" y1="0" x2="-17.3" y2="-8.2"  stroke="#e0ccd6" stroke-width="1.25" stroke-linecap="round" opacity="0.76"/>
+    <line x1="0" y1="0" x2="-13.0" y2="-14.0" stroke="#e0ccd6" stroke-width="1.25" stroke-linecap="round" opacity="0.83"/>
+    <line x1="0" y1="0" x2="-6.3"  y2="-18.3" stroke="#e0ccd6" stroke-width="1.25" stroke-linecap="round" opacity="0.88"/>
+    <line x1="0" y1="0" x2="0"     y2="-20"   stroke="#e0ccd6" stroke-width="1.28" stroke-linecap="round" opacity="0.90"/>
+    <line x1="0" y1="0" x2="6.3"   y2="-18.3" stroke="#e0ccd6" stroke-width="1.25" stroke-linecap="round" opacity="0.88"/>
+    <line x1="0" y1="0" x2="13.0"  y2="-14.0" stroke="#e0ccd6" stroke-width="1.25" stroke-linecap="round" opacity="0.83"/>
+    <line x1="0" y1="0" x2="17.3"  y2="-8.2"  stroke="#e0ccd6" stroke-width="1.20" stroke-linecap="round" opacity="0.76"/>
+    <line x1="0" y1="0" x2="19.5"  y2="-3.4"  stroke="#e0ccd6" stroke-width="1.20" stroke-linecap="round" opacity="0.68"/>
   </g>
+  <g id="s1"><!-- r=3.8, 8가닥 -->
+    <line x1="0" y1="0" x2="2.5" y2="21" stroke="#d4c0cc" stroke-width="1.5" stroke-linecap="round" opacity="0.56"/>
+    <circle cx="0" cy="0" r="3.8" fill="#eedadf"/>
+    <line x1="0" y1="0" x2="-15.3" y2="-2.6"  stroke="#dacac8" stroke-width="1.05" stroke-linecap="round" opacity="0.66"/>
+    <line x1="0" y1="0" x2="-13.6" y2="-6.4"  stroke="#dacac8" stroke-width="1.05" stroke-linecap="round" opacity="0.75"/>
+    <line x1="0" y1="0" x2="-10.2" y2="-11.0" stroke="#dacac8" stroke-width="1.05" stroke-linecap="round" opacity="0.83"/>
+    <line x1="0" y1="0" x2="-5.1"  y2="-14.1" stroke="#dacac8" stroke-width="1.05" stroke-linecap="round" opacity="0.88"/>
+    <line x1="0" y1="0" x2="0"     y2="-15.5" stroke="#dacac8" stroke-width="1.08" stroke-linecap="round" opacity="0.90"/>
+    <line x1="0" y1="0" x2="5.1"   y2="-14.1" stroke="#dacac8" stroke-width="1.05" stroke-linecap="round" opacity="0.88"/>
+    <line x1="0" y1="0" x2="10.2"  y2="-11.0" stroke="#dacac8" stroke-width="1.02" stroke-linecap="round" opacity="0.83"/>
+    <line x1="0" y1="0" x2="13.6"  y2="-6.4"  stroke="#dacac8" stroke-width="1.00" stroke-linecap="round" opacity="0.75"/>
+    <line x1="0" y1="0" x2="15.3"  y2="-2.6"  stroke="#dacac8" stroke-width="0.98" stroke-linecap="round" opacity="0.66"/>
+  </g>
+  <g id="s2"><!-- r=2.7, 7가닥 -->
+    <line x1="0" y1="0" x2="2" y2="16" stroke="#ccb8c6" stroke-width="1.2" stroke-linecap="round" opacity="0.54"/>
+    <circle cx="0" cy="0" r="2.7" fill="#e8d4e2"/>
+    <line x1="0" y1="0" x2="-11.6" y2="-3.1"  stroke="#d0b8c6" stroke-width="0.90" stroke-linecap="round" opacity="0.64"/>
+    <line x1="0" y1="0" x2="-9.8"  y2="-6.5"  stroke="#d0b8c6" stroke-width="0.90" stroke-linecap="round" opacity="0.74"/>
+    <line x1="0" y1="0" x2="-6.0"  y2="-10.4" stroke="#d0b8c6" stroke-width="0.90" stroke-linecap="round" opacity="0.83"/>
+    <line x1="0" y1="0" x2="0"     y2="-12"   stroke="#d0b8c6" stroke-width="0.92" stroke-linecap="round" opacity="0.88"/>
+    <line x1="0" y1="0" x2="6.0"   y2="-10.4" stroke="#d0b8c6" stroke-width="0.90" stroke-linecap="round" opacity="0.83"/>
+    <line x1="0" y1="0" x2="9.8"   y2="-6.5"  stroke="#d0b8c6" stroke-width="0.88" stroke-linecap="round" opacity="0.74"/>
+    <line x1="0" y1="0" x2="11.6"  y2="-3.1"  stroke="#d0b8c6" stroke-width="0.86" stroke-linecap="round" opacity="0.64"/>
+  </g>
+  <g id="s3"><!-- r=1.9, 6가닥 -->
+    <line x1="0" y1="0" x2="1.5" y2="13" stroke="#c4b0c0" stroke-width="1.0" stroke-linecap="round" opacity="0.50"/>
+    <circle cx="0" cy="0" r="1.9" fill="#e0cedd"/>
+    <line x1="0" y1="0" x2="-8.7" y2="-2.3"  stroke="#c8b0c0" stroke-width="0.75" stroke-linecap="round" opacity="0.62"/>
+    <line x1="0" y1="0" x2="-7.2" y2="-5.2"  stroke="#c8b0c0" stroke-width="0.75" stroke-linecap="round" opacity="0.73"/>
+    <line x1="0" y1="0" x2="-4.5" y2="-7.8"  stroke="#c8b0c0" stroke-width="0.75" stroke-linecap="round" opacity="0.83"/>
+    <line x1="0" y1="0" x2="0"    y2="-9"    stroke="#c8b0c0" stroke-width="0.77" stroke-linecap="round" opacity="0.87"/>
+    <line x1="0" y1="0" x2="4.5"  y2="-7.8"  stroke="#c8b0c0" stroke-width="0.73" stroke-linecap="round" opacity="0.83"/>
+    <line x1="0" y1="0" x2="7.2"  y2="-5.2"  stroke="#c8b0c0" stroke-width="0.72" stroke-linecap="round" opacity="0.73"/>
+    <line x1="0" y1="0" x2="8.7"  y2="-2.3"  stroke="#c8b0c0" stroke-width="0.70" stroke-linecap="round" opacity="0.62"/>
+  </g>
+  <g id="s4"><!-- r=1.2, 5가닥 -->
+    <line x1="0" y1="0" x2="1" y2="10" stroke="#bcaabc" stroke-width="0.85" stroke-linecap="round" opacity="0.46"/>
+    <circle cx="0" cy="0" r="1.2" fill="#d8c6d6"/>
+    <line x1="0" y1="0" x2="-6.5" y2="-1.7" stroke="#c0acbc" stroke-width="0.66" stroke-linecap="round" opacity="0.58"/>
+    <line x1="0" y1="0" x2="-4.8" y2="-5.0" stroke="#c0acbc" stroke-width="0.66" stroke-linecap="round" opacity="0.72"/>
+    <line x1="0" y1="0" x2="0"    y2="-7"   stroke="#c0acbc" stroke-width="0.68" stroke-linecap="round" opacity="0.80"/>
+    <line x1="0" y1="0" x2="4.8"  y2="-5.0" stroke="#c0acbc" stroke-width="0.64" stroke-linecap="round" opacity="0.72"/>
+    <line x1="0" y1="0" x2="6.5"  y2="-1.7" stroke="#c0acbc" stroke-width="0.62" stroke-linecap="round" opacity="0.58"/>
+  </g>
+</defs>
+
+<rect width="512" height="512" rx="112" fill="url(#bg)"/>
+<circle cx="256" cy="256" r="230" fill="url(#bgGlow)" filter="url(#gb)"/>
+
+<!-- ═══════════════════════════════════════════════
+     ★ 우하단 소스 클러스터 (22개) — 빽빽하고 밝게
+     ═══════════════════════════════════════════════ -->
+<use href="#s0" transform="translate(462,455) rotate(-28)" opacity="0.84"/>
+<use href="#s0" transform="translate(490,418) rotate(-34)" opacity="0.82"/>
+<use href="#s1" transform="translate(447,487) rotate(-26)" opacity="0.80"/>
+<use href="#s1" transform="translate(481,384) rotate(-38)" opacity="0.78"/>
+<use href="#s1" transform="translate(433,449) rotate(-32)" opacity="0.76"/>
+<use href="#s1" transform="translate(499,354) rotate(-42)" opacity="0.74"/>
+<use href="#s2" transform="translate(467,414) rotate(-35)" opacity="0.73"/>
+<use href="#s2" transform="translate(489,464) rotate(-27)" opacity="0.71"/>
+<use href="#s2" transform="translate(420,478) rotate(-24)" opacity="0.70"/>
+<use href="#s2" transform="translate(441,424) rotate(-37)" opacity="0.68"/>
+<use href="#s2" transform="translate(482,494) rotate(-21)" opacity="0.66"/>
+<use href="#s2" transform="translate(502,398) rotate(-40)" opacity="0.67"/>
+<use href="#s3" transform="translate(417,493) rotate(-23)" opacity="0.64"/>
+<use href="#s2" transform="translate(510,444) rotate(-24)" opacity="0.64"/>
+<use href="#s2" transform="translate(473,504) rotate(-20)" opacity="0.62"/>
+<use href="#s3" transform="translate(451,512) rotate(-18)" opacity="0.58"/>
+<use href="#s2" transform="translate(512,404) rotate(-36)" opacity="0.66"/>
+<use href="#s3" transform="translate(512,483) rotate(-15)" opacity="0.54"/>
+<use href="#s2" transform="translate(432,393) rotate(-41)" opacity="0.68"/>
+<use href="#s2" transform="translate(460,375) rotate(-44)" opacity="0.65"/>
+<use href="#s1" transform="translate(500,290) rotate(-50)" opacity="0.70"/>
+<use href="#s2" transform="translate(493,325) rotate(-46)" opacity="0.68"/>
+
+<!-- ═══════════════════════════════════════════════
+     ★ 좌상단 소스 클러스터 (30개) — 우하단처럼 밝게
+     ═══════════════════════════════════════════════ -->
+<!-- 코너 핵심 밀집 (10개) -->
+<use href="#s0" transform="translate(44,42)  rotate(-66)" opacity="0.84"/>
+<use href="#s0" transform="translate(22,70)  rotate(-70)" opacity="0.82"/>
+<use href="#s1" transform="translate(70,22)  rotate(-62)" opacity="0.80"/>
+<use href="#s1" transform="translate(28,36)  rotate(-68)" opacity="0.78"/>
+<use href="#s1" transform="translate(14,88)  rotate(-72)" opacity="0.76"/>
+<use href="#s1" transform="translate(84,16)  rotate(-61)" opacity="0.74"/>
+<use href="#s2" transform="translate(52,58)  rotate(-67)" opacity="0.72"/>
+<use href="#s2" transform="translate(12,50)  rotate(-72)" opacity="0.70"/>
+<use href="#s1" transform="translate(28,50)  rotate(-70)" opacity="0.78"/>
+<use href="#s1" transform="translate(58,24)  rotate(-65)" opacity="0.76"/>
+<!-- 중간 확산 (12개) -->
+<use href="#s1" transform="translate(108,30) rotate(-64)" opacity="0.72"/>
+<use href="#s1" transform="translate(138,18) rotate(-63)" opacity="0.70"/>
+<use href="#s1" transform="translate(30,112) rotate(-68)" opacity="0.72"/>
+<use href="#s2" transform="translate(58,98)  rotate(-67)" opacity="0.68"/>
+<use href="#s2" transform="translate(86,78)  rotate(-66)" opacity="0.66"/>
+<use href="#s2" transform="translate(115,52) rotate(-65)" opacity="0.64"/>
+<use href="#s2" transform="translate(148,40) rotate(-63)" opacity="0.62"/>
+<use href="#s2" transform="translate(18,138) rotate(-70)" opacity="0.66"/>
+<use href="#s2" transform="translate(46,128) rotate(-68)" opacity="0.63"/>
+<use href="#s2" transform="translate(78,110) rotate(-67)" opacity="0.60"/>
+<use href="#s2" transform="translate(108,90) rotate(-66)" opacity="0.58"/>
+<use href="#s2" transform="translate(72,48)  rotate(-64)" opacity="0.68"/>
+<!-- 외곽 퍼짐 (8개) -->
+<use href="#s3" transform="translate(42,168) rotate(-68)" opacity="0.56"/>
+<use href="#s3" transform="translate(68,158) rotate(-67)" opacity="0.54"/>
+<use href="#s3" transform="translate(22,178) rotate(-70)" opacity="0.58"/>
+<use href="#s3" transform="translate(130,72) rotate(-65)" opacity="0.52"/>
+<use href="#s3" transform="translate(162,50) rotate(-63)" opacity="0.50"/>
+<use href="#s3" transform="translate(48,192) rotate(-68)" opacity="0.52"/>
+<use href="#s3" transform="translate(60,150) rotate(-67)" opacity="0.50"/>
+<use href="#s3" transform="translate(36,18)  rotate(-70)" opacity="0.72"/>
+
+<!-- ═══════════════════════════════════════
+     오른쪽 엣지 흐름 (14개)
+     ═══════════════════════════════════════ -->
+<use href="#s1" transform="translate(482,252) rotate(-52)" opacity="0.68"/>
+<use href="#s2" transform="translate(494,214) rotate(-55)" opacity="0.65"/>
+<use href="#s2" transform="translate(478,179) rotate(-55)" opacity="0.62"/>
+<use href="#s2" transform="translate(492,144) rotate(-52)" opacity="0.58"/>
+<use href="#s2" transform="translate(471,310) rotate(-48)" opacity="0.64"/>
+<use href="#s3" transform="translate(481,139) rotate(-54)" opacity="0.56"/>
+<use href="#s3" transform="translate(494,109) rotate(-56)" opacity="0.52"/>
+<use href="#s3" transform="translate(463,169) rotate(-50)" opacity="0.58"/>
+<use href="#s3" transform="translate(478,94)  rotate(-58)" opacity="0.48"/>
+<use href="#s4" transform="translate(498,72)  rotate(-55)" opacity="0.44"/>
+<use href="#s2" transform="translate(510,184) rotate(-52)" opacity="0.56"/>
+<use href="#s3" transform="translate(507,150) rotate(-54)" opacity="0.52"/>
+<use href="#s3" transform="translate(512,120) rotate(-56)" opacity="0.48"/>
+<use href="#s2" transform="translate(512,228) rotate(-50)" opacity="0.60"/>
+
+<!-- ═══════════════════════════════════════
+     하단 중앙 → 좌 흐름 (18개)
+     ═══════════════════════════════════════ -->
+<use href="#s1" transform="translate(368,470) rotate(-40)" opacity="0.72"/>
+<use href="#s1" transform="translate(338,491) rotate(-38)" opacity="0.70"/>
+<use href="#s2" transform="translate(303,478) rotate(-40)" opacity="0.66"/>
+<use href="#s2" transform="translate(271,492) rotate(-36)" opacity="0.64"/>
+<use href="#s2" transform="translate(241,482) rotate(-33)" opacity="0.60"/>
+<use href="#s2" transform="translate(391,463) rotate(-38)" opacity="0.68"/>
+<use href="#s2" transform="translate(213,468) rotate(-30)" opacity="0.56"/>
+<use href="#s3" transform="translate(185,481) rotate(-29)" opacity="0.52"/>
+<use href="#s2" transform="translate(157,491) rotate(-28)" opacity="0.55"/>
+<use href="#s2" transform="translate(130,490) rotate(-26)" opacity="0.52"/>
+<use href="#s3" transform="translate(102,500) rotate(-24)" opacity="0.48"/>
+<use href="#s3" transform="translate(74,494)  rotate(-22)" opacity="0.44"/>
+<use href="#s3" transform="translate(48,502)  rotate(-20)" opacity="0.40"/>
+<use href="#s2" transform="translate(322,512) rotate(-35)" opacity="0.60"/>
+<use href="#s2" transform="translate(282,514) rotate(-33)" opacity="0.58"/>
+<use href="#s2" transform="translate(252,510) rotate(-30)" opacity="0.55"/>
+<use href="#s2" transform="translate(423,393) rotate(-44)" opacity="0.62"/>
+<use href="#s2" transform="translate(404,424) rotate(-40)" opacity="0.60"/>
+
+<!-- ═══════════════════════════════════════
+     왼쪽 엣지 흐름 (14개) x < 60
+     ═══════════════════════════════════════ -->
+<use href="#s2" transform="translate(55,264)  rotate(-58)" opacity="0.50"/>
+<use href="#s2" transform="translate(40,220)  rotate(-60)" opacity="0.48"/>
+<use href="#s2" transform="translate(35,277)  rotate(-58)" opacity="0.46"/>
+<use href="#s3" transform="translate(46,315)  rotate(-55)" opacity="0.44"/>
+<use href="#s3" transform="translate(41,374)  rotate(-50)" opacity="0.38"/>
+<use href="#s3" transform="translate(31,444)  rotate(-45)" opacity="0.32"/>
+<use href="#s3" transform="translate(22,163)  rotate(-64)" opacity="0.42"/>
+<use href="#s3" transform="translate(18,233)  rotate(-62)" opacity="0.40"/>
+<use href="#s4" transform="translate(21,121)  rotate(-66)" opacity="0.36"/>
+<use href="#s4" transform="translate(15,301)  rotate(-56)" opacity="0.30"/>
+<use href="#s3" transform="translate(40,342)  rotate(-52)" opacity="0.40"/>
+<use href="#s3" transform="translate(30,407)  rotate(-48)" opacity="0.36"/>
+<use href="#s4" transform="translate(14,82)   rotate(-68)" opacity="0.34"/>
+<use href="#s4" transform="translate(24,50)   rotate(-70)" opacity="0.38"/>
+
+<!-- ═══════════════════════════════════════
+     상단 끝자락 흩날림 (10개)
+     ═══════════════════════════════════════ -->
+<use href="#s3" transform="translate(144,59)  rotate(-66)" opacity="0.42"/>
+<use href="#s3" transform="translate(110,92)  rotate(-67)" opacity="0.38"/>
+<use href="#s4" transform="translate(22,58)   rotate(-70)" opacity="0.36"/>
+<use href="#s4" transform="translate(56,53)   rotate(-69)" opacity="0.32"/>
+<use href="#s4" transform="translate(88,50)   rotate(-68)" opacity="0.30"/>
+<use href="#s3" transform="translate(190,52)  rotate(-66)" opacity="0.36"/>
+<use href="#s4" transform="translate(230,58)  rotate(-67)" opacity="0.30"/>
+<use href="#s4" transform="translate(270,52)  rotate(-68)" opacity="0.26"/>
+<use href="#s4" transform="translate(310,60)  rotate(-65)" opacity="0.24"/>
+<use href="#s4" transform="translate(350,55)  rotate(-65)" opacity="0.22"/>
+
+<!-- ═══════════════════════════════════════════════
+     핑크 구체 r=210 (+20% 더 크게)
+     ═══════════════════════════════════════════════ -->
+<circle cx="256" cy="256" r="210" fill="#FF2A7A" opacity="0.18" filter="url(#gb)"/>
+<circle cx="256" cy="256" r="210" fill="url(#sph)"/>
+<circle cx="256" cy="256" r="210" fill="url(#bnc)"/>
+<!-- 소프트 스페큘러 -->
+<ellipse cx="192" cy="177" rx="96" ry="60" fill="#fff" opacity="0.08"
+         transform="rotate(-22 192 177)" filter="url(#sb)"/>
+<!-- 메인 하이라이트 -->
+<ellipse cx="189" cy="171" rx="58" ry="36" fill="#fff" opacity="0.22"
+         transform="rotate(-18 189 171)" filter="url(#xb)"/>
+<!-- 선명 하이라이트 -->
+<ellipse cx="183" cy="164" rx="34" ry="22" fill="#fff" opacity="0.35"
+         transform="rotate(-14 183 164)"/>
+<!-- 핀포인트 -->
+<ellipse cx="173" cy="154" rx="14" ry="10" fill="#fff" opacity="0.55"
+         transform="rotate(-10 173 154)"/>
+<!-- 림 라이트 -->
+<path d="M 118 430 Q 256 468 394 430"
+      stroke="#ff90be" stroke-width="6" fill="none"
+      stroke-linecap="round" opacity="0.14"/>
+
+<rect width="512" height="512" rx="112" fill="none"
+      stroke="#fff" stroke-opacity="0.06" stroke-width="2.5"/>
 </svg>

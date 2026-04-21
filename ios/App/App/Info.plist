@@ -49,6 +49,8 @@
 	<true/>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
+	<key>NSUserNotificationAlertStyle</key>
+	<string>alert</string>
 	<key>NSCameraUsageDescription</key>
 	<string>과거 기록 가져오기 기능에서 스크린샷을 촬영하기 위해 카메라 접근이 필요합니다.</string>
 	<key>NSPhotoLibraryUsageDescription</key>

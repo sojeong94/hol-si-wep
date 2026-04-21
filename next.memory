@@ -1,0 +1,166 @@
+# 홀시 작업 메모 — 2026-04-18 업데이트
+
+---
+
+## 오늘 완료한 작업 (2026-04-18)
+
+### 1. 구글 로그인 disallowed_useragent 해결
+- `src/pages/MyPage.tsx` — `@capacitor/browser` Browser.open()으로 Chrome Custom Tabs 열기
+- `src/App.tsx` — `@capacitor/app` appUrlOpen 딥링크 리스너 추가 (holsi://auth?token=)
+- `npx cap sync android` 완료 상태
+- Android Studio에서 앱 재빌드 후 구글 로그인 정상 확인 ✅
+
+### 2. 스플래시 화면 교체
+- 이모티콘 홀시 → 핑크볼 아이콘
+- 슬로건: "주기를 알면 몸이 보여" + 서브텍스트: "treat yourself" (흰색, italic)
+- 배경: #1c0510 → #080206 다크 그라디언트
+- 11개 해상도 drawable 폴더 전부 생성 완료
+- `public/icon-512.png`도 핑크볼로 교체
+
+### 3. 헤더 상태바 색상 & 바텀 네비 리디자인
+- App.tsx 배경 `from-orange-50/50` 파스텔 → `#0A0A0A` 다크로 변경 (상태바 회색 분리 해소)
+- BottomNav: `bg-white/60` → `bg-zinc-950/95` 다크
+- 비활성 아이콘: `text-gray-500` → `text-zinc-500`
+- 활성탭: 핑크 배경 하이라이트 + active:scale-90 터치 피드백
+- EC2 배포 필요 (아직 안 함)
+
+### 4. Android build.gradle proguard 오류 수정
+- `proguard-android.txt` → `proguard-android-optimize.txt`
+
+---
+
+## EC2 배포 미완료 항목
+아래 명령을 AWS 브라우저 터미널에서 실행해야 함:
+```bash
+cd /home/ubuntu/hol-si-wep && git pull && npm run build && pm2 restart holsi
+```
+
+---
+
+## Claude의 제품전략 & UX 점검 결과
+
+### 제품전략 점검
+
+**Casual Concept** — 70점
+- ✅ "호르몬 시스터", "난 홀시야" 등 친근한 언어
+- ❌ "PMS", "황체기", "배란" 등 의학 용어 설명 없이 노출
+
+**Minimum Features** — 60점
+- ✅ 주기 기록/예측: 명확히 핵심
+- ❌ 커뮤니티: 초기 유저 없으면 텅 빈 게시판 → 신뢰 저하. 지금 단계에서 필수인가 재고 필요
+- ❌ OCR 스캐너: 주기 앱에서 영양제 라벨 스캔이 핵심인가? 포지셔닝 모호
+- ❌ AI 상담 월 3회 제한이 너무 이른 시점에 paywall → 가치 충분히 못 느끼고 차단
+
+**Less Policy** — 90점 ✅ 구독 2가지(월/연), 단순함
+
+### UX 원칙 점검
+
+**One Thing Per One Page** — 50점 ❌ (가장 시급)
+- Home 한 화면에 D-day + AI 상담 + 영양제 체크리스트 + 추천 카드 동시 노출
+- → 개선안: 홈은 "오늘 주기 상태 + AI 한 줄 질문"만. 영양제 체크리스트는 영양제 탭으로 이동
+
+**Tap & Scroll** — 85점 ✅
+
+**Easy to Answer** — 70점
+- ✅ 주기 자동 계산, AI 상담
+- ❌ 첫 실행 시 기록 없으면 예측 무의미. "언제부터 데이터가 정확해지냐" 앱이 안 알려줌
+
+**Value First, Cost Later** — 65점
+- ❌ 온보딩 첫 화면에서 닉네임 입력 요구 → 가치 경험 전에 정보 입력 비용 먼저
+  → 사용자가 선택: 온보딩 순서는 현재 유지하기로 결정
+- ❌ AI 3회 제한이 너무 이른 paywall
+
+**No Ads Patterns** — 90점 ✅
+
+**Context Based** — 70점
+- ✅ 생리 D-day 홈 노출, 영양제 알람
+- ❌ "지금 생리 중" 상태인데 홈이 달라지지 않음. 상태별 맞춤 메시지/콘텐츠 부재
+  → 개선안: 생리중/PMS/배란기에 따라 홈 메시지 변경
+
+**No More Loading** — 75점
+- ✅ localStorage 즉시 로드, PWA 캐싱
+- ❌ Community 탭 서버 fetch 로딩 있음
+
+**Sleek Experience** — 75점
+- ✅ 다크 글래스모피즘, 자연스러운 전환
+- ❌ 소셜 로그인 시 Chrome Custom Tab 앱 밖 이동 (기술적 한계, 감수)
+
+---
+
+## 미선택 개선 제안 (나중에 논의)
+
+### A. Home 화면 분리 (One Thing Per One Page 개선)
+- 현재: D-day + AI + 영양제 체크리스트 + 추천 카드 한 화면
+- 제안: 홈 = 오늘 주기 상태 + AI 한 줄 질문만. 영양제 체크리스트 → 영양제 탭으로 이동
+
+### B. 상태 기반 홈 (Context Based 개선)
+- 생리 중 / PMS 시기 / 배란기에 따라 홈 상단 메시지 달라지게
+- "지금 생리 3일차예요, 철분이 많이 빠져나가는 시기예요" 같은 맥락 메시지
+
+### C. 커뮤니티 큐레이션 콘텐츠
+- 큐레이션 콘텐츠 = 유저 없을 때 팀이 미리 올린 건강 정보 게시글로 채우기
+- "PMS가 뭔가요?", "생리통에 좋은 식품 5가지" 등
+- 텅 빈 게시판 대신 처음부터 살아있는 느낌 제공
+
+### D. 의학 용어 친절화
+- PMS, 황체기, 배란 등 첫 등장 시 툴팁/설명 추가
+
+---
+
+## 내일 할 작업 리스트 (우선순위 순)
+
+### [즉시] EC2 배포
+```bash
+cd /home/ubuntu/hol-si-wep && git pull && npm run build && pm2 restart holsi
+```
+
+### 1. 커뮤니티 스레드형 댓글
+- 글 상세 페이지 → 댓글 목록 + 작성 (Threads 스타일)
+- `src/pages/Community.tsx` 고도화
+- 서버에 댓글 API 추가 필요
+
+### 2. Codemagic 재빌드
+- Android: 새 아이콘/스플래시 포함 AAB 빌드 트리거
+- iOS: 새 AppIcon 포함 IPA 빌드 트리거
+
+### 3. 스토어 구독 상품 등록
+- App Store Connect: 월간 ₩4,900 / 연간 ₩39,900
+- Google Play Console: 동일 상품 등록
+
+### 4. RevenueCat Android 연결
+- Google Play에서 goog_ 키 발급
+- RevenueCat 대시보드에 Android 앱 연결
+
+### 5. AdMob 광고
+- 스토어 배포 완료 후 신청 가능
+- 코드 세팅: `@capacitor-community/admob` 설치
+- Android/iOS 각각 App ID 필요
+
+---
+
+## 주요 파일 경로
+
+| 파일 | 설명 |
+|------|------|
+| `src/App.tsx` | 앱 루트, 딥링크 리스너, 배경 색상 |
+| `src/components/layout/BottomNav.tsx` | 하단 네비게이션 |
+| `src/pages/Home.tsx` | 홈 화면 |
+| `src/pages/MyPage.tsx` | 소셜 로그인 버튼 |
+| `src/pages/Community.tsx` | 커뮤니티 (댓글 추가 필요) |
+| `src/store/useUsageLimitStore.ts` | AI/OCR 무료 사용량 제한 |
+| `server/auth.ts` | OAuth 서버 라우터 |
+| `android/app/src/main/res/drawable*/splash.png` | 스플래시 이미지 |
+
+## EC2 접속 정보
+```
+AWS Instance Connect (브라우저 터미널)
+인스턴스 ID: i-00806177a0caa80b5
+퍼블릭 IP: 52.206.253.217
+앱 경로: /home/ubuntu/hol-si-wep
+PM2 프로세스: holsi (id 7) — port 3001
+```
+
+## 브랜드 컬러
+- 메인 핑크: #FF2A7A
+- 다크 배경: #0A0A0A / #080206
+- 스플래시 배경: #1c0510 → #080206

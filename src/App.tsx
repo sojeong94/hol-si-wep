@@ -10,6 +10,7 @@ import { useAuthStore } from '@/store/useAuthStore'
 import { useSubscriptionStore } from '@/store/useSubscriptionStore'
 import { BottomNav } from '@/components/layout/BottomNav'
 import { syncPillsToServer } from '@/lib/pushService'
+import { scheduleLocalNotifications } from '@/lib/localNotificationService'
 import { SubscriptionModal } from '@/components/ui/SubscriptionModal'
 
 import { Home } from '@/pages/Home'
@@ -132,9 +133,14 @@ function App() {
     }
   }, [])
 
-  // 영양제 변경 시 서버 자동 동기화 (push 활성화된 경우에만)
+  // 영양제 변경 시 알림 자동 동기화 (push 활성화된 경우에만)
   useEffect(() => {
-    if (pushEnabled && Notification.permission === 'granted') {
+    if (!pushEnabled) return
+    if (Capacitor.isNativePlatform()) {
+      // 네이티브: 로컬 알림 재스케줄
+      scheduleLocalNotifications(pills)
+    } else if (Notification.permission === 'granted') {
+      // 브라우저/PWA: 서버 Web Push 동기화
       syncPillsToServer(pills)
     }
   }, [pills, pushEnabled])

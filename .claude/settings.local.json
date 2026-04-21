@@ -50,7 +50,20 @@
       "Bash(mkdir -p appstore-screenshots/ipad)",
       "Bash(npx tsx -e ':*)",
       "Bash(DEVICE=ipad npx tsx server/automation/appstore-screenshots.ts)",
-      "WebSearch"
+      "WebSearch",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" https://hol-si.com/.well-known/assetlinks.json)",
+      "Bash(curl -s -I https://hol-si.com/.well-known/assetlinks.json)",
+      "Bash(curl:*)",
+      "Bash(npm uninstall:*)",
+      "Bash(xargs grep *)",
+      "Bash(npx cap *)",
+      "Bash(./gradlew bundleRelease)",
+      "PowerShell(Get-ChildItem -Path \"C:\\\\user1\\\\2.hol-si-web-ver\\\\android\\\\app\\\\build\\\\outputs\\\\bundle\\\\release\\\\\" | Select-Object Name, @{N='MB';E={[math]::Round\\($_.Length/1MB,1\\)}})",
+      "PowerShell(Get-ChildItem \"C:\\\\user1\\\\2.hol-si-web-ver\" -File | Where-Object { $_.Name -match \"keystore|key|pem|jks|p12|pfx\" } | Select-Object Name, Length, LastWriteTime)",
+      "PowerShell(Get-ChildItem \"C:\\\\user1\\\\2.hol-si-web-ver\" -File -Force | Select-Object Name, @{N='KB';E={[math]::Round\\($_.Length/1KB,1\\)}}, LastWriteTime | Sort-Object Name)",
+      "Bash(keytool -list -keystore \"C:/user1/2.hol-si-web-ver/holsi_decoded.p12\" -storetype PKCS12 -storepass holsi1234)",
+      "Bash(keytool -list -keystore \"C:/user1/2.hol-si-web-ver/holsi_decoded.p12\" -storetype PKCS12 -storepass \"\")",
+      "Bash(keytool -list -v -keystore \"C:/user1/2.hol-si-web-ver/holsi.keystore\" -alias holsi -storepass holsi1234)"
     ]
   }
 }

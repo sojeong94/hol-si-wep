@@ -1,11 +1,16 @@
-[{
-      "relation": ["delegate_permission/common.handle_all_urls"],
-      "target": {
-        "namespace": "android_app",
-        "package_name": "com.holsi.app",
-        "sha256_cert_fingerprints": [
-          "E2:66:04:23:FA:35:EE:4C:9B:BC:B5:28:71:C9:C6:C6:9E:F4:23:4D:19:B0:2A:8D:31:62:90:92:93:47:54:E7",
-          "6D:5D:D4:B2:06:C8:94:DD:84:63:51:99:21:A9:E2:1A:DC:B3:AB:A3:10:85:9A:D2:92:C9:B1:AC:97:1E:4F:9A"
-        ]
-      }
-    }]
+[
+  {
+    "relation": [
+      "delegate_permission/common.handle_all_urls",
+      "delegate_permission/common.get_login_creds"
+    ],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.holsi.app",
+      "sha256_cert_fingerprints": [
+        "E2:66:04:23:FA:35:EE:4C:9B:BC:B5:28:71:C9:C6:C6:9E:F4:23:4D:19:B0:2A:8D:31:62:90:92:93:47:54:E7",
+        "6D:5D:D4:B2:06:C8:94:DD:84:63:51:99:21:A9:E2:1A:DC:B3:AB:A3:10:85:9A:D2:92:C9:B1:AC:97:1E:4F:9A"
+      ]
+    }
+  }
+]

@@ -10,6 +10,11 @@ import { Modal } from '@/components/ui/Modal'
 import { SubscriptionModal } from '@/components/ui/SubscriptionModal'
 import { Bell, Download, Upload, Info, UserRound, Pencil, Users, MessageSquare, Globe, LogOut, Crown, Sparkles } from 'lucide-react'
 import { subscribePush, unsubscribePush } from '@/lib/pushService'
+import {
+  requestLocalNotificationPermission,
+  scheduleLocalNotifications,
+  cancelLocalNotifications,
+} from '@/lib/localNotificationService'
 import { usePillStore } from '@/store/usePillStore'
 import { Capacitor } from '@capacitor/core'
 import { Browser } from '@capacitor/browser'
@@ -33,35 +38,56 @@ export function MyPage() {
 
   const handlePushToggle = async (enable: boolean) => {
     if (enable) {
-      // iOS 기기인지 확인
-      const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent)
-      const isPWA = window.matchMedia('(display-mode: standalone)').matches
-
-      if (isIOS && !isPWA) {
-        alert('iOS에서 알림을 받으려면 먼저 Safari 하단 메뉴에서\n"홈 화면에 추가"를 눌러 앱으로 설치해주세요.\n\n(iOS 16.4 이상 필요)')
-        return
-      }
-
-      if (!('Notification' in window) || !('PushManager' in window)) {
-        alert('이 브라우저는 푸시 알림을 지원하지 않아요.\nChrome 또는 Edge를 사용해주세요.')
-        return
-      }
-
-      const permission = await Notification.requestPermission()
-      if (permission !== 'granted') {
-        alert('알림이 차단되어 있어요.\n\n브라우저 주소창 왼쪽 자물쇠 아이콘 → 알림 → 허용 으로 변경해주세요.')
-        setPushEnabled(false)
-        return
-      }
-      const ok = await subscribePush(pills)
-      if (ok) {
-        setPushEnabled(true)
+      if (Capacitor.isNativePlatform()) {
+        // 네이티브 앱 (Android / iOS): 로컬 알림 사용
+        const granted = await requestLocalNotificationPermission()
+        if (!granted) {
+          alert('알림 권한이 필요해요.\n\n기기 설정 → 홀시 → 알림 → 허용 으로 변경해주세요.')
+          setPushEnabled(false)
+          return
+        }
+        const ok = await scheduleLocalNotifications(pills)
+        if (ok) {
+          setPushEnabled(true)
+        } else {
+          alert('알림 등록에 실패했어요. 잠시 후 다시 시도해주세요.')
+          setPushEnabled(false)
+        }
       } else {
-        alert('알림 등록에 실패했어요. 잠시 후 다시 시도해주세요.')
-        setPushEnabled(false)
+        // 브라우저 / PWA: Web Push 사용
+        const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent)
+        const isPWA = window.matchMedia('(display-mode: standalone)').matches
+
+        if (isIOS && !isPWA) {
+          alert('iOS에서 알림을 받으려면 먼저 Safari 하단 메뉴에서\n"홈 화면에 추가"를 눌러 앱으로 설치해주세요.\n\n(iOS 16.4 이상 필요)')
+          return
+        }
+
+        if (!('Notification' in window) || !('PushManager' in window)) {
+          alert('이 브라우저는 푸시 알림을 지원하지 않아요.\nChrome 또는 Edge를 사용해주세요.')
+          return
+        }
+
+        const permission = await Notification.requestPermission()
+        if (permission !== 'granted') {
+          alert('알림이 차단되어 있어요.\n\n브라우저 주소창 왼쪽 자물쇠 아이콘 → 알림 → 허용 으로 변경해주세요.')
+          setPushEnabled(false)
+          return
+        }
+        const ok = await subscribePush(pills)
+        if (ok) {
+          setPushEnabled(true)
+        } else {
+          alert('알림 등록에 실패했어요. 잠시 후 다시 시도해주세요.')
+          setPushEnabled(false)
+        }
       }
     } else {
-      await unsubscribePush()
+      if (Capacitor.isNativePlatform()) {
+        await cancelLocalNotifications()
+      } else {
+        await unsubscribePush()
+      }
       setPushEnabled(false)
     }
   }

@@ -1,0 +1,802 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>홀시 스토어 스크린샷</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  background: #0a0a0a;
+  font-family: 'Noto Sans KR', 'Apple SD Gothic Neo', sans-serif;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px;
+  padding: 32px;
+  justify-content: center;
+}
+
+h1 {
+  width: 100%;
+  color: #ff2a7a;
+  font-size: 14px;
+  text-align: center;
+  margin-bottom: 8px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+.guide {
+  width: 100%;
+  color: #555;
+  font-size: 12px;
+  text-align: center;
+  margin-bottom: 16px;
+}
+
+/* ─────────────────────────────────────
+   SCREENSHOT CARD  390 × 844
+───────────────────────────────────── */
+.card {
+  width: 390px;
+  height: 844px;
+  border-radius: 28px;
+  overflow: hidden;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  padding: 44px 28px 36px;
+  flex-shrink: 0;
+}
+
+/* headline area */
+.headline {
+  text-align: center;
+  z-index: 2;
+}
+.headline .tag {
+  display: inline-block;
+  background: rgba(255,42,122,0.18);
+  border: 1px solid rgba(255,42,122,0.4);
+  color: #ff2a7a;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  padding: 4px 12px;
+  border-radius: 99px;
+  margin-bottom: 14px;
+  text-transform: uppercase;
+}
+.headline h2 {
+  font-size: 34px;
+  font-weight: 900;
+  line-height: 1.2;
+  color: #fff;
+  text-shadow: 0 0 40px rgba(255,42,122,0.3);
+  white-space: pre-line;
+}
+.headline p {
+  font-size: 14px;
+  font-weight: 400;
+  color: rgba(255,255,255,0.5);
+  margin-top: 10px;
+  line-height: 1.6;
+}
+
+/* phone mockup */
+.phone {
+  width: 240px;
+  height: 490px;
+  background: #0e0e10;
+  border-radius: 44px;
+  border: 7px solid #2a2a2e;
+  box-shadow:
+    0 0 0 1px #1a1a1e,
+    0 30px 80px rgba(0,0,0,0.7),
+    0 0 40px rgba(255,42,122,0.15);
+  overflow: hidden;
+  position: relative;
+  flex-shrink: 0;
+  z-index: 2;
+}
+.phone::before {
+  content: '';
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 80px;
+  height: 6px;
+  background: #1e1e22;
+  border-radius: 99px;
+  z-index: 10;
+}
+.phone-inner {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: #0e0e10;
+  border-radius: 38px;
+}
+
+/* ── SCREEN 1: HOME ─────────────────── */
+.screen-home {
+  background: linear-gradient(160deg, #13071a 0%, #0e0e14 100%);
+  padding: 28px 14px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.screen-home .status { display: flex; justify-content: flex-end; padding-right: 4px; }
+.screen-home .status span { font-size: 9px; color: #555; }
+.screen-home .h-title { font-size: 13px; font-weight: 900; color: #fff; padding: 0 4px; }
+.dday-card {
+  background: linear-gradient(135deg, #ff2a7a, #ff6b9d, #c0392b);
+  border-radius: 18px;
+  padding: 16px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  box-shadow: 0 8px 24px rgba(255,42,122,0.4);
+}
+.dday-card .label { font-size: 9px; color: rgba(255,255,255,0.7); font-weight: 700; letter-spacing: 1px; text-transform: uppercase; }
+.dday-card .big { font-size: 44px; font-weight: 900; color: #fff; line-height: 1; }
+.dday-card .sub { font-size: 11px; color: rgba(255,255,255,0.8); font-weight: 600; }
+.dday-card .phase { display: inline-block; background: rgba(0,0,0,0.2); border-radius: 99px; padding: 3px 8px; font-size: 9px; color: #fff; margin-top: 4px; }
+.mini-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.mini-card { background: #1a1a22; border-radius: 12px; padding: 10px 10px; }
+.mini-card .mc-label { font-size: 8px; color: #555; margin-bottom: 4px; }
+.mini-card .mc-val { font-size: 14px; font-weight: 900; color: #fff; }
+.mini-card .mc-sub { font-size: 8px; color: #ff2a7a; margin-top: 2px; }
+.ai-btn-home { background: linear-gradient(135deg,#ff2a7a,#c0392b); border-radius: 12px; padding: 10px 14px; display: flex; align-items: center; gap: 8px; }
+.ai-btn-home .icon { width: 20px; height: 20px; background: rgba(255,255,255,0.2); border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 10px; color: #fff; }
+.ai-btn-home .text { font-size: 11px; font-weight: 700; color: #fff; }
+.ai-btn-home .arrow { margin-left: auto; color: rgba(255,255,255,0.6); font-size: 10px; }
+
+/* ── SCREEN 2: CALENDAR ─────────────── */
+.screen-cal {
+  background: #0e0e14;
+  padding: 28px 10px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.cal-header { text-align: center; }
+.cal-header .month { font-size: 13px; font-weight: 900; color: #fff; }
+.cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 1px; }
+.cal-day-name { font-size: 7px; color: #555; text-align: center; padding: 2px; font-weight: 700; }
+.cal-day {
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 9px;
+  color: #777;
+  border-radius: 50%;
+  position: relative;
+}
+.cal-day.period { background: rgba(255,42,122,0.3); color: #ff2a7a; font-weight: 700; }
+.cal-day.period-dark { background: #ff2a7a; color: #fff; font-weight: 900; }
+.cal-day.today { border: 1.5px solid #ff2a7a; color: #fff; }
+.cal-day.ovulation { background: rgba(99,179,237,0.3); color: #63b3ed; }
+.cal-day.fertile { background: rgba(154,215,255,0.15); color: #9ad7ff; }
+.cal-legend { display: flex; gap: 8px; padding: 0 4px; flex-wrap: wrap; }
+.legend-item { display: flex; align-items: center; gap: 4px; font-size: 8px; color: #666; }
+.legend-dot { width: 8px; height: 8px; border-radius: 50%; }
+
+/* ── SCREEN 3: AI CHAT ──────────────── */
+.screen-ai {
+  background: #0e0e14;
+  padding: 28px 10px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.ai-header { display: flex; align-items: center; gap: 8px; padding: 0 4px; }
+.ai-avatar { width: 24px; height: 24px; border-radius: 50%; background: linear-gradient(135deg,#ff2a7a,#c0392b); display: flex; align-items: center; justify-content: center; font-size: 10px; }
+.ai-header-text { font-size: 11px; font-weight: 700; color: #fff; }
+.ai-header-sub { font-size: 8px; color: #ff2a7a; }
+.chat-bubble { border-radius: 14px; padding: 8px 10px; font-size: 9px; line-height: 1.5; max-width: 85%; }
+.chat-user { background: #ff2a7a; color: #fff; align-self: flex-end; margin-left: auto; }
+.chat-ai { background: #1e1e28; color: #ddd; align-self: flex-start; border: 1px solid #2a2a38; }
+.chat-ai strong { color: #ff2a7a; }
+.chat-wrap { display: flex; flex-direction: column; gap: 6px; flex: 1; }
+.ai-input-bar { background: #1a1a22; border-radius: 20px; padding: 8px 12px; display: flex; align-items: center; gap: 6px; margin-top: 4px; }
+.ai-input-bar span { font-size: 8px; color: #555; flex: 1; }
+.ai-send { width: 18px; height: 18px; background: #ff2a7a; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 8px; color: #fff; }
+.suggestion-chips { display: flex; gap: 4px; flex-wrap: wrap; }
+.chip { background: #1e1e28; border: 1px solid #2a2a38; border-radius: 99px; padding: 3px 7px; font-size: 7px; color: #aaa; }
+
+/* ── SCREEN 4: PILLS ────────────────── */
+.screen-pills {
+  background: #0e0e14;
+  padding: 28px 10px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.pills-header { font-size: 14px; font-weight: 900; color: #fff; padding: 0 4px; }
+.pills-section-label { font-size: 8px; font-weight: 700; color: #555; letter-spacing: 1px; text-transform: uppercase; padding: 0 4px; }
+.pill-row {
+  background: #1a1a22;
+  border-radius: 12px;
+  padding: 8px 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.pill-check { width: 16px; height: 16px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 8px; flex-shrink: 0; }
+.pill-check.done { background: #ff2a7a; color: #fff; }
+.pill-check.undone { border: 1.5px solid #333; }
+.pill-info { flex: 1; }
+.pill-name { font-size: 10px; font-weight: 700; color: #fff; }
+.pill-time { font-size: 8px; color: #555; margin-top: 1px; }
+.pill-divider { border: none; border-top: 1px solid #1e1e28; margin: 2px 0; }
+.pill-list-row { padding: 8px 4px; border-bottom: 1px solid #1a1a22; display: flex; justify-content: space-between; align-items: center; }
+.pill-list-time { font-size: 18px; font-weight: 300; color: #fff; }
+.pill-list-name { font-size: 8px; color: #555; margin-top: 2px; }
+
+/* ── SCREEN 5: COMMUNITY ────────────── */
+.screen-comm {
+  background: #111113;
+  padding: 28px 10px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.comm-header { font-size: 14px; font-weight: 900; color: #fff; padding: 0 4px; }
+.comm-sub { font-size: 8px; color: #555; padding: 0 4px; margin-top: -4px; }
+.cat-tabs { display: flex; gap: 4px; overflow: hidden; }
+.cat-tab { padding: 3px 8px; border-radius: 99px; font-size: 8px; font-weight: 700; white-space: nowrap; flex-shrink: 0; }
+.cat-tab.active { background: #ff2a7a; color: #fff; }
+.cat-tab.inactive { background: #27272a; color: #71717a; border: 1px solid #3f3f46; }
+.post-card {
+  background: #18181b;
+  border-radius: 10px;
+  padding: 10px 10px;
+  border: 1px solid #27272a;
+}
+.post-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+.post-author { font-size: 8px; color: #71717a; }
+.post-flag { font-size: 8px; color: #3f3f46; }
+.post-tag { display: inline-block; font-size: 7px; font-weight: 700; padding: 2px 6px; border-radius: 4px; margin-bottom: 4px; }
+.tag-period { background: rgba(239,68,68,0.2); color: #f87171; }
+.tag-pms { background: rgba(168,85,247,0.2); color: #c084fc; }
+.tag-nutrient { background: rgba(59,130,246,0.2); color: #60a5fa; }
+.tag-daily { background: #27272a; color: #71717a; }
+.post-title { font-size: 10px; color: #e4e4e7; line-height: 1.5; }
+.post-meta { display: flex; gap: 8px; margin-top: 7px; align-items: center; }
+.post-like { font-size: 8px; color: #71717a; display: flex; align-items: center; gap: 3px; }
+.post-comment { font-size: 8px; color: #71717a; display: flex; align-items: center; gap: 3px; }
+.post-time { font-size: 7px; color: #3f3f46; margin-left: auto; }
+
+/* ── SCREEN 6: SUBSCRIPTION ─────────── */
+.screen-sub {
+  background: #0e0e14;
+  padding: 28px 10px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.sub-title { font-size: 12px; font-weight: 900; color: #fff; text-align: center; }
+.sub-desc { font-size: 8px; color: #555; text-align: center; margin-top: 2px; }
+.sub-card {
+  border-radius: 14px;
+  padding: 12px 12px;
+  position: relative;
+  overflow: hidden;
+}
+.sub-card.annual {
+  background: linear-gradient(135deg, #ff2a7a22, #ff2a7a11);
+  border: 1.5px solid #ff2a7a;
+}
+.sub-card.monthly {
+  background: #1a1a22;
+  border: 1.5px solid #2a2a38;
+}
+.sub-badge { position: absolute; top: 8px; right: 8px; background: #ff2a7a; color: #fff; font-size: 7px; font-weight: 700; padding: 2px 6px; border-radius: 99px; }
+.sub-plan { font-size: 9px; font-weight: 700; color: #ff2a7a; }
+.sub-price { font-size: 22px; font-weight: 900; color: #fff; margin: 2px 0; }
+.sub-per { font-size: 8px; color: #777; display: inline; }
+.sub-features { margin-top: 6px; display: flex; flex-direction: column; gap: 3px; }
+.sub-feat { font-size: 8px; color: #aaa; display: flex; gap: 4px; align-items: center; }
+.sub-feat::before { content: '✓'; color: #ff2a7a; font-weight: 700; }
+.sub-btn { background: #ff2a7a; border-radius: 10px; padding: 10px; text-align: center; font-size: 10px; font-weight: 700; color: #fff; margin-top: 4px; box-shadow: 0 4px 16px rgba(255,42,122,0.4); }
+.free-badge-row { text-align: center; font-size: 8px; color: #ff2a7a; font-weight: 700; }
+
+/* bottom nav */
+.bottom-nav {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  padding: 6px 0 4px;
+  border-top: 1px solid #1a1a22;
+  margin-top: auto;
+}
+.nav-item { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.nav-icon { width: 16px; height: 16px; border-radius: 4px; }
+.nav-label { font-size: 7px; color: #555; }
+.nav-item.active .nav-label { color: #ff2a7a; }
+.nav-dot { width: 4px; height: 4px; border-radius: 50%; background: #ff2a7a; }
+
+/* ── BACKGROUNDS PER CARD ────────────── */
+.bg1 { background: radial-gradient(ellipse at 70% 20%, #3d0a22 0%, #13071a 50%, #0a0a0e 100%); }
+.bg2 { background: radial-gradient(ellipse at 30% 80%, #0a1a3d 0%, #07131a 50%, #0a0a0e 100%); }
+.bg3 { background: radial-gradient(ellipse at 60% 30%, #1a0a3d 0%, #0e0718 50%, #0a0a0e 100%); }
+.bg4 { background: radial-gradient(ellipse at 40% 70%, #1a2a0a 0%, #0a1307 50%, #0a0a0e 100%); }
+.bg5 { background: radial-gradient(ellipse at 70% 40%, #3d1a0a 0%, #1a0e07 50%, #0a0a0e 100%); }
+.bg6 { background: radial-gradient(ellipse at 50% 20%, #3d0a22 0%, #13071a 50%, #0a0a0e 100%); }
+
+/* glow ring behind phone */
+.glow-ring {
+  position: absolute;
+  width: 280px;
+  height: 280px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255,42,122,0.12) 0%, transparent 70%);
+  bottom: 60px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1;
+}
+
+/* FEATURE GRAPHIC 1024×500 */
+.feature-graphic {
+  width: 1024px;
+  height: 500px;
+  border-radius: 16px;
+  overflow: hidden;
+  background: radial-gradient(ellipse at 30% 50%, #3d0a22 0%, #13071a 40%, #0a0a0e 100%);
+  display: flex;
+  align-items: center;
+  padding: 0 60px;
+  gap: 40px;
+  position: relative;
+}
+.fg-text { flex: 1; z-index: 2; }
+.fg-tag { display: inline-block; background: rgba(255,42,122,0.2); border: 1px solid rgba(255,42,122,0.5); color: #ff2a7a; font-size: 12px; font-weight: 700; padding: 5px 14px; border-radius: 99px; margin-bottom: 20px; letter-spacing: 1px; }
+.fg-title { font-size: 54px; font-weight: 900; color: #fff; line-height: 1.15; text-shadow: 0 0 60px rgba(255,42,122,0.3); }
+.fg-title span { color: #ff2a7a; }
+.fg-sub { font-size: 16px; color: rgba(255,255,255,0.5); margin-top: 16px; line-height: 1.6; }
+.fg-chips { display: flex; gap: 8px; margin-top: 24px; flex-wrap: wrap; }
+.fg-chip { background: rgba(255,42,122,0.15); border: 1px solid rgba(255,42,122,0.3); color: #ff9ec4; font-size: 12px; padding: 5px 14px; border-radius: 99px; }
+.fg-phones { display: flex; gap: 20px; align-items: center; flex-shrink: 0; z-index: 2; }
+.fg-phone {
+  width: 140px;
+  height: 290px;
+  background: #0e0e10;
+  border-radius: 28px;
+  border: 5px solid #2a2a2e;
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.6), 0 0 30px rgba(255,42,122,0.1);
+}
+.fg-phone-2 {
+  width: 130px;
+  height: 270px;
+  opacity: 0.7;
+  transform: rotate(4deg) translateY(16px);
+}
+.fg-glow { position: absolute; right: 300px; top: 50%; transform: translateY(-50%); width: 400px; height: 400px; border-radius: 50%; background: radial-gradient(circle, rgba(255,42,122,0.08) 0%, transparent 70%); }
+.section-label-main {
+  width: 100%;
+  text-align: center;
+  font-size: 11px;
+  color: #333;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-top: 24px;
+  padding-top: 24px;
+  border-top: 1px solid #1a1a1a;
+}
+</style>
+</head>
+<body>
+
+<h1>홀시 — Store Screenshots</h1>
+<p class="guide">각 카드 우클릭 → 다른 이름으로 저장 / 또는 브라우저 확대 후 캡처 | 390×844px (iPhone 14 기준)</p>
+
+<!-- ── CARD 1: HOME ─────────────────────────────── -->
+<div class="card bg1">
+  <div class="headline">
+    <div class="tag">✦ Cycle Tracker</div>
+    <h2>오늘 내 몸<br>한눈에 파악</h2>
+    <p>생리 예정일부터 배란일까지<br>매일 달라지는 내 몸 상태를 알려드려요</p>
+  </div>
+  <div class="glow-ring"></div>
+  <div class="phone">
+    <div class="phone-inner">
+      <div class="screen-home">
+        <div style="font-size:11px;font-weight:900;color:#fff;padding:0 4px;margin-bottom:4px;">홈</div>
+        <div class="dday-card">
+          <div class="label">생리 예정</div>
+          <div class="big">D-3</div>
+          <div class="sub">4월 22일 화요일</div>
+          <div class="phase">황체기 · 배란 후 11일</div>
+        </div>
+        <div class="mini-cards">
+          <div class="mini-card">
+            <div class="mc-label">배란 예정</div>
+            <div class="mc-val">D+8</div>
+            <div class="mc-sub">다음 달 기준</div>
+          </div>
+          <div class="mini-card">
+            <div class="mc-label">생리 주기</div>
+            <div class="mc-val">28일</div>
+            <div class="mc-sub">평균 5일</div>
+          </div>
+        </div>
+        <div class="ai-btn-home">
+          <div class="icon">✦</div>
+          <div>
+            <div class="text">AI에게 물어보기</div>
+            <div style="font-size:8px;color:rgba(255,255,255,0.6);">PMS 증상이 심한데 어떻게 하면 될까?</div>
+          </div>
+          <div class="arrow">›</div>
+        </div>
+        <div class="bottom-nav">
+          <div class="nav-item active"><div style="font-size:14px;">🏠</div><div class="nav-label">홈</div><div class="nav-dot"></div></div>
+          <div class="nav-item"><div style="font-size:14px;">📅</div><div class="nav-label">캘린더</div></div>
+          <div class="nav-item"><div style="font-size:14px;">💊</div><div class="nav-label">영양제</div></div>
+          <div class="nav-item"><div style="font-size:14px;">💬</div><div class="nav-label">커뮤니티</div></div>
+          <div class="nav-item"><div style="font-size:14px;">👤</div><div class="nav-label">마이</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── CARD 2: CALENDAR ────────────────────────── -->
+<div class="card bg2">
+  <div class="headline">
+    <div class="tag">📅 Calendar</div>
+    <h2>주기를 알면<br>컨디션이<br>보여요</h2>
+    <p>생리일·배란일·PMS 기간을<br>달력에서 한눈에 확인</p>
+  </div>
+  <div class="glow-ring" style="background:radial-gradient(circle,rgba(99,179,237,0.12) 0%,transparent 70%);"></div>
+  <div class="phone">
+    <div class="phone-inner">
+      <div class="screen-cal">
+        <div class="cal-header"><div class="month">2026년 4월</div></div>
+        <div class="cal-grid">
+          <div class="cal-day-name" style="color:#ff2a7a">일</div><div class="cal-day-name">월</div><div class="cal-day-name">화</div><div class="cal-day-name">수</div><div class="cal-day-name">목</div><div class="cal-day-name">금</div><div class="cal-day-name" style="color:#63b3ed">토</div>
+          <div class="cal-day"></div><div class="cal-day"></div><div class="cal-day period-dark">1</div><div class="cal-day period-dark">2</div><div class="cal-day period-dark">3</div><div class="cal-day period-dark">4</div><div class="cal-day period">5</div>
+          <div class="cal-day period">6</div><div class="cal-day">7</div><div class="cal-day">8</div><div class="cal-day">9</div><div class="cal-day">10</div><div class="cal-day fertile">11</div><div class="cal-day fertile">12</div>
+          <div class="cal-day fertile">13</div><div class="cal-day fertile">14</div><div class="cal-day ovulation">15</div><div class="cal-day fertile">16</div><div class="cal-day fertile">17</div><div class="cal-day">18</div><div class="cal-day today">19</div>
+          <div class="cal-day">20</div><div class="cal-day">21</div><div class="cal-day">22</div><div class="cal-day">23</div><div class="cal-day">24</div><div class="cal-day">25</div><div class="cal-day">26</div>
+          <div class="cal-day">27</div><div class="cal-day">28</div><div class="cal-day">29</div><div class="cal-day">30</div><div class="cal-day"></div><div class="cal-day"></div><div class="cal-day"></div>
+        </div>
+        <div class="cal-legend">
+          <div class="legend-item"><div class="legend-dot" style="background:#ff2a7a"></div>생리</div>
+          <div class="legend-item"><div class="legend-dot" style="background:#63b3ed"></div>배란</div>
+          <div class="legend-item"><div class="legend-dot" style="background:rgba(154,215,255,0.4)"></div>가임기</div>
+        </div>
+        <div style="background:#1a1a22;border-radius:10px;padding:8px 10px;margin:4px 0;">
+          <div style="font-size:8px;color:#ff2a7a;font-weight:700;">오늘 · 4월 19일</div>
+          <div style="font-size:10px;color:#fff;font-weight:600;margin-top:2px;">황체기 11일째</div>
+          <div style="font-size:8px;color:#666;margin-top:1px;">생리 예정까지 D-3</div>
+        </div>
+        <div class="bottom-nav">
+          <div class="nav-item"><div style="font-size:14px;">🏠</div><div class="nav-label">홈</div></div>
+          <div class="nav-item active"><div style="font-size:14px;">📅</div><div class="nav-label">캘린더</div><div class="nav-dot"></div></div>
+          <div class="nav-item"><div style="font-size:14px;">💊</div><div class="nav-label">영양제</div></div>
+          <div class="nav-item"><div style="font-size:14px;">💬</div><div class="nav-label">커뮤니티</div></div>
+          <div class="nav-item"><div style="font-size:14px;">👤</div><div class="nav-label">마이</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── CARD 3: AI CHAT ─────────────────────────── -->
+<div class="card bg3">
+  <div class="headline">
+    <div class="tag">✦ AI 상담</div>
+    <h2>궁금한 건<br>뭐든<br>AI에게</h2>
+    <p>생리통·PMS·영양제 궁합까지<br>첫 7일 무제한 무료</p>
+  </div>
+  <div class="glow-ring" style="background:radial-gradient(circle,rgba(180,100,255,0.1) 0%,transparent 70%);"></div>
+  <div class="phone">
+    <div class="phone-inner">
+      <div class="screen-ai">
+        <div class="ai-header">
+          <div class="ai-avatar">✦</div>
+          <div>
+            <div class="ai-header-text">홀시 AI</div>
+            <div class="ai-header-sub">여성 건강 전문 상담</div>
+          </div>
+        </div>
+        <div class="chat-wrap">
+          <div class="suggestion-chips">
+            <div class="chip">같이 먹으면 안 되는 조합?</div>
+            <div class="chip">공복에 먹어도 돼?</div>
+          </div>
+          <div class="chat-bubble chat-user">생리 전에 왜 이렇게 예민해지는 거야?</div>
+          <div class="chat-bubble chat-ai"><strong>PMS(월경 전 증후군)</strong> 때문이에요. 생리 1~2주 전에 프로게스테론이 급격히 변하면서 세로토닌이 줄어 감정 기복이 생겨요.<br><br>🌿 마그네슘 + 비타민 B6 섭취를 늘려보세요. 증상 완화에 도움이 돼요.</div>
+          <div class="chat-bubble chat-user">마그네슘은 어떤 걸 먹어야 해?</div>
+          <div class="chat-bubble chat-ai"><strong>글리시네이트 형태</strong>가 흡수율이 좋고 위장 자극이 적어서 추천해요 ✓</div>
+        </div>
+        <div class="ai-input-bar">
+          <span>무엇이든 물어보세요...</span>
+          <div class="ai-send">›</div>
+        </div>
+        <div class="bottom-nav">
+          <div class="nav-item active"><div style="font-size:14px;">🏠</div><div class="nav-label">홈</div><div class="nav-dot"></div></div>
+          <div class="nav-item"><div style="font-size:14px;">📅</div><div class="nav-label">캘린더</div></div>
+          <div class="nav-item"><div style="font-size:14px;">💊</div><div class="nav-label">영양제</div></div>
+          <div class="nav-item"><div style="font-size:14px;">💬</div><div class="nav-label">커뮤니티</div></div>
+          <div class="nav-item"><div style="font-size:14px;">👤</div><div class="nav-label">마이</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── CARD 4: PILLS ───────────────────────────── -->
+<div class="card bg4">
+  <div class="headline">
+    <div class="tag" style="background:rgba(72,199,142,0.15);border-color:rgba(72,199,142,0.4);color:#48c78e;">💊 영양제</div>
+    <h2>매일 챙길 것<br>잊지 않게</h2>
+    <p>먹었는지 체크하고<br>AI에게 복용 조합도 물어보세요</p>
+  </div>
+  <div class="glow-ring" style="background:radial-gradient(circle,rgba(72,199,142,0.1) 0%,transparent 70%);"></div>
+  <div class="phone">
+    <div class="phone-inner">
+      <div class="screen-pills">
+        <div class="pills-header">영양제</div>
+        <div class="pills-section-label">오늘 챙겼어요?</div>
+        <div class="pill-row">
+          <div class="pill-check done">✓</div>
+          <div class="pill-info"><div class="pill-name">마그네슘 글리시네이트</div><div class="pill-time">08:00</div></div>
+        </div>
+        <div class="pill-row">
+          <div class="pill-check done">✓</div>
+          <div class="pill-info"><div class="pill-name">비타민 D3 + K2</div><div class="pill-time">08:00</div></div>
+        </div>
+        <div class="pill-row">
+          <div class="pill-check undone"></div>
+          <div class="pill-info"><div class="pill-name" style="color:#555;">오메가-3</div><div class="pill-time" style="color:#444;">21:00</div></div>
+        </div>
+        <hr class="pill-divider">
+        <div class="pills-section-label">복용 목록</div>
+        <div class="pill-list-row">
+          <div><div class="pill-list-time">08:00</div><div class="pill-list-name">마그네슘, 매일</div></div>
+        </div>
+        <div class="pill-list-row">
+          <div><div class="pill-list-time">21:00</div><div class="pill-list-name">오메가-3, 매일</div></div>
+        </div>
+        <div class="bottom-nav">
+          <div class="nav-item"><div style="font-size:14px;">🏠</div><div class="nav-label">홈</div></div>
+          <div class="nav-item"><div style="font-size:14px;">📅</div><div class="nav-label">캘린더</div></div>
+          <div class="nav-item active"><div style="font-size:14px;">💊</div><div class="nav-label">영양제</div><div class="nav-dot"></div></div>
+          <div class="nav-item"><div style="font-size:14px;">💬</div><div class="nav-label">커뮤니티</div></div>
+          <div class="nav-item"><div style="font-size:14px;">👤</div><div class="nav-label">마이</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── CARD 5: COMMUNITY ───────────────────────── -->
+<div class="card bg5">
+  <div class="headline">
+    <div class="tag" style="background:rgba(255,150,50,0.15);border-color:rgba(255,150,50,0.4);color:#ff9632;">💬 커뮤니티</div>
+    <h2>같은 고민<br>혼자가<br>아니에요</h2>
+    <p>익명으로 솔직하게<br>호르몬 시스터즈와 이야기 나눠요</p>
+  </div>
+  <div class="glow-ring" style="background:radial-gradient(circle,rgba(255,150,50,0.08) 0%,transparent 70%);"></div>
+  <div class="phone">
+    <div class="phone-inner">
+      <div class="screen-comm">
+        <div class="comm-header">커뮤니티</div>
+        <div class="comm-sub">익명으로 자유롭게 이야기해요</div>
+        <div class="cat-tabs">
+          <div class="cat-tab active">전체</div>
+          <div class="cat-tab inactive">생리통</div>
+          <div class="cat-tab inactive">PMS</div>
+          <div class="cat-tab inactive">영양제</div>
+          <div class="cat-tab inactive">일상</div>
+        </div>
+        <div class="post-card">
+          <div class="post-top"><span class="post-author">익명</span><span class="post-flag">⚑</span></div>
+          <div class="post-tag tag-period">생리통</div>
+          <div class="post-title">생리 첫날 진통제 먹는 타이밍이 있나요? 항상 너무 늦게 먹는 것 같아서요</div>
+          <div class="post-meta">
+            <span class="post-like">♥ 24</span>
+            <span class="post-comment">💬 8</span>
+            <span class="post-time">2시간 전</span>
+          </div>
+        </div>
+        <div class="post-card">
+          <div class="post-top"><span class="post-author">익명</span><span class="post-flag">⚑</span></div>
+          <div class="post-tag tag-pms">PMS</div>
+          <div class="post-title">생리 전 일주일이 너무 힘든데 나만 그런 건 아니죠?</div>
+          <div class="post-meta">
+            <span class="post-like">♥ 47</span>
+            <span class="post-comment">💬 21</span>
+            <span class="post-time">5시간 전</span>
+          </div>
+        </div>
+        <div class="post-card">
+          <div class="post-top"><span class="post-author">익명</span><span class="post-flag">⚑</span></div>
+          <div class="post-tag tag-nutrient">영양제</div>
+          <div class="post-title">철분제 먹으면 속 더부룩한 거 어떻게 해결하셨어요?</div>
+          <div class="post-meta">
+            <span class="post-like">♥ 33</span>
+            <span class="post-comment">💬 15</span>
+            <span class="post-time">어제</span>
+          </div>
+        </div>
+        <div class="bottom-nav">
+          <div class="nav-item"><div style="font-size:14px;">🏠</div><div class="nav-label">홈</div></div>
+          <div class="nav-item"><div style="font-size:14px;">📅</div><div class="nav-label">캘린더</div></div>
+          <div class="nav-item"><div style="font-size:14px;">💊</div><div class="nav-label">영양제</div></div>
+          <div class="nav-item active"><div style="font-size:14px;">💬</div><div class="nav-label">커뮤니티</div><div class="nav-dot"></div></div>
+          <div class="nav-item"><div style="font-size:14px;">👤</div><div class="nav-label">마이</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── CARD 6: SUBSCRIPTION ────────────────────── -->
+<div class="card bg6">
+  <div class="headline">
+    <div class="tag">⭐ 프리미엄</div>
+    <h2>첫 7일<br>무료로<br>시작하기</h2>
+    <p>부담 없이 경험해보고<br>결정하세요</p>
+  </div>
+  <div class="glow-ring"></div>
+  <div class="phone">
+    <div class="phone-inner">
+      <div class="screen-sub">
+        <div class="sub-title">홀시 프리미엄</div>
+        <div class="sub-desc">7일 무료 · 언제든 취소 가능</div>
+
+        <div style="display:flex;flex-direction:column;gap:7px;margin-top:4px;">
+          <div style="background:#1e1e28;border-radius:12px;padding:10px 12px;display:flex;align-items:center;gap:10px;">
+            <div style="width:28px;height:28px;border-radius:8px;background:rgba(255,42,122,0.15);display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;">✦</div>
+            <div>
+              <div style="font-size:10px;font-weight:700;color:#fff;">AI 상담 무제한</div>
+              <div style="font-size:8px;color:#555;margin-top:1px;">생리통·PMS·영양제 무엇이든</div>
+            </div>
+          </div>
+          <div style="background:#1e1e28;border-radius:12px;padding:10px 12px;display:flex;align-items:center;gap:10px;">
+            <div style="width:28px;height:28px;border-radius:8px;background:rgba(99,179,237,0.15);display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;">📅</div>
+            <div>
+              <div style="font-size:10px;font-weight:700;color:#fff;">주기 심층 분석</div>
+              <div style="font-size:8px;color:#555;margin-top:1px;">호르몬 패턴 리포트 제공</div>
+            </div>
+          </div>
+          <div style="background:#1e1e28;border-radius:12px;padding:10px 12px;display:flex;align-items:center;gap:10px;">
+            <div style="width:28px;height:28px;border-radius:8px;background:rgba(72,199,142,0.15);display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;">📷</div>
+            <div>
+              <div style="font-size:10px;font-weight:700;color:#fff;">영양제 라벨 AI 스캔</div>
+              <div style="font-size:8px;color:#555;margin-top:1px;">사진 찍으면 자동 등록</div>
+            </div>
+          </div>
+        </div>
+
+        <div style="background:linear-gradient(135deg,rgba(255,42,122,0.15),rgba(255,42,122,0.05));border:1.5px solid rgba(255,42,122,0.3);border-radius:12px;padding:10px 12px;text-align:center;">
+          <div style="font-size:11px;font-weight:900;color:#ff2a7a;">✦ 7일 무료 체험</div>
+          <div style="font-size:8px;color:#777;margin-top:3px;">체험 후 자동 전환 · 언제든 취소</div>
+        </div>
+
+        <div class="sub-btn">무료로 시작하기</div>
+        <div class="bottom-nav">
+          <div class="nav-item"><div style="font-size:14px;">🏠</div><div class="nav-label">홈</div></div>
+          <div class="nav-item"><div style="font-size:14px;">📅</div><div class="nav-label">캘린더</div></div>
+          <div class="nav-item"><div style="font-size:14px;">💊</div><div class="nav-label">영양제</div></div>
+          <div class="nav-item"><div style="font-size:14px;">💬</div><div class="nav-label">커뮤니티</div></div>
+          <div class="nav-item active"><div style="font-size:14px;">👤</div><div class="nav-label">마이</div><div class="nav-dot"></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── FEATURE GRAPHIC ─────────────────────────── -->
+<p class="section-label-main">▼ Google Play 그래픽 이미지 (1024×500)</p>
+<div class="feature-graphic">
+  <div class="fg-glow"></div>
+  <div class="fg-text">
+    <div class="fg-tag">✦ 여성 건강 앱</div>
+    <div class="fg-title">내 몸의<br>언어를<br><span>읽다</span></div>
+    <div class="fg-sub">생리주기 · AI 상담 · 영양제 관리<br>호르몬 사이클을 이해하는 첫걸음</div>
+    <div class="fg-chips">
+      <div class="fg-chip">생리 주기 추적</div>
+      <div class="fg-chip">AI 건강 상담</div>
+      <div class="fg-chip">7일 무료</div>
+    </div>
+  </div>
+
+  <div class="fg-phones">
+    <!-- 스플래시 화면 (뒤, 왼쪽) -->
+    <div class="fg-phone fg-phone-2" style="
+      background: radial-gradient(ellipse at 50% 40%, #2a0a18 0%, #0e0e14 100%);
+      display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px;
+      border-color:#1e1e28;
+    ">
+      <img src="icon-512.png" style="width:52px;height:52px;border-radius:14px;box-shadow:0 0 20px rgba(255,42,122,0.5);">
+      <div style="text-align:center;">
+        <div style="font-size:20px;font-weight:900;color:#fff;letter-spacing:-0.5px;">홀시</div>
+        <div style="font-size:8px;color:#ff2a7a;margin-top:3px;letter-spacing:1px;">호르몬 시스터즈</div>
+      </div>
+      <div style="width:30px;height:2px;background:rgba(255,42,122,0.4);border-radius:99px;margin-top:4px;"></div>
+    </div>
+
+    <!-- 홈 탭 (앞, 오른쪽) -->
+    <div class="fg-phone" style="
+      background:#0e0e14;
+      border-color:#ff2a7a;
+      box-shadow:0 20px 60px rgba(0,0,0,0.7), 0 0 40px rgba(255,42,122,0.25);
+      display:flex; flex-direction:column; overflow:hidden;
+    ">
+      <!-- status bar -->
+      <div style="height:14px;background:#0e0e14;display:flex;align-items:center;justify-content:flex-end;padding:0 14px;flex-shrink:0;">
+        <span style="font-size:7px;color:#444;">9:41</span>
+      </div>
+      <!-- home content -->
+      <div style="flex:1;overflow:hidden;padding:8px 12px;display:flex;flex-direction:column;gap:8px;">
+        <div style="font-size:13px;font-weight:900;color:#fff;">홈</div>
+        <!-- D-day card -->
+        <div style="
+          background:linear-gradient(135deg,#ff2a7a,#ff6b9d,#c0392b);
+          border-radius:16px;padding:14px 12px;
+          box-shadow:0 8px 20px rgba(255,42,122,0.45);
+        ">
+          <div style="font-size:8px;color:rgba(255,255,255,0.7);font-weight:700;letter-spacing:1px;text-transform:uppercase;">생리 예정</div>
+          <div style="font-size:38px;font-weight:900;color:#fff;line-height:1;">D-3</div>
+          <div style="font-size:10px;color:rgba(255,255,255,0.85);font-weight:600;">4월 22일 화요일</div>
+          <div style="display:inline-block;background:rgba(0,0,0,0.2);border-radius:99px;padding:2px 8px;font-size:8px;color:#fff;margin-top:5px;">황체기 · 배란 후 11일</div>
+        </div>
+        <!-- mini cards -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
+          <div style="background:#1a1a22;border-radius:10px;padding:9px 9px;">
+            <div style="font-size:7px;color:#555;margin-bottom:3px;">배란 예정</div>
+            <div style="font-size:13px;font-weight:900;color:#fff;">D+8</div>
+            <div style="font-size:7px;color:#ff2a7a;margin-top:1px;">다음 달 기준</div>
+          </div>
+          <div style="background:#1a1a22;border-radius:10px;padding:9px 9px;">
+            <div style="font-size:7px;color:#555;margin-bottom:3px;">생리 주기</div>
+            <div style="font-size:13px;font-weight:900;color:#fff;">28일</div>
+            <div style="font-size:7px;color:#ff2a7a;margin-top:1px;">평균 5일</div>
+          </div>
+        </div>
+        <!-- AI btn -->
+        <div style="background:linear-gradient(135deg,#ff2a7a,#c0392b);border-radius:10px;padding:9px 11px;display:flex;align-items:center;gap:7px;">
+          <div style="width:18px;height:18px;background:rgba(255,255,255,0.2);border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:9px;color:#fff;flex-shrink:0;">✦</div>
+          <div>
+            <div style="font-size:10px;font-weight:700;color:#fff;">AI에게 물어보기</div>
+            <div style="font-size:7px;color:rgba(255,255,255,0.6);">PMS 증상이 심한데 어떻게 하면 될까?</div>
+          </div>
+          <div style="margin-left:auto;color:rgba(255,255,255,0.5);font-size:10px;">›</div>
+        </div>
+      </div>
+      <!-- bottom nav -->
+      <div style="display:flex;justify-content:space-around;padding:6px 0 10px;border-top:1px solid #1a1a22;flex-shrink:0;">
+        <div style="display:flex;flex-direction:column;align-items:center;gap:2px;">
+          <span style="font-size:13px;">🏠</span>
+          <span style="font-size:6px;color:#ff2a7a;font-weight:700;">홈</span>
+          <div style="width:4px;height:4px;border-radius:50%;background:#ff2a7a;"></div>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:2px;">
+          <span style="font-size:13px;">📅</span><span style="font-size:6px;color:#555;">캘린더</span>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:2px;">
+          <span style="font-size:13px;">💊</span><span style="font-size:6px;color:#555;">영양제</span>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:2px;">
+          <span style="font-size:13px;">💬</span><span style="font-size:6px;color:#555;">커뮤니티</span>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:2px;">
+          <span style="font-size:13px;">👤</span><span style="font-size:6px;color:#555;">마이</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
