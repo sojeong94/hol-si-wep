@@ -56,8 +56,14 @@ extension AppleSignInPlugin: ASAuthorizationControllerDelegate {
 
 extension AppleSignInPlugin: ASAuthorizationControllerPresentationContextProviding {
     public func presentationAnchor(for controller: ASAuthorizationController) -> ASPresentationAnchor {
-        return self.bridge?.viewController?.view.window
-            ?? self.bridge?.webView?.window
-            ?? UIWindow()
+        if let window = self.bridge?.viewController?.view.window { return window }
+        if let window = self.bridge?.webView?.window { return window }
+        if let scene = UIApplication.shared.connectedScenes
+            .compactMap({ $0 as? UIWindowScene })
+            .first(where: { $0.activationState == .foregroundActive }),
+           let window = scene.windows.first(where: { $0.isKeyWindow }) ?? scene.windows.first {
+            return window
+        }
+        return UIWindow()
     }
 }

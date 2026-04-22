@@ -12,6 +12,7 @@ import { Modal } from '@/components/ui/Modal'
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Share, Wind, RefreshCw, Info, MessageCircle, Send, Loader2, Crown } from 'lucide-react'
+import { Browser } from '@capacitor/browser'
 import { track } from '@/lib/analytics'
 import { RecommendCards, type Recommendation } from '@/components/ui/RecommendCards'
 
@@ -442,10 +443,14 @@ export function Home() {
             <Card className="p-4 bg-zinc-900 border border-zinc-700 text-sm text-zinc-200 leading-relaxed whitespace-pre-wrap">
               {advisorAnswer}
               <RecommendCards recommendations={advisorRecommendations} label="관련 영양제 보기" />
-              <p className="mt-3 text-[10px] text-zinc-500 leading-relaxed border-t border-zinc-800 pt-2">
-                ※ 이 정보는 일반적인 건강 참고용이며 의학적 진단이나 처방을 대체하지 않아요. 건강 상태에 따라 복용량·효과가 다를 수 있으니, 중요한 결정 전에 의사·약사와 상담하세요.<br />
-                출처: 식품의약품안전처 영양소 기준치, 국내외 임상영양학 문헌 참고
-              </p>
+              <div className="mt-3 text-[10px] text-zinc-500 leading-relaxed border-t border-zinc-800 pt-2 space-y-1">
+                <p>※ 이 정보는 일반적인 건강 참고용이며 의학적 진단이나 처방을 대체하지 않아요. 중요한 결정 전에 의사·약사와 상담하세요.</p>
+                <p>참고 출처:&nbsp;
+                  <button onClick={() => Browser.open({ url: 'https://www.mfds.go.kr' })} className="underline text-zinc-400">식품의약품안전처</button>
+                  &nbsp;·&nbsp;
+                  <button onClick={() => Browser.open({ url: 'https://ods.od.nih.gov/' })} className="underline text-zinc-400">NIH 영양보조식품 연구소</button>
+                </p>
+              </div>
             </Card>
           )}
           <div className="flex w-full gap-2 items-center">
