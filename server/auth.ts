@@ -5,7 +5,7 @@ import { google } from 'googleapis'
 import fs from 'fs'
 import path from 'path'
 import { fileURLToPath } from 'url'
-import { upsertUser, getUserById, syncUserData, getUserData, getAllUsers } from './db.js'
+import { upsertUser, getUserById, syncUserData, getUserData, getAllUsers, deleteUser } from './db.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
@@ -327,6 +327,23 @@ router.get('/restore', async (req: Request, res: Response) => {
 
   const data = await getUserData(payload.userId)
   res.json(data ?? {})
+})
+
+router.delete('/user', async (req: Request, res: Response) => {
+  const token = getTokenFromRequest(req)
+  if (!token) return res.status(401).json({ error: 'no token' })
+
+  const payload = verifyToken(token)
+  if (!payload) return res.status(401).json({ error: 'invalid token' })
+
+  try {
+    await deleteUser(payload.userId)
+    auditLog('delete_account', payload.userId, req.ip)
+    res.json({ ok: true })
+  } catch (err) {
+    console.error('[Delete User]', err)
+    res.status(500).json({ error: 'delete_failed' })
+  }
 })
 
 // ─── Admin API ────────────────────────────────────────────────────────────────

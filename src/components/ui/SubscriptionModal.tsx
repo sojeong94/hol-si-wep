@@ -192,6 +192,11 @@ export function SubscriptionModal({ isOpen, onClose }: Props) {
             <span className="text-zinc-700">·</span>
             <span className="text-zinc-600 text-xs">언제든지 취소 가능</span>
           </div>
+          <div className="flex items-center justify-center gap-3 pb-2">
+            <a href="https://hol-si.com/privacy" target="_blank" rel="noopener noreferrer" className="text-zinc-600 text-xs underline active:text-zinc-400">개인정보처리방침</a>
+            <span className="text-zinc-700">·</span>
+            <a href="https://hol-si.com/terms" target="_blank" rel="noopener noreferrer" className="text-zinc-600 text-xs underline active:text-zinc-400">이용약관</a>
+          </div>
         </div>
       </div>
     </div>

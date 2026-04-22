@@ -68,3 +68,8 @@ export async function getAllUsers() {
     include: { userData: true },
   })
 }
+
+export async function deleteUser(userId: string) {
+  await prisma.userData.deleteMany({ where: { userId } })
+  await prisma.user.delete({ where: { id: userId } })
+}

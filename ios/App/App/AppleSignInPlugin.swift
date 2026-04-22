@@ -56,6 +56,8 @@ extension AppleSignInPlugin: ASAuthorizationControllerDelegate {
 
 extension AppleSignInPlugin: ASAuthorizationControllerPresentationContextProviding {
     public func presentationAnchor(for controller: ASAuthorizationController) -> ASPresentationAnchor {
-        return self.bridge?.webView?.window ?? UIWindow()
+        return self.bridge?.viewController?.view.window
+            ?? self.bridge?.webView?.window
+            ?? UIWindow()
     }
 }

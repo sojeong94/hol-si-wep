@@ -8,7 +8,7 @@ import { getAverageCycle, getAveragePeriodDays } from '@/utils/cycleCalculators'
 import { Card } from '@/components/ui/Card'
 import { Modal } from '@/components/ui/Modal'
 import { SubscriptionModal } from '@/components/ui/SubscriptionModal'
-import { Bell, Download, Upload, Info, UserRound, Pencil, Users, MessageSquare, Globe, LogOut, Crown, Sparkles } from 'lucide-react'
+import { Bell, Download, Upload, Info, UserRound, Pencil, Users, MessageSquare, Globe, LogOut, Crown, Sparkles, Trash2 } from 'lucide-react'
 import { subscribePush, unsubscribePush } from '@/lib/pushService'
 import {
   requestLocalNotificationPermission,
@@ -35,6 +35,8 @@ export function MyPage() {
   const { user, logout, setAuth } = useAuthStore()
   const { isPremium, checkStatus } = useSubscriptionStore()
   const [showSubscriptionModal, setShowSubscriptionModal] = useState(false)
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
 
   const handlePushToggle = async (enable: boolean) => {
     if (enable) {
@@ -174,6 +176,23 @@ export function MyPage() {
     logout()
   }
 
+  const handleDeleteAccount = async () => {
+    const token = useAuthStore.getState().token
+    setIsDeleting(true)
+    try {
+      await fetch('/api/auth/user', {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` },
+      })
+    } catch {
+      // 서버 오류여도 로컬 로그아웃 진행
+    } finally {
+      setIsDeleting(false)
+      setIsDeleteModalOpen(false)
+      logout()
+    }
+  }
+
   const changeLanguage = (lang: string) => {
     i18n.changeLanguage(lang)
   }
@@ -229,6 +248,13 @@ export function MyPage() {
                  >
                    <LogOut size={14} className="text-zinc-400" />
                    <span className="text-sm font-bold text-zinc-300">{t('mypage_logout')}</span>
+                 </button>
+                 <button
+                   onClick={() => setIsDeleteModalOpen(true)}
+                   className="w-full py-2.5 flex justify-center items-center gap-2 bg-zinc-900 border border-red-900/50 rounded-xl hover:bg-red-950/30 transition-colors"
+                 >
+                   <Trash2 size={14} className="text-red-500/70" />
+                   <span className="text-sm font-bold text-red-500/70">계정 삭제</span>
                  </button>
                </div>
              ) : (
@@ -517,6 +543,30 @@ export function MyPage() {
           >
              {t('mypage_nickname_modal_button')}
           </button>
+        </div>
+      </Modal>
+
+      {/* 계정 삭제 확인 모달 */}
+      <Modal isOpen={isDeleteModalOpen} onClose={() => setIsDeleteModalOpen(false)} title="계정 삭제">
+        <div className="space-y-5">
+          <p className="text-sm text-zinc-300 leading-relaxed">
+            계정을 삭제하면 모든 데이터(생리 기록, 영양제 정보, 설정)가 <span className="text-red-400 font-bold">영구적으로 삭제</span>되며 복구할 수 없어요.
+          </p>
+          <div className="flex gap-3">
+            <button
+              onClick={() => setIsDeleteModalOpen(false)}
+              className="flex-1 py-3 rounded-xl bg-zinc-800 border border-zinc-700 text-zinc-300 font-bold text-sm"
+            >
+              취소
+            </button>
+            <button
+              onClick={handleDeleteAccount}
+              disabled={isDeleting}
+              className="flex-1 py-3 rounded-xl bg-red-600 disabled:opacity-50 text-white font-bold text-sm"
+            >
+              {isDeleting ? '삭제 중...' : '삭제할게요'}
+            </button>
+          </div>
         </div>
       </Modal>
     </div>
