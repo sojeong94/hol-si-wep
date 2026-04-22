@@ -453,7 +453,7 @@ export function Community() {
       {selectedPost && (
         <div className="fixed inset-0 z-50 bg-[#0A0A0A] flex flex-col animate-in slide-in-from-bottom duration-300">
           {/* 헤더 */}
-          <div className="flex items-center gap-3 px-5 py-4 border-b border-zinc-800 flex-shrink-0">
+          <div className="flex items-center gap-3 px-5 py-4 border-b border-zinc-800 flex-shrink-0" style={{ paddingTop: 'calc(env(safe-area-inset-top) + 1rem)' }}>
             <button
               onClick={closePost}
               className="text-zinc-400 active:scale-90 transition-all"
