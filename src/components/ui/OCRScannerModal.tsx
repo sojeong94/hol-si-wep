@@ -127,31 +127,43 @@ export function OCRScannerModal({
     }
   }
 
-  // 네이티브: @capacitor/camera 플러그인으로 카메라 직접 호출 (WKWebView input capture 크래시 방지)
-  const handleCameraClick = async () => {
+  // 네이티브: @capacitor/camera로 직접 호출 (WKWebView input+URL.createObjectURL 오류 방지)
+  const handleNativePhoto = async (source: CameraSource, errorMsg: string) => {
     setErrorMsg(null)
-    if (Capacitor.isNativePlatform()) {
-      setIsScanning(true)
-      try {
-        const photo = await CapCamera.getPhoto({
-          resultType: CameraResultType.DataUrl,
-          source: CameraSource.Camera,
-          quality: 85,
-          width: 1024,
-          correctOrientation: true,
-        })
-        if (!photo.dataUrl) { setErrorMsg('카메라에서 사진을 가져올 수 없어요.'); return }
-        const base64 = photo.dataUrl.split(',')[1]
-        const mimeType = photo.format === 'png' ? 'image/png' : 'image/jpeg'
-        await submitToOCR(base64, mimeType)
-      } catch (err) {
-        const msg = (err as Error)?.message ?? ''
-        if (!msg.toLowerCase().includes('cancel') && !msg.toLowerCase().includes('user denied')) {
-          setErrorMsg('카메라를 열 수 없어요. 카메라 권한을 확인해주세요.')
-        }
-      } finally {
-        setIsScanning(false)
+    setIsScanning(true)
+    try {
+      const photo = await CapCamera.getPhoto({
+        resultType: CameraResultType.DataUrl,
+        source,
+        quality: 85,
+        width: 1024,
+        correctOrientation: true,
+      })
+      if (!photo.dataUrl) { setErrorMsg(`${errorMsg}에서 사진을 가져올 수 없어요.`); return }
+      const base64 = photo.dataUrl.split(',')[1]
+      const mimeType = photo.format === 'png' ? 'image/png' : 'image/jpeg'
+      await submitToOCR(base64, mimeType)
+    } catch (err) {
+      const msg = (err as Error)?.message ?? ''
+      if (!msg.toLowerCase().includes('cancel') && !msg.toLowerCase().includes('user denied')) {
+        setErrorMsg(`${errorMsg}을 열 수 없어요. 권한을 확인해주세요.`)
       }
+    } finally {
+      setIsScanning(false)
+    }
+  }
+
+  const handleGalleryClick = () => {
+    if (Capacitor.isNativePlatform()) {
+      handleNativePhoto(CameraSource.Photos, '갤러리')
+    } else {
+      galleryInputRef.current?.click()
+    }
+  }
+
+  const handleCameraClick = () => {
+    if (Capacitor.isNativePlatform()) {
+      handleNativePhoto(CameraSource.Camera, '카메라')
     } else {
       cameraInputRef.current?.click()
     }
@@ -203,7 +215,7 @@ export function OCRScannerModal({
         ) : (
           <div className="flex gap-4 w-full">
             <button
-              onClick={() => { setErrorMsg(null); galleryInputRef.current?.click() }}
+              onClick={handleGalleryClick}
               className="flex-1 flex flex-col items-center justify-center p-6 bg-zinc-900 border-2 border-dashed border-zinc-700 rounded-xl hover:border-pink-500/50 hover:bg-zinc-800 transition-colors active:scale-95 group"
             >
               <ImageIcon className="w-8 h-8 text-zinc-400 mb-2 group-hover:text-pink-400 transition-colors" />
