@@ -299,7 +299,7 @@ export function MyPage() {
                 </div>
                 <div>
                   <p className="text-white font-black text-sm">프리미엄 시작하기</p>
-                  <p className="text-zinc-400 text-xs font-medium mt-0.5">14일 무료 · ₩4,900/월</p>
+                  <p className="text-zinc-400 text-xs font-medium mt-0.5">7일 무료 · ₩4,900/월</p>
                 </div>
               </div>
               <div className="shrink-0 px-3 py-1.5 bg-[#ff2a7a] rounded-xl">

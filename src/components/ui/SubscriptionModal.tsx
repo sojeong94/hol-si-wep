@@ -103,7 +103,7 @@ export function SubscriptionModal({ isOpen, onClose }: Props) {
               <h2 className="text-white text-xl font-black leading-tight">프리미엄</h2>
             </div>
           </div>
-          <p className="text-white/80 text-sm font-medium mt-2">14일 무료 체험 후 자동 결제</p>
+          <p className="text-white/80 text-sm font-medium mt-2">7일 무료 체험 후 자동 결제</p>
         </div>
 
         <div className="px-6 pt-5 space-y-4">
@@ -173,7 +173,7 @@ export function SubscriptionModal({ isOpen, onClose }: Props) {
               ) : (
                 <>
                   <Crown size={18} />
-                  {!isNative ? '기기에서만 구독 가능' : '14일 무료 체험 시작'}
+                  {!isNative ? '기기에서만 구독 가능' : '7일 무료 체험 시작'}
                 </>
               )}
             </button>
