@@ -15,6 +15,7 @@
 	"packageClassList": [
 		"AppPlugin",
 		"CAPBrowserPlugin",
+		"CAPCameraPlugin",
 		"LocalNotificationsPlugin",
 		"PurchasesPlugin"
 	]

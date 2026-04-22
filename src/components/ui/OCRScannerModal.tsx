@@ -1,4 +1,6 @@
 import { useState, useRef } from 'react'
+import { Capacitor } from '@capacitor/core'
+import { Camera as CapCamera, CameraResultType, CameraSource } from '@capacitor/camera'
 import { Modal } from './Modal'
 import { Camera, Image as ImageIcon, Loader2, Sparkles } from 'lucide-react'
 
@@ -50,6 +52,54 @@ export function OCRScannerModal({
   const galleryInputRef = useRef<HTMLInputElement>(null)
   const cameraInputRef = useRef<HTMLInputElement>(null)
 
+  const submitToOCR = async (base64: string, mimeType: string) => {
+    const controller = new AbortController()
+    const timeoutId = window.setTimeout(() => controller.abort(), 30_000)
+    let res: Response
+    try {
+      res = await fetch('/api/ocr', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ imageBase64: base64, mimeType, mode }),
+        signal: controller.signal,
+      })
+    } catch (err) {
+      console.error('[OCR] fetch error:', err)
+      if ((err as Error)?.name === 'AbortError') {
+        setErrorMsg('응답이 너무 오래 걸려요. 잠시 후 다시 시도해주세요.')
+      } else {
+        setErrorMsg('서버에 연결할 수 없어요. 백엔드(3001)가 실행 중인지 확인해주세요.')
+      }
+      return
+    } finally {
+      window.clearTimeout(timeoutId)
+    }
+
+    const rawText = await res.text()
+    const contentType = res.headers.get('content-type') ?? ''
+    let data: { result?: unknown; raw?: string; error?: string; detail?: string } = {}
+    if (contentType.includes('application/json')) {
+      try { data = JSON.parse(rawText) } catch { console.error('[OCR] invalid JSON:', rawText.slice(0, 200)) }
+    } else {
+      console.error('[OCR] non-JSON response:', rawText.slice(0, 200))
+    }
+
+    if (!res.ok) { setErrorMsg(data.error ?? `서버 오류 (${res.status})`); return }
+
+    const resultText =
+      data.result != null
+        ? (typeof data.result === 'string' ? data.result : JSON.stringify(data.result))
+        : (data.raw ?? '')
+
+    if (!resultText) {
+      setErrorMsg('AI가 이미지에서 아무것도 읽지 못했어요. 텍스트가 더 잘 보이는 사진을 시도해주세요.')
+      return
+    }
+
+    onScanResult(resultText)
+    onClose()
+  }
+
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
@@ -58,7 +108,6 @@ export function OCRScannerModal({
     setErrorMsg(null)
 
     try {
-      // 1) 이미지 압축
       let base64: string
       let mimeType: string
       try {
@@ -70,66 +119,41 @@ export function OCRScannerModal({
         setErrorMsg('이미지를 처리하지 못했어요. 다른 사진으로 시도해주세요.')
         return
       }
-
-      // 2) 서버 요청 (30초 타임아웃)
-      const controller = new AbortController()
-      const timeoutId = window.setTimeout(() => controller.abort(), 30_000)
-      let res: Response
-      try {
-        res = await fetch('/api/ocr', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ imageBase64: base64, mimeType, mode }),
-          signal: controller.signal,
-        })
-      } catch (err) {
-        console.error('[OCR] fetch error:', err)
-        if ((err as Error)?.name === 'AbortError') {
-          setErrorMsg('응답이 너무 오래 걸려요. 잠시 후 다시 시도해주세요.')
-        } else {
-          setErrorMsg('서버에 연결할 수 없어요. 백엔드(3001)가 실행 중인지 확인해주세요.')
-        }
-        return
-      } finally {
-        window.clearTimeout(timeoutId)
-      }
-
-      // 3) 응답 본문 파싱 (JSON 가드)
-      const rawText = await res.text()
-      const contentType = res.headers.get('content-type') ?? ''
-      let data: { result?: unknown; raw?: string; error?: string; detail?: string } = {}
-      if (contentType.includes('application/json')) {
-        try {
-          data = JSON.parse(rawText)
-        } catch {
-          console.error('[OCR] invalid JSON response:', rawText.slice(0, 200))
-        }
-      } else {
-        console.error('[OCR] non-JSON response:', rawText.slice(0, 200))
-      }
-
-      if (!res.ok) {
-        setErrorMsg(data.error ?? `서버 오류 (${res.status})`)
-        return
-      }
-
-      // result 또는 raw 중 하나라도 있으면 Calendar/Pills에서 처리
-      const resultText =
-        data.result != null
-          ? (typeof data.result === 'string' ? data.result : JSON.stringify(data.result))
-          : (data.raw ?? '')
-
-      if (!resultText) {
-        setErrorMsg('AI가 이미지에서 아무것도 읽지 못했어요. 텍스트가 더 잘 보이는 사진을 시도해주세요.')
-        return
-      }
-
-      onScanResult(resultText)
-      onClose()
+      await submitToOCR(base64, mimeType)
     } finally {
       setIsScanning(false)
       if (galleryInputRef.current) galleryInputRef.current.value = ''
       if (cameraInputRef.current) cameraInputRef.current.value = ''
+    }
+  }
+
+  // 네이티브: @capacitor/camera 플러그인으로 카메라 직접 호출 (WKWebView input capture 크래시 방지)
+  const handleCameraClick = async () => {
+    setErrorMsg(null)
+    if (Capacitor.isNativePlatform()) {
+      setIsScanning(true)
+      try {
+        const photo = await CapCamera.getPhoto({
+          resultType: CameraResultType.DataUrl,
+          source: CameraSource.Camera,
+          quality: 85,
+          width: 1024,
+          correctOrientation: true,
+        })
+        if (!photo.dataUrl) { setErrorMsg('카메라에서 사진을 가져올 수 없어요.'); return }
+        const base64 = photo.dataUrl.split(',')[1]
+        const mimeType = photo.format === 'png' ? 'image/png' : 'image/jpeg'
+        await submitToOCR(base64, mimeType)
+      } catch (err) {
+        const msg = (err as Error)?.message ?? ''
+        if (!msg.toLowerCase().includes('cancel') && !msg.toLowerCase().includes('user denied')) {
+          setErrorMsg('카메라를 열 수 없어요. 카메라 권한을 확인해주세요.')
+        }
+      } finally {
+        setIsScanning(false)
+      }
+    } else {
+      cameraInputRef.current?.click()
     }
   }
 
@@ -186,7 +210,7 @@ export function OCRScannerModal({
               <span className="font-bold text-zinc-300 text-sm">갤러리에서 선택</span>
             </button>
             <button
-              onClick={() => { setErrorMsg(null); cameraInputRef.current?.click() }}
+              onClick={handleCameraClick}
               className="flex-1 flex flex-col items-center justify-center p-6 bg-zinc-900 border-2 border-dashed border-zinc-700 rounded-xl hover:border-pink-500/50 hover:bg-zinc-800 transition-colors active:scale-95 group"
             >
               <Camera className="w-8 h-8 text-zinc-400 mb-2 group-hover:text-pink-400 transition-colors" />

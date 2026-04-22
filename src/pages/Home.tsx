@@ -62,7 +62,9 @@ export function Home() {
   if (records.length > 0) {
     const sortedRecords = [...records].sort((a, b) => parseLocalDate(a.startDate).getTime() - parseLocalDate(b.startDate).getTime())
     const lastRecord = sortedRecords[sortedRecords.length - 1]
-    const today = new Date()
+    const now = new Date()
+    // 날짜 비교는 자정 기준으로 통일 (시간 포함 시 D-day off-by-1 발생)
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
     const lastStartDate = parseLocalDate(lastRecord.startDate)
     const lastEndDate = lastRecord.endDate ? parseLocalDate(lastRecord.endDate) : null
     const daysSinceStart = differenceInDays(today, lastStartDate)
