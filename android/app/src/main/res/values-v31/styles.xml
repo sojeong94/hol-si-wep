@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Android 12+ (API 31+): SplashScreen API 전용 설정 -->
+    <!-- windowSplashScreenBackground: 배경색 (색상값만 허용) -->
+    <!-- windowSplashScreenAnimatedIcon: 중앙에 표시될 아이콘 -->
+    <!-- android:windowBackground: SplashScreen 사라진 뒤 WebView 로드 중 배경 -->
+    <style name="AppTheme.NoActionBarLaunch" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">#0A0A0A</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/splash</item>
+        <item name="android:windowBackground">@drawable/splash</item>
+        <item name="postSplashScreenTheme">@style/AppTheme.NoActionBar</item>
+    </style>
+</resources>

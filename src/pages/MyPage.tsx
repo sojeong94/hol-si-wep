@@ -154,21 +154,26 @@ export function MyPage() {
     try {
       const result = await AppleSignIn.authorize()
       const { identityToken, givenName, familyName, email } = result.response
-      const res = await fetch('/api/auth/apple', {
+      const res = await fetch('https://hol-si.com/api/auth/apple', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ identityToken, givenName, familyName, email }),
       })
       const data = await res.json()
       if (data.token) {
-        const userRes = await fetch('/api/auth/me', {
+        const userRes = await fetch('https://hol-si.com/api/auth/me', {
           headers: { Authorization: `Bearer ${data.token}` },
         })
         const user = await userRes.json()
         setAuth(data.token, user)
+      } else {
+        alert('Apple 로그인에 실패했어요. 다시 시도해주세요.')
       }
-    } catch (err) {
-      console.error('Apple login failed', err)
+    } catch (err: any) {
+      // 사용자가 취소한 경우는 무시
+      const msg = err?.message ?? String(err)
+      if (msg.includes('cancel') || msg.includes('dismiss') || msg.includes('Cancel')) return
+      alert(`Apple 로그인 오류: ${msg}`)
     }
   }
 
