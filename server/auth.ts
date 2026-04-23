@@ -1,6 +1,6 @@
 import { Router, Request, Response } from 'express'
 import jwt from 'jsonwebtoken'
-import { createPublicKey, createHmac } from 'crypto'
+import { createPublicKey, randomBytes } from 'crypto'
 import { google } from 'googleapis'
 import fs from 'fs'
 import path from 'path'
@@ -37,29 +37,36 @@ const JWT_SECRET = process.env.JWT_SECRET
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173'
 const ADMIN_SECRET = process.env.ADMIN_SECRET
 
-// ─── OAuth CSRF 방어용 state (HMAC 서명 — 서버 재시작/다중 프로세스에서도 안전) ──
+// ─── OAuth CSRF 방어용 state (파일 기반 — PM2 재시작에도 유지) ────────────────
+const STATE_FILE = path.join(__dirname, 'oauth-states.json')
+
+function loadStates(): Record<string, { platform: string; expiresAt: number }> {
+  try { return JSON.parse(fs.readFileSync(STATE_FILE, 'utf8')) } catch { return {} }
+}
+
+function saveStates(states: Record<string, { platform: string; expiresAt: number }>) {
+  try { fs.writeFileSync(STATE_FILE, JSON.stringify(states), 'utf8') } catch {}
+}
+
 function generateOAuthState(platform: string): string {
-  const data = `${platform}:${Date.now()}`
-  const sig = createHmac('sha256', JWT_SECRET).update(data).digest('hex').slice(0, 24)
-  return Buffer.from(`${data}:${sig}`).toString('base64url')
+  const state = randomBytes(16).toString('hex')
+  const states = loadStates()
+  const now = Date.now()
+  // 만료된 state 정리
+  for (const k in states) if (states[k].expiresAt < now) delete states[k]
+  states[state] = { platform, expiresAt: now + 10 * 60_000 }
+  saveStates(states)
+  return state
 }
 
 function consumeOAuthState(state: string): string | null {
-  try {
-    const decoded = Buffer.from(state, 'base64url').toString()
-    const lastColon = decoded.lastIndexOf(':')
-    const secondLastColon = decoded.lastIndexOf(':', lastColon - 1)
-    const data = decoded.slice(0, lastColon)
-    const sig = decoded.slice(lastColon + 1)
-    const platform = decoded.slice(0, secondLastColon)
-    const timestamp = parseInt(decoded.slice(secondLastColon + 1, lastColon))
-    const expectedSig = createHmac('sha256', JWT_SECRET).update(data).digest('hex').slice(0, 24)
-    if (sig !== expectedSig) return null
-    if (Date.now() - timestamp > 10 * 60_000) return null  // 10분 TTL
-    return platform
-  } catch {
-    return null
-  }
+  if (!state) return null
+  const states = loadStates()
+  const entry = states[state]
+  if (!entry || entry.expiresAt < Date.now()) return null
+  delete states[state]
+  saveStates(states)
+  return entry.platform
 }
 
 // ─── Auth 엔드포인트 전용 Rate Limiter ────────────────────────────────────────
