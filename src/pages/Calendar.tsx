@@ -137,15 +137,9 @@ export function CalendarPage() {
     }
   }
 
-  // manualPeriodDays 변경이 즉시 반영되도록:
-  // 저장된 endDate보다 avgPeriod 계산값이 더 길면 avgPeriod를 우선 사용
-  const resolveEnd = (r: { startDate: string; endDate: string | null }) => {
-    const start = parseLocalDate(r.startDate)
-    const autoEnd = addDays(start, avgPeriod - 1)
-    if (!r.endDate) return autoEnd
-    const manualEnd = parseLocalDate(r.endDate)
-    return manualEnd > autoEnd ? manualEnd : autoEnd
-  }
+  // manualPeriodDays 변경이 늘고/줄고 모두 즉시 반영 — endDate 무시
+  const resolveEnd = (r: { startDate: string }) =>
+    addDays(parseLocalDate(r.startDate), avgPeriod - 1)
 
   // ─── 날짜 타입 분류 ──────────────────────────────────────────
   const getDayType = (date: Date) => {

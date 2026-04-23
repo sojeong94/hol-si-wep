@@ -37,6 +37,10 @@ export function MyPage() {
   const [showSubscriptionModal, setShowSubscriptionModal] = useState(false)
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
+  // 주기 수동 설정 — 로컬 임시값 (저장 버튼 누를 때만 반영)
+  const [localCycleDays, setLocalCycleDays] = useState(manualCycleDays)
+  const [localPeriodDays, setLocalPeriodDays] = useState(manualPeriodDays)
+  const [cycleSaved, setCycleSaved] = useState(false)
 
   const handlePushToggle = async (enable: boolean) => {
     if (enable) {
@@ -372,26 +376,40 @@ export function MyPage() {
               <div>
                 <div className="flex justify-between items-center mb-1">
                   <span className="font-medium text-zinc-300">{t('mypage_manual_cycle')}</span>
-                  <span className="text-xl font-bold text-[var(--color-primary)] drop-shadow-[0_0_8px_rgba(255,42,122,0.4)]">{manualCycleDays}일</span>
+                  <span className="text-xl font-bold text-[var(--color-primary)] drop-shadow-[0_0_8px_rgba(255,42,122,0.4)]">{localCycleDays}일</span>
                 </div>
-                <input 
-                  type="range" min="15" max="40" 
-                  value={manualCycleDays} 
-                  onChange={e => setManualCycleDays(Number(e.target.value))}
+                <input
+                  type="range" min="15" max="40"
+                  value={localCycleDays}
+                  onChange={e => { setLocalCycleDays(Number(e.target.value)); setCycleSaved(false) }}
                   className="w-full accent-[var(--color-primary)]"
                 />
               </div>
               <div className="pt-2 border-t border-zinc-800">
                 <div className="flex justify-between items-center mb-1">
                   <span className="font-medium text-zinc-300">{t('mypage_manual_period')}</span>
-                  <span className="text-xl font-bold text-pink-400">{manualPeriodDays}일</span>
+                  <span className="text-xl font-bold text-pink-400">{localPeriodDays}일</span>
                 </div>
-                <input 
-                  type="range" min="2" max="14" 
-                  value={manualPeriodDays} 
-                  onChange={e => setManualPeriodDays(Number(e.target.value))}
+                <input
+                  type="range" min="2" max="14"
+                  value={localPeriodDays}
+                  onChange={e => { setLocalPeriodDays(Number(e.target.value)); setCycleSaved(false) }}
                   className="w-full accent-pink-500"
                 />
+              </div>
+              <div className="flex gap-2 pt-1">
+                <button
+                  onClick={() => { setLocalCycleDays(manualCycleDays); setLocalPeriodDays(manualPeriodDays); setCycleSaved(false) }}
+                  className="flex-1 py-2.5 rounded-xl text-sm font-bold bg-zinc-800 border border-zinc-700 text-zinc-400 active:scale-95 transition-all"
+                >
+                  되돌리기
+                </button>
+                <button
+                  onClick={() => { setManualCycleDays(localCycleDays); setManualPeriodDays(localPeriodDays); setCycleSaved(true); setTimeout(() => setCycleSaved(false), 2000) }}
+                  className={`flex-2 px-6 py-2.5 rounded-xl text-sm font-bold transition-all active:scale-95 ${cycleSaved ? 'bg-zinc-700 text-zinc-300' : 'bg-[var(--color-primary)] text-white shadow-[0_0_12px_rgba(255,42,122,0.4)]'}`}
+                >
+                  {cycleSaved ? '저장됐어요 ✓' : '저장하기'}
+                </button>
               </div>
             </div>
           )}

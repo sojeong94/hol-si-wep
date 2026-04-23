@@ -23,6 +23,7 @@ import Privacy from '@/pages/Privacy'
 import { LandingPage } from '@/pages/LandingPage'
 import { AlarmRingingModal } from '@/components/ui/AlarmRingingModal'
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary'
+import { useLiquidGlass } from '@/lib/useLiquidGlass'
 
 // 탭 전환 시 스크롤 상단으로 초기화
 function ScrollReset() {
@@ -73,6 +74,7 @@ function App() {
   const { pills, setTriggerAlarm } = usePillStore()
   const { pushEnabled } = useSettingStore()
   const { initialize, showPaywall, setShowPaywall } = useSubscriptionStore()
+  useLiquidGlass()
 
   // RevenueCat 초기화
   useEffect(() => {
