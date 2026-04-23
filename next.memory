@@ -1,104 +1,95 @@
-# 홀시 작업 메모 — 2026-04-21 업데이트
+# 홀시 작업 메모 — 2026-04-23 업데이트
 
 ---
 
-## 완료된 작업 (2026-04-21)
+## 현재 심사 상태
 
-### 1. 영양제 알림 네이티브 로컬 알림으로 전환
-- `@capacitor/local-notifications` 설치 및 연동
-- `src/lib/localNotificationService.ts` 신규 생성
-- `MyPage.tsx` — Capacitor.isNativePlatform() 분기 (네이티브: 로컬알림 / 브라우저: Web Push)
-- AndroidManifest.xml — POST_NOTIFICATIONS 권한 추가 (USE_EXACT_ALARM, SCHEDULE_EXACT_ALARM 제거)
-- iOS Info.plist — NSUserNotificationAlertStyle 추가
+- **iOS 빌드**: 40번 (Codemagic ios-app-store 워크플로우)
+- **제출**: 6차 제출 완료 (2026-04-23 저녁)
+- **심사 메모**: 계정삭제 녹화 링크 포함
+  - https://drive.google.com/file/d/1Ij_VRA1DLKOuh1asCnTRXuWPZBgTcnfX/view?usp=sharing
+- **테스트 계정**: t3512q@gmail.com / t35123512Q
 
-### 2. Android 서명 이슈 해결
-- jarsigner → Gradle signingConfig(V1+V2+V3)으로 전환
-- codemagic.yaml: Decode keystore → HOLSI_KEYSTORE_FILE 환경변수 → bundleRelease
-- build.gradle: 환경변수(CM_KEYSTORE_PASSWORD, CM_KEY_ALIAS, CM_KEY_PASSWORD) 우선, 로컬 fallback
-- ⚠️ 서명 키 정보는 하단 "Google 서명키 이슈" 섹션 참고
-
-### 3. 스토어 구독 상품 등록 완료
-- App Store Connect: holsi_yearly (₩39,900), holsi_monthly (₩4,900) — 제출 준비됨
-- Google Play Console: holsi_yearly:yearly-base, holsi_monthly:monthly-base — 활성
-
-### 4. RevenueCat Android 연결 완료
-- 서비스 계정: revenuecat@holsi-493615.iam.gserviceaccount.com
-- Google Play Android Developer API 활성화
-- Entitlements(premium)에 iOS/Android 4개 상품 모두 연결
-- Offerings(default): Monthly, Yearly 패키지에 iOS+Android 상품 연결
-
-### 5. 브라우저 접속 차단 — 랜딩 페이지 전환
-- `src/pages/LandingPage.tsx` 신규 생성
-- 브라우저 접속 시 App Store/Google Play 다운로드 유도 페이지 표시
-- 네이티브 앱은 기존과 동일하게 동작
-
-### 6. AdMob 앱 추가 (인증 대기 중)
-- public/app-ads.txt 추가 (pub-7010515643704037)
-- hol-si.com/app-ads.txt 서빙 확인 완료
-- Google 크롤링 및 앱 인증 대기 중 (며칠 소요)
+### 5차 거절 원인 및 대응 현황
+| 항목 | 가이드라인 | 대응 |
+|------|-----------|------|
+| 계정 삭제 미확인 | 5.1.1(v) | ✅ 이미 구현됨 — 녹화+메모로 안내 |
+| iPad 미최적화 | 4 | ✅ UIDeviceFamily=1, UIRequiresFullScreen=true 추가 |
+| Apple Sign In 오류 | 2.1(a) | ✅ ViewController.swift 명시 등록으로 수정 |
 
 ---
 
-## ⚠️ Google Android 서명키 이슈 정리
+## 완료된 작업 (2026-04-23)
 
-### 상황
-- 첫 번째 출시: Codemagic이 `CM_KEYSTORE` 환경변수(base64 인코딩)로 서명
-- 이후 로컬에서 `holsi.keystore` 새로 생성 → 다른 키라 Google Play 업로드 거부
-- `holsi_base64.txt` = Codemagic keystore의 base64 (비밀번호 불명)
+### 1. Android 스플래시 화면 수정
+- `values/styles.xml`: `android:background` → `android:windowBackground` + `postSplashScreenTheme`
+- `values-v31/styles.xml` 신규 생성 (Android 12+ SplashScreen API 대응)
 
-### 올바른 서명 방법
+### 2. Apple Sign In 수정
+- `MyPage.tsx`: 에러 알림 추가, 절대 URL 변경
+- `ios/App/App/ViewController.swift` 신규: `capacitorDidLoad`에서 `registerPluginInstance` 명시 등록
+- `Main.storyboard`: CAPBridgeViewController → ViewController(App 모듈) 변경
+- `project.pbxproj`: AppleSignInPlugin.swift, ViewController.swift 컴파일 소스 추가
+
+### 3. 커뮤니티 나가기 버튼
+- 상단 safe-area padding 3rem 확보 + "나가기" 텍스트 추가
+
+### 4. FAB 버튼 위치 수정
+- `Community.tsx`, `Pills.tsx`: `bottom: calc(4rem + env(safe-area-inset-bottom) + 1rem)`
+
+### 5. 달력 주기 완전 연동
+- `Calendar.tsx`: `resolveEnd()` → `avgPeriod`만 사용 (증가/감소 모두 즉시 반영)
+- `addRecord` 호출 시 `autoEnd` 제거
+
+### 6. CSP 허용 도메인 추가
+- `server/index.ts`: googletagmanager, jsdelivr, AdSense 도메인 추가
+
+### 7. OAuth state 파일 기반 저장
+- `server/auth.ts`: in-memory → `oauth-states.json` 파일 저장 (PM2 재시작 후에도 유지)
+
+### 8. 카카오 로그인 수정
+- Kakao Developers Console에 redirect URI 등록: `https://hol-si.com/api/auth/kakao/callback`
+
+### 9. 마이페이지 주기 설정 저장 버튼
+- 로컬 임시값 + 수정하기/되돌리기/저장하기 플로우
+- `isEditingCycle` 상태로 슬라이더 잠금/해제
+
+### 10. Liquid Glass 효과
+- `useLiquidGlass.ts` 신규: DeviceOrientation 기반 동적 유리 반사
+- `Card.tsx`: CSS 변수로 빛 반사 gradient 적용
+
+### 11. iOS App Store 대응
+- `Info.plist`: UIDeviceFamily=1 (iPhone 전용), UIRequiresFullScreen=true 추가
+- iPad 스크린샷 제거 권고
+
+---
+
+## 내일 할 작업
+
+1. **iOS 6차 심사 결과 확인** — 통과 시 App Store 출시 완료
+2. **Android Google Play 심사 결과 확인** (빌드 29 버전)
+3. **Android 캐시 삭제 후 UI 변경사항 확인** (달력/마이페이지/커뮤니티)
+4. **인앱결제 Sandbox 테스트** — iOS TestFlight에서 결제 플로우 확인
+5. **Liquid Glass iOS 권한 요청 버튼** — iOS에서 모션 효과 활성화 버튼 추가 (현재 Android만 작동)
+6. **Apple Sign In 서버 연동 최종 확인** — 로그인 후 계정 정보 정상 저장되는지
+
+---
+
+## ⚠️ Google Android 서명키 이슈
+
 - **반드시 Codemagic에서 빌드** → `android-google-play` 워크플로우 사용
-- Codemagic 환경변수 그룹 `ios_credentials`에 키 저장됨:
-  - `CM_KEYSTORE` — base64 인코딩된 keystore
-  - `CM_KEYSTORE_PASSWORD` — keystore 비밀번호
-  - `CM_KEY_ALIAS` — 키 별칭
-  - `CM_KEY_PASSWORD` — 키 비밀번호
-- build.gradle에서 환경변수 자동 참조하도록 설정 완료
-
-### 로컬 빌드 시 주의
-- `holsi.keystore` (SHA1: 31:E4:CC:D2...)는 Google Play에 등록된 키가 아님
-- 로컬 빌드 AAB는 테스트용으로만 사용, Google Play 업로드 불가
-
----
-
-## 대기 중인 항목
-
-| 항목 | 상태 |
-|------|------|
-| iOS App Store 심사 | 승인 대기 중 |
-| Android Google Play v1.1 업데이트 | 심사 중 |
-| AdMob 앱 인증 | 크롤링/심사 대기 (며칠 소요) |
-
----
-
-## 심사 통과 후 할 작업 리스트
-
-### [최우선] iOS 심사 통과 직후
-1. **App Store Connect 구독 제출** — 앱 버전 페이지에서 holsi_yearly, holsi_monthly 선택 후 심사 제출
-2. **RevenueCat iOS "Could not check" 해결 확인** — 심사 통과 후 자동으로 "Published"로 변경되는지 확인
-3. **iOS Codemagic 빌드 결과 확인** — TestFlight에서 실제 구독 결제 테스트
-
-### [AdMob 인증 완료 후]
-4. **AdMob 광고 단위 생성**
-   - 배너 광고 단위 ID 발급 (Android)
-   - `@capacitor-community/admob` 플러그인 설치
-   - 홈 화면 하단 배너 광고 코드 추가
-   - iOS용 App ID, 광고 단위 ID 별도 발급
-
-### [추가 개선 작업]
-5. **Google developer notifications 연결** (RevenueCat 실시간 구독 추적)
-   - Google Cloud Pub/Sub 토픽 생성
-   - RevenueCat 대시보드에서 연결
-
-6. **커뮤니티 스레드형 댓글**
-   - `src/pages/Community.tsx` 고도화
-   - 서버 댓글 API 추가
+- Codemagic 환경변수 그룹 `ios_credentials`에 키 저장됨
 
 ---
 
 ## EC2 배포 명령어
 ```bash
-cd /home/ubuntu/hol-si-wep && git pull && npm run build && pm2 restart holsi
+cd /home/ubuntu/hol-si-wep && git pull && npm install && npm run build && pm2 restart holsi-app
+```
+
+## EC2 환경변수 업데이트 (env 변경 시)
+```bash
+set -a && source ~/hol-si-wep/.env && set +a && pm2 restart holsi-app --update-env
 ```
 
 ## EC2 접속 정보
@@ -107,33 +98,24 @@ AWS Instance Connect (브라우저 터미널)
 인스턴스 ID: i-00806177a0caa80b5
 퍼블릭 IP: 52.206.253.217
 앱 경로: /home/ubuntu/hol-si-wep
-PM2 프로세스: holsi (id 7) — port 3001
+PM2 프로세스: holsi-app (id 0), holsi (id 1)
 ```
 
 ## Codemagic 빌드
 - Android: android-google-play 워크플로우
 - iOS: ios-app-store 워크플로우
-- artifact: app-release.aab (Android), *.ipa (iOS)
-
-## 주요 파일 경로
-
-| 파일 | 설명 |
-|------|------|
-| `src/App.tsx` | 앱 루트, 딥링크 리스너, 랜딩 페이지 분기 |
-| `src/pages/LandingPage.tsx` | 브라우저 접속 시 다운로드 랜딩 페이지 |
-| `src/lib/localNotificationService.ts` | 네이티브 로컬 알림 (영양제 알림) |
-| `src/lib/pushService.ts` | 브라우저/PWA Web Push |
-| `src/pages/MyPage.tsx` | 소셜 로그인, 알림 토글 |
-| `android/app/build.gradle` | Android 빌드 설정 (서명 포함) |
-| `codemagic.yaml` | CI/CD 파이프라인 |
-| `server/auth.ts` | OAuth 서버 라우터 |
-
-## 브랜드 컬러
-- 메인 핑크: #FF2A7A
-- 다크 배경: #0A0A0A / #080206
-- 스플래시 배경: #1c0510 → #080206
 
 ## 앱 스토어 정보
 - App Store Apple ID: 6762106047
 - Google Play Package: com.holsi.app
 - AdMob Publisher ID: pub-7010515643704037
+
+## 구독 상품
+| 상품 | App Store ID | Google Play ID |
+|------|------|------|
+| 월간 ₩4,900 | com.holsi.app.monthly | holsi_monthly:monthly-base |
+| 연간 ₩39,900 | com.holsi.app.yearly | holsi_yearly:yearly-base |
+
+## 브랜드 컬러
+- 메인 핑크: #FF2A7A
+- 다크 배경: #0A0A0A / #080206
