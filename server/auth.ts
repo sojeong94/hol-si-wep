@@ -1,6 +1,6 @@
 import { Router, Request, Response } from 'express'
 import jwt from 'jsonwebtoken'
-import { createPublicKey, randomBytes } from 'crypto'
+import { createPublicKey, createHmac } from 'crypto'
 import { google } from 'googleapis'
 import fs from 'fs'
 import path from 'path'
@@ -37,24 +37,29 @@ const JWT_SECRET = process.env.JWT_SECRET
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173'
 const ADMIN_SECRET = process.env.ADMIN_SECRET
 
-// ─── OAuth CSRF 방어용 state 저장소 (in-memory, 10분 TTL) ──────────────────────
-const oauthStateStore = new Map<string, { platform: string; expiresAt: number }>()
-setInterval(() => {
-  const now = Date.now()
-  for (const [k, v] of oauthStateStore) if (v.expiresAt < now) oauthStateStore.delete(k)
-}, 60_000).unref?.()
-
+// ─── OAuth CSRF 방어용 state (HMAC 서명 — 서버 재시작/다중 프로세스에서도 안전) ──
 function generateOAuthState(platform: string): string {
-  const state = randomBytes(16).toString('hex')
-  oauthStateStore.set(state, { platform, expiresAt: Date.now() + 10 * 60_000 })
-  return state
+  const data = `${platform}:${Date.now()}`
+  const sig = createHmac('sha256', JWT_SECRET).update(data).digest('hex').slice(0, 24)
+  return Buffer.from(`${data}:${sig}`).toString('base64url')
 }
 
 function consumeOAuthState(state: string): string | null {
-  const entry = oauthStateStore.get(state)
-  if (!entry || entry.expiresAt < Date.now()) return null
-  oauthStateStore.delete(state)
-  return entry.platform
+  try {
+    const decoded = Buffer.from(state, 'base64url').toString()
+    const lastColon = decoded.lastIndexOf(':')
+    const secondLastColon = decoded.lastIndexOf(':', lastColon - 1)
+    const data = decoded.slice(0, lastColon)
+    const sig = decoded.slice(lastColon + 1)
+    const platform = decoded.slice(0, secondLastColon)
+    const timestamp = parseInt(decoded.slice(secondLastColon + 1, lastColon))
+    const expectedSig = createHmac('sha256', JWT_SECRET).update(data).digest('hex').slice(0, 24)
+    if (sig !== expectedSig) return null
+    if (Date.now() - timestamp > 10 * 60_000) return null  // 10분 TTL
+    return platform
+  } catch {
+    return null
+  }
 }
 
 // ─── Auth 엔드포인트 전용 Rate Limiter ────────────────────────────────────────
