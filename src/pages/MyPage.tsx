@@ -40,7 +40,8 @@ export function MyPage() {
   // 주기 수동 설정 — 로컬 임시값 (저장 버튼 누를 때만 반영)
   const [localCycleDays, setLocalCycleDays] = useState(manualCycleDays)
   const [localPeriodDays, setLocalPeriodDays] = useState(manualPeriodDays)
-  const [cycleSaved, setCycleSaved] = useState(false)
+  // 저장 상태: 로컬값과 실제 저장값이 일치하면 저장된 상태
+  const cycleSaved = localCycleDays === manualCycleDays && localPeriodDays === manualPeriodDays
 
   const handlePushToggle = async (enable: boolean) => {
     if (enable) {
@@ -381,7 +382,7 @@ export function MyPage() {
                 <input
                   type="range" min="15" max="40"
                   value={localCycleDays}
-                  onChange={e => { setLocalCycleDays(Number(e.target.value)); setCycleSaved(false) }}
+                  onChange={e => setLocalCycleDays(Number(e.target.value))}
                   className="w-full accent-[var(--color-primary)]"
                 />
               </div>
@@ -393,13 +394,13 @@ export function MyPage() {
                 <input
                   type="range" min="2" max="14"
                   value={localPeriodDays}
-                  onChange={e => { setLocalPeriodDays(Number(e.target.value)); setCycleSaved(false) }}
+                  onChange={e => setLocalPeriodDays(Number(e.target.value))}
                   className="w-full accent-pink-500"
                 />
               </div>
               <div className="flex gap-2 pt-1">
                 <button
-                  onClick={() => { setLocalCycleDays(manualCycleDays); setLocalPeriodDays(manualPeriodDays); setCycleSaved(false) }}
+                  onClick={() => { setLocalCycleDays(manualCycleDays); setLocalPeriodDays(manualPeriodDays) }}
                   className={`flex-1 py-2.5 rounded-xl text-sm font-bold transition-all active:scale-95 ${
                     cycleSaved
                       ? 'bg-pink-950/40 border border-pink-500/30 text-pink-400'
@@ -409,7 +410,7 @@ export function MyPage() {
                   되돌리기
                 </button>
                 <button
-                  onClick={() => { setManualCycleDays(localCycleDays); setManualPeriodDays(localPeriodDays); setCycleSaved(true) }}
+                  onClick={() => { setManualCycleDays(localCycleDays); setManualPeriodDays(localPeriodDays) }}
                   disabled={cycleSaved}
                   className={`flex-2 px-6 py-2.5 rounded-xl text-sm font-bold transition-all active:scale-95 ${
                     cycleSaved
