@@ -37,11 +37,10 @@ export function MyPage() {
   const [showSubscriptionModal, setShowSubscriptionModal] = useState(false)
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
-  // 주기 수동 설정 — 로컬 임시값 (저장 버튼 누를 때만 반영)
+  // 주기 수동 설정 — 편집 잠금 (되돌리기 눌러야 슬라이더 활성화)
   const [localCycleDays, setLocalCycleDays] = useState(manualCycleDays)
   const [localPeriodDays, setLocalPeriodDays] = useState(manualPeriodDays)
-  // 저장 상태: 로컬값과 실제 저장값이 일치하면 저장된 상태
-  const cycleSaved = localCycleDays === manualCycleDays && localPeriodDays === manualPeriodDays
+  const [isEditingCycle, setIsEditingCycle] = useState(false)
 
   const handlePushToggle = async (enable: boolean) => {
     if (enable) {
@@ -382,8 +381,9 @@ export function MyPage() {
                 <input
                   type="range" min="15" max="40"
                   value={localCycleDays}
+                  disabled={!isEditingCycle}
                   onChange={e => setLocalCycleDays(Number(e.target.value))}
-                  className="w-full accent-[var(--color-primary)]"
+                  className={`w-full accent-[var(--color-primary)] transition-opacity ${!isEditingCycle ? 'opacity-40' : ''}`}
                 />
               </div>
               <div className="pt-2 border-t border-zinc-800">
@@ -394,31 +394,42 @@ export function MyPage() {
                 <input
                   type="range" min="2" max="14"
                   value={localPeriodDays}
+                  disabled={!isEditingCycle}
                   onChange={e => setLocalPeriodDays(Number(e.target.value))}
-                  className="w-full accent-pink-500"
+                  className={`w-full accent-pink-500 transition-opacity ${!isEditingCycle ? 'opacity-40' : ''}`}
                 />
               </div>
               <div className="flex gap-2 pt-1">
                 <button
-                  onClick={() => { setLocalCycleDays(manualCycleDays); setLocalPeriodDays(manualPeriodDays) }}
+                  onClick={() => {
+                    if (isEditingCycle) {
+                      // 편집 중 → 되돌리기: 저장값으로 초기화 후 잠금
+                      setLocalCycleDays(manualCycleDays)
+                      setLocalPeriodDays(manualPeriodDays)
+                      setIsEditingCycle(false)
+                    } else {
+                      // 잠금 상태 → 편집 모드 진입
+                      setIsEditingCycle(true)
+                    }
+                  }}
                   className={`flex-1 py-2.5 rounded-xl text-sm font-bold transition-all active:scale-95 ${
-                    cycleSaved
+                    !isEditingCycle
                       ? 'bg-pink-950/40 border border-pink-500/30 text-pink-400'
                       : 'bg-zinc-800 border border-zinc-700 text-zinc-400'
                   }`}
                 >
-                  되돌리기
+                  {isEditingCycle ? '되돌리기' : '수정하기'}
                 </button>
                 <button
-                  onClick={() => { setManualCycleDays(localCycleDays); setManualPeriodDays(localPeriodDays) }}
-                  disabled={cycleSaved}
+                  onClick={() => { setManualCycleDays(localCycleDays); setManualPeriodDays(localPeriodDays); setIsEditingCycle(false) }}
+                  disabled={!isEditingCycle}
                   className={`flex-2 px-6 py-2.5 rounded-xl text-sm font-bold transition-all active:scale-95 ${
-                    cycleSaved
+                    !isEditingCycle
                       ? 'bg-zinc-700 text-zinc-400 cursor-default'
                       : 'bg-[var(--color-primary)] text-white shadow-[0_0_12px_rgba(255,42,122,0.4)]'
                   }`}
                 >
-                  {cycleSaved ? '저장됐어요 ✓' : '저장하기'}
+                  {!isEditingCycle ? '저장됐어요 ✓' : '저장하기'}
                 </button>
               </div>
             </div>
