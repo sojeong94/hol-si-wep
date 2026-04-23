@@ -400,13 +400,22 @@ export function MyPage() {
               <div className="flex gap-2 pt-1">
                 <button
                   onClick={() => { setLocalCycleDays(manualCycleDays); setLocalPeriodDays(manualPeriodDays); setCycleSaved(false) }}
-                  className="flex-1 py-2.5 rounded-xl text-sm font-bold bg-zinc-800 border border-zinc-700 text-zinc-400 active:scale-95 transition-all"
+                  className={`flex-1 py-2.5 rounded-xl text-sm font-bold transition-all active:scale-95 ${
+                    cycleSaved
+                      ? 'bg-pink-950/40 border border-pink-500/30 text-pink-400'
+                      : 'bg-zinc-800 border border-zinc-700 text-zinc-400'
+                  }`}
                 >
                   되돌리기
                 </button>
                 <button
-                  onClick={() => { setManualCycleDays(localCycleDays); setManualPeriodDays(localPeriodDays); setCycleSaved(true); setTimeout(() => setCycleSaved(false), 2000) }}
-                  className={`flex-2 px-6 py-2.5 rounded-xl text-sm font-bold transition-all active:scale-95 ${cycleSaved ? 'bg-zinc-700 text-zinc-300' : 'bg-[var(--color-primary)] text-white shadow-[0_0_12px_rgba(255,42,122,0.4)]'}`}
+                  onClick={() => { setManualCycleDays(localCycleDays); setManualPeriodDays(localPeriodDays); setCycleSaved(true) }}
+                  disabled={cycleSaved}
+                  className={`flex-2 px-6 py-2.5 rounded-xl text-sm font-bold transition-all active:scale-95 ${
+                    cycleSaved
+                      ? 'bg-zinc-700 text-zinc-400 cursor-default'
+                      : 'bg-[var(--color-primary)] text-white shadow-[0_0_12px_rgba(255,42,122,0.4)]'
+                  }`}
                 >
                   {cycleSaved ? '저장됐어요 ✓' : '저장하기'}
                 </button>
