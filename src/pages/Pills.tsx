@@ -175,7 +175,8 @@ export function Pills() {
       {!isEditMode && (
         <button
           onClick={() => { setIsAdvisorOpen(true); setAdvisorAnswer(''); setAdvisorQuestion('') }}
-          className="fixed bottom-24 right-5 w-14 h-14 bg-[var(--color-primary)] rounded-full shadow-[0_0_20px_rgba(255,42,122,0.5)] flex items-center justify-center active:scale-95 transition-all z-40 border border-pink-400"
+          className="fixed right-5 w-14 h-14 bg-[var(--color-primary)] rounded-full shadow-[0_0_20px_rgba(255,42,122,0.5)] flex items-center justify-center active:scale-95 transition-all z-40 border border-pink-400"
+          style={{ bottom: 'calc(4rem + env(safe-area-inset-bottom) + 1rem)' }}
         >
           <MessageCircle size={24} className="text-white" />
         </button>

@@ -484,8 +484,7 @@ export function CalendarPage() {
             {/* 시작 버튼 */}
             <button
               onClick={() => {
-                const autoEnd = format(addDays(parseLocalDate(selectedDateStr), avgPeriod - 1), 'yyyy-MM-dd')
-                addRecord(selectedDateStr, autoEnd)
+                addRecord(selectedDateStr)
                 track('record_added', { total: records.length + 1 })
               }}
               className="w-full h-14 bg-zinc-900 border border-zinc-800 shadow-sm rounded-[var(--radius-xl)] flex items-center justify-center gap-2 hover:bg-zinc-800 transition-colors active:scale-[0.98]"

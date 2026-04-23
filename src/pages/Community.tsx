@@ -361,7 +361,8 @@ export function Community() {
       {/* 글쓰기 FAB */}
       <button
         onClick={() => setShowWriteModal(true)}
-        className="fixed bottom-24 right-5 w-14 h-14 bg-[var(--color-primary)] rounded-full shadow-[0_4px_20px_rgba(255,42,122,0.5)] flex items-center justify-center z-40 active:scale-95 transition-all"
+        className="fixed right-5 w-14 h-14 bg-[var(--color-primary)] rounded-full shadow-[0_4px_20px_rgba(255,42,122,0.5)] flex items-center justify-center z-40 active:scale-95 transition-all"
+        style={{ bottom: 'calc(4rem + env(safe-area-inset-bottom) + 1rem)' }}
       >
         <Plus size={28} className="text-white" strokeWidth={2.5} />
       </button>
@@ -453,12 +454,16 @@ export function Community() {
       {selectedPost && (
         <div className="fixed inset-0 z-50 bg-[#0A0A0A] flex flex-col animate-in slide-in-from-bottom duration-300">
           {/* 헤더 */}
-          <div className="flex items-center gap-3 px-5 py-4 border-b border-zinc-800 flex-shrink-0" style={{ paddingTop: 'calc(env(safe-area-inset-top) + 1rem)' }}>
+          <div
+            className="flex items-center gap-3 px-5 border-b border-zinc-800 flex-shrink-0"
+            style={{ paddingTop: 'calc(env(safe-area-inset-top) + 3rem)', paddingBottom: '1rem' }}
+          >
             <button
               onClick={closePost}
-              className="text-zinc-400 active:scale-90 transition-all"
+              className="flex items-center gap-2 text-white bg-zinc-800 px-3 py-2 rounded-xl active:scale-95 transition-all"
             >
-              <ArrowLeft size={22} />
+              <ArrowLeft size={18} />
+              <span className="text-sm font-bold">나가기</span>
             </button>
             <span className="text-white font-bold text-base">댓글</span>
           </div>
