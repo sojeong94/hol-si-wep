@@ -3,6 +3,7 @@ import { Capacitor } from '@capacitor/core'
 import { Camera as CapCamera, CameraResultType, CameraSource } from '@capacitor/camera'
 import { Modal } from './Modal'
 import { Camera, Image as ImageIcon, Loader2, Sparkles } from 'lucide-react'
+import { useAuthStore } from '@/store/useAuthStore'
 
 interface OCRScannerModalProps {
   isOpen: boolean
@@ -57,9 +58,13 @@ export function OCRScannerModal({
     const timeoutId = window.setTimeout(() => controller.abort(), 30_000)
     let res: Response
     try {
+      const token = useAuthStore.getState().token
       res = await fetch('/api/ocr', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
         body: JSON.stringify({ imageBase64: base64, mimeType, mode }),
         signal: controller.signal,
       })

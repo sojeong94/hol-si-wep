@@ -4,6 +4,7 @@ import { usePillStore } from '@/store/usePillStore'
 import { useSettingStore } from '@/store/useSettingStore'
 import { useSubscriptionStore } from '@/store/useSubscriptionStore'
 import { useUsageLimitStore } from '@/store/useUsageLimitStore'
+import { useAuthStore } from '@/store/useAuthStore'
 import { TermTooltip } from '@/components/ui/TermTooltip'
 import { getAverageCycle, getAveragePeriodDays, getNextPeriodDate, parseLocalDate } from '@/utils/cycleCalculators'
 import { differenceInDays, format } from 'date-fns'
@@ -178,9 +179,13 @@ export function Home() {
     setIsLoadingAdvice(true)
     try {
       const { dDay, userName, pills } = latestAdviceInput.current
+      const token = useAuthStore.getState().token
       const res = await fetch('/api/holsi-advice', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
         body: JSON.stringify({
           dDay,
           userName,
@@ -229,9 +234,13 @@ export function Home() {
     track('advisor_question', { phase: dDay !== null ? String(dDay) : 'unknown' })
     if (!isPremium) incrementAI()
     try {
+      const token = useAuthStore.getState().token
       const res = await fetch('/api/pill-advisor', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
         body: JSON.stringify({ question: advisorQuestion, pills, dDay, userName }),
       })
       const data = await res.json()

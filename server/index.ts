@@ -7,7 +7,8 @@ import cron from 'node-cron'
 import fs from 'fs'
 import path from 'path'
 import { fileURLToPath } from 'url'
-import authRouter from './auth.js'
+import authRouter, { verifyToken } from './auth.js'
+import { getHolsiContent } from './holsi-content.js'
 
 dotenv.config()
 
@@ -94,6 +95,35 @@ function rateLimit(max: number, windowMs: number) {
 }
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+
+// ─── 유저별 일별 AI 사용량 추적 (in-memory, 자정마다 리셋) ───────────────────
+// IP 레이트리밋만으론 앱 우회 직접 호출을 막기 어렵기 때문에 userId 기반 추가 검증
+interface UserDailyUsage { holsi: number; pill: number; ocr: number; date: string }
+const userDailyUsageMap = new Map<string, UserDailyUsage>()
+setInterval(() => {
+  const today = new Date().toISOString().slice(0, 10)
+  for (const [k, v] of userDailyUsageMap) if (v.date !== today) userDailyUsageMap.delete(k)
+}, 60 * 60_000).unref?.()
+
+const USER_DAILY_LIMITS = { holsi: 30, pill: 15, ocr: 8 }
+
+function getUserDailyUsage(userId: string): UserDailyUsage {
+  const today = new Date().toISOString().slice(0, 10)
+  const existing = userDailyUsageMap.get(userId)
+  if (!existing || existing.date !== today) {
+    const fresh: UserDailyUsage = { holsi: 0, pill: 0, ocr: 0, date: today }
+    userDailyUsageMap.set(userId, fresh)
+    return fresh
+  }
+  return existing
+}
+
+function getUserIdFromRequest(req: express.Request): string | null {
+  const authHeader = req.headers.authorization
+  if (!authHeader?.startsWith('Bearer ')) return null
+  const payload = verifyToken(authHeader.slice(7))
+  return payload?.userId ?? null
+}
 
 // ─── Web Push 설정 ────────────────────────────────────────────────────────────
 webpush.setVapidDetails(
@@ -279,9 +309,8 @@ startAutomationScheduler()
 // Claude 호출 엔드포인트는 비용 보호를 위해 IP 당 분당 6회로 제한
 const aiLimiter = rateLimit(6, 60_000)
 
-app.post('/api/holsi-advice', aiLimiter, async (req, res) => {
-  const { dDay, userName, pills } = req.body ?? {}
-  // 페이로드 가볍게 검증
+app.post('/api/holsi-advice', aiLimiter, (req, res) => {
+  const { dDay, userName } = req.body ?? {}
   if (dDay !== null && dDay !== undefined && typeof dDay !== 'number') {
     return res.status(400).json({ error: 'dDay 형식 오류' })
   }
@@ -289,115 +318,18 @@ app.post('/api/holsi-advice', aiLimiter, async (req, res) => {
     return res.status(400).json({ error: 'userName 형식 오류' })
   }
 
-  let phase = ''
-  if (dDay === null || dDay === undefined) {
-    phase = '아직 주기 데이터가 없는 상태'
-  } else if (dDay > 14) {
-    phase = `다음 생리까지 ${dDay}일 남음 (배란 전후, 활력 최고)`
-  } else if (dDay > 7) {
-    phase = `다음 생리까지 ${dDay}일 남음 (황체기 초반, 에너지 충만)`
-  } else if (dDay > 3) {
-    phase = `다음 생리까지 ${dDay}일 남음 (황체기 후반, PMS 주의)`
-  } else if (dDay > 0) {
-    phase = `다음 생리까지 ${dDay}일 남음 (생리 임박, 예민함 MAX)`
-  } else if (dDay === 0) {
-    phase = '생리 당일 (D-DAY)'
-  } else {
-    phase = `생리 시작 후 ${Math.abs(dDay)}일째 (회복 중)`
+  // 로그인 유저 일별 사용량 추적 (우회 호출 방어)
+  const userId = getUserIdFromRequest(req)
+  if (userId) {
+    const usage = getUserDailyUsage(userId)
+    if (usage.holsi >= USER_DAILY_LIMITS.holsi) {
+      return res.status(429).json({ error: '오늘 홀시 참견을 너무 많이 봤어요.' })
+    }
+    usage.holsi++
   }
-
-  const pillList =
-    pills && pills.length > 0
-      ? `현재 복용 중인 영양제: ${pills.map((p: { name: string }) => p.name).join(', ')}`
-      : '등록된 영양제 없음'
 
   const nickname = (userName && String(userName).trim()) || '언니'
-
-  try {
-    const msg = await anthropic.messages.create({
-      model: 'claude-haiku-4-5-20251001',
-      max_tokens: 600,
-      messages: [
-        {
-          role: 'user',
-          content: `너는 '홀시'라는 여성 건강 앱이야. 사용자 상태를 짧고 바이럴되는 카피로 표현하고, 아래 상품을 자연스럽게 원하게 만들어줘.
-
-사용자 정보:
-- 닉네임: ${nickname}
-- 현재 주기 단계: ${phase}
-- ${pillList}
-
-[advice 작성 규칙 - 절대 준수]
-- 이모지 절대 금지
-- 반드시 두 줄, 줄바꿈은 \\n
-- **첫 줄은 무조건 "${nickname}" 이라는 닉네임 토큰으로 시작해야 한다.** 첫 글자가 "${nickname}" 이 아니면 규칙 위반이다.
-  · 허용 예시: "${nickname}아, 지금 예민함 MAX", "${nickname}, 오늘 당 떨어질 각", "${nickname}야 배 아프지?", "${nickname}님 컨디션 체크!"
-  · 금지 예시: "생리 2일 전 ~", "지금 몸이 ~", "오늘은 ~" (닉네임 없이 시작하면 안 됨)
-- 첫 줄은 닉네임 포함 22자 이내
-- 둘째 줄: 아래 recommendations 상품이 자연스럽게 땡기도록 욕구를 건드려줘. 설명 말고 감각적으로. 20자 이내.
-- 반말. 친구 카톡에 공유하고 싶어지는 문체.
-
-[홀시 캐릭터 - 츤데레 스타일]
-- 겉으론 까칠하지만 속으론 진심으로 챙겨주는 언니 느낌
-- "그냥 챙겨주는 거야", "내가 시켜서 먹는 거 아니야", "딱 오늘만 허락할게" 같은 뉘앙스
-- 공유하고 싶어지는 위트 있는 문체
-
-[recommendations 작성 규칙]
-- 여성 건강 관심사 위주: 다이어트, 영양제, 유산균, 이노시톨, 마그네슘, 철분, 오메가3, 콜라겐, 루테인 등
-- 주기 단계에 맞는 음식/간식/음료/핫팩도 추천 가능
-- name: "[짧은 특징] [상품 종류/이름]" 형태의 굵게 표시될 라벨. 6~12자. 형용사/특징 + 상품명 결합. (예: "배따뜻 핫팩", "속편한 캐모마일티", "당충전 마카롱", "PMS 진정 마그네슘", "수분폭탄 코코넛워터")
-  · 절대 긴 문장 금지. 광고 헤드라인 금지. 오직 "특징어 + 상품명" 형태.
-- reason: 얇은 글씨로 들어갈 짧은 설명 + 후킹 멘트. 18자 이내. 한 문장. (예: "지금 배 위에 얹으면 즉각 진정", "당 떨어진 니 몸을 위한 구원템")
-- cta: 버튼에 들어갈 짧은 텍스트. 아래 중 가장 어울리는 것 하나 선택. ["핫딜 보기", "최저가 확인", "끝딜 잡기", "바로 가기", "지금 주문", "오늘만 이가격"]
-- keyword: 쿠팡 실제 검색 키워드 (잘 팔리는 키워드로)
-
-JSON 형식으로만 응답 (설명 없이):
-{
-  "advice": "{첫 줄}\\n{둘째 줄}",
-  "recommendations": [
-    {"name": "특징+상품명", "reason": "짧은 설명+후킹", "cta": "버튼텍스트", "keyword": "쿠팡 검색어"}
-  ]
-}
-
-recommendations 1~2개. 이미 복용 중인 영양제는 제외. 한국어로만.`,
-        },
-        // assistant 메시지 prefill: JSON 을 강제로 "${nickname}" 으로 시작하게 유도
-        {
-          role: 'assistant',
-          content: `{\n  "advice": "${nickname}`,
-        },
-      ],
-    })
-
-    const continuation = (msg.content[0] as Anthropic.TextBlock).text
-    // prefill 한 조각을 다시 붙여서 온전한 JSON 으로 복원
-    const raw = `{\n  "advice": "${nickname}${continuation}`
-
-    const cleanText = raw.replace(/```(?:json)?\n?|\n?```/g, '').trim()
-    let parsed: { advice?: string; recommendations?: unknown } | null = null
-    try {
-      parsed = JSON.parse(cleanText)
-    } catch {
-      // 모델이 JSON 을 완성하지 못한 경우 일부만 파싱 시도
-      const match = cleanText.match(/\{[\s\S]*\}/)
-      if (match) {
-        try { parsed = JSON.parse(match[0]) } catch { /* ignore */ }
-      }
-    }
-
-    if (parsed && typeof parsed.advice === 'string') {
-      // 2차 안전망: 혹시 닉네임으로 시작하지 않으면 강제로 붙인다
-      if (!parsed.advice.startsWith(nickname)) {
-        parsed.advice = `${nickname}아, ${parsed.advice}`
-      }
-      res.json(parsed)
-    } else {
-      res.json({ advice: `${nickname}아, 오늘도 나를 챙겨보자\n지금 필요한 건 바로 이거야`, recommendations: [] })
-    }
-  } catch (err: any) {
-    console.error('holsi-advice error:', err?.message ?? err)
-    res.status(500).json({ error: '조언 생성에 실패했어요.' })
-  }
+  res.json(getHolsiContent(dDay, nickname))
 })
 
 // ─── 영양제 AI 상담 + 추천 ─────────────────────────────────────────────────
@@ -405,6 +337,15 @@ app.post('/api/pill-advisor', aiLimiter, async (req, res) => {
   const { question, pills, dDay, userName } = req.body ?? {}
   if (typeof question !== 'string' || question.length === 0 || question.length > 500) {
     return res.status(400).json({ error: '질문 형식 오류 (1~500자)' })
+  }
+
+  const userId = getUserIdFromRequest(req)
+  if (userId) {
+    const usage = getUserDailyUsage(userId)
+    if (usage.pill >= USER_DAILY_LIMITS.pill) {
+      return res.status(429).json({ error: '오늘 AI 상담 횟수를 초과했어요.' })
+    }
+    usage.pill++
   }
 
   const pillContext =
@@ -472,6 +413,16 @@ const ocrLimiter = rateLimit(10, 60_000)
 
 app.post('/api/ocr', ocrLimiter, async (req, res) => {
   const { imageBase64, mimeType = 'image/jpeg', mode = 'pill' } = req.body ?? {}
+
+  const userId = getUserIdFromRequest(req)
+  if (userId) {
+    const usage = getUserDailyUsage(userId)
+    if (usage.ocr >= USER_DAILY_LIMITS.ocr) {
+      return res.status(429).json({ error: '오늘 OCR 사용 횟수를 초과했어요.' })
+    }
+    usage.ocr++
+  }
+
   // base64 크기 상한 1.5MB (압축 후 대략 300KB 이므로 충분한 여유)
   if (!isNonEmptyString(imageBase64, 1_500_000)) {
     return res.status(413).json({ error: '이미지가 너무 크거나 비어있어요.' })

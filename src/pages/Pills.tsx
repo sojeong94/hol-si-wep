@@ -8,6 +8,7 @@ import { Modal } from '@/components/ui/Modal'
 import { Plus, MessageCircle, Send, Loader2, CheckCircle2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { RecommendCards, type Recommendation } from '@/components/ui/RecommendCards'
+import { useAuthStore } from '@/store/useAuthStore'
 
 export function Pills() {
   const { t } = useTranslation()
@@ -30,9 +31,13 @@ export function Pills() {
     setAdvisorAnswer('')
     setAdvisorRecommendations([])
     try {
+      const token = useAuthStore.getState().token
       const res = await fetch('/api/pill-advisor', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
         body: JSON.stringify({ question: advisorQuestion, pills }),
       })
       const data = await res.json()
